@@ -3409,7 +3409,7 @@
                 task.days = isNaN(val) || val < 0 ? 0 : val;
             } else if (field === 'responsible') {
                 task.responsible = input.value || '';
-                // Всегда показываем полное значение в data-tooltip на родительской <td>,
+                // Всегда показываем полное значение в data-tooltip на родительской <td> (таблица),
                 // чтобы при переполнении можно было увидеть всех ответственных при наведении в едином стиле подсказок.
                 const td = input.closest('.table-col-responsible');
                 if (td) {
@@ -3417,6 +3417,18 @@
                         td.setAttribute('data-tooltip', task.responsible);
                     } else {
                         td.removeAttribute('data-tooltip');
+                    }
+                }
+                // Также обновляем подсказку в Ганте (если колонка видна)
+                const ganttRow = document.querySelector(`.gantt-row[data-task-id="${task.id}"]`);
+                if (ganttRow) {
+                    const ganttRespCell = ganttRow.querySelector('.gantt-details-cell input[data-field="responsible"]')?.parentElement;
+                    if (ganttRespCell) {
+                        if (task.responsible) {
+                            ganttRespCell.setAttribute('data-tooltip', task.responsible);
+                        } else {
+                            ganttRespCell.removeAttribute('data-tooltip');
+                        }
                     }
                 }
             } else if (field === 'status') {
