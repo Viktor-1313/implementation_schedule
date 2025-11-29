@@ -1,16 +1,21 @@
 {
-  "name": "1",
+  "name": "icona-gantt-schedule",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Интерактивная диаграмма Ганта ICONA",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": [],
+  "keywords": ["gantt", "icona", "schedule"],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "bcrypt": "^5.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

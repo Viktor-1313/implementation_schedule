@@ -2,33 +2,160 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 const app = express();
-const PORT = process.env.PORT || 3100; // отдельный порт
-const DATA_FILE = path.join(__dirname, 'gantt-state.json');
-const COMPANY_FILE = path.join(__dirname, 'company-info.json');
+const PORT = process.env.PORT || 3001; // порт для внутреннего сервера компании
+const USERS_FILE = path.join(__dirname, 'users.json');
+const COMPANIES_FILE = path.join(__dirname, 'companies.json');
+
+// Вспомогательные функции для работы с файлами компаний
+function getCompanyDataFile(companyId) {
+  return path.join(__dirname, `gantt-state-${companyId}.json`);
+}
+
+function getCompanyInfoFile(companyId) {
+  return path.join(__dirname, `company-info-${companyId}.json`);
+}
+
+// Валидация ID компании (только латинские буквы, цифры, дефисы и подчеркивания)
+function isValidCompanyId(companyId) {
+  return /^[a-zA-Z0-9_-]+$/.test(companyId);
+}
 
 // парсим JSON и разрешаем запросы с файловой страницы
 app.use(cors());
-app.use(express.json());
+// Увеличиваем лимит размера тела запроса до 10MB для загрузки изображений
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// отдаём статику из папки 1 (твой index (1) (1).html)
-app.use(express.static(__dirname));
+// ========== API МАРШРУТЫ (должны быть ПЕРЕД статикой) ==========
+
+// ========== API ДЛЯ РАБОТЫ С КОМПАНИЯМИ ==========
+
+// Получить список всех компаний (только для админов)
+app.get('/api/companies', (req, res) => {
+  try {
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.json([]);
+    }
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    const companies = JSON.parse(raw);
+    res.json(companies);
+  } catch (e) {
+    console.error('Ошибка загрузки компаний:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
+  }
+});
+
+// Создать новую компанию
+app.post('/api/companies', (req, res) => {
+  try {
+    const { id, name } = req.body;
+
+    if (!id || !name) {
+      return res.status(400).json({ ok: false, error: 'ID и название компании обязательны' });
+    }
+
+    if (!isValidCompanyId(id)) {
+      return res.status(400).json({ ok: false, error: 'ID компании может содержать только латинские буквы, цифры, дефисы и подчеркивания' });
+    }
+
+    // Загружаем существующие компании
+    let companies = [];
+    if (fs.existsSync(COMPANIES_FILE)) {
+      const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = JSON.parse(raw);
+    }
+
+    // Проверяем, не существует ли уже компания с таким ID
+    if (companies.some(c => c.id === id)) {
+      return res.status(400).json({ ok: false, error: 'Компания с таким ID уже существует' });
+    }
+
+    // Добавляем новую компанию
+    const newCompany = {
+      id: id.trim(),
+      name: name.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    companies.push(newCompany);
+
+    // Сохраняем
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true, company: newCompany });
+  } catch (e) {
+    console.error('Ошибка создания компании:', e);
+    res.status(500).json({ ok: false, error: 'create_failed' });
+  }
+});
+
+// Удалить компанию
+app.delete('/api/companies/:id', (req, res) => {
+  try {
+    const companyId = req.params.id;
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    const initialLength = companies.length;
+    companies = companies.filter(c => c.id !== companyId);
+
+    if (companies.length === initialLength) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    // Удаляем файлы данных компании
+    const dataFile = getCompanyDataFile(companyId);
+    const infoFile = getCompanyInfoFile(companyId);
+    if (fs.existsSync(dataFile)) fs.unlinkSync(dataFile);
+    if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка удаления компании:', e);
+    res.status(500).json({ ok: false, error: 'delete_failed' });
+  }
+});
+
+// ========== API ДЛЯ РАБОТЫ С ГРАФИКОМ ГАНТА ==========
 
 // получить сохранённое состояние графика
 app.get('/api/gantt-state', (req, res) => {
   try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    const companyId = req.query.company;
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+
+    const dataFile = getCompanyDataFile(companyId);
+    if (!fs.existsSync(dataFile)) {
+      return res.json(null);
+    }
+    const raw = fs.readFileSync(dataFile, 'utf8');
     res.json(JSON.parse(raw));
-  } catch {
-    res.json(null);
+  } catch (e) {
+    console.error('Ошибка загрузки gantt-state:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
   }
 });
 
 // сохранить состояние графика
 app.post('/api/gantt-state', (req, res) => {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(req.body, null, 2), 'utf8');
+    const companyId = req.query.company || req.body.company;
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+
+    const dataFile = getCompanyDataFile(companyId);
+    fs.writeFileSync(dataFile, JSON.stringify(req.body, null, 2), 'utf8');
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка сохранения gantt-state:', e);
@@ -39,18 +166,34 @@ app.post('/api/gantt-state', (req, res) => {
 // получить информацию о компании (название и логотип)
 app.get('/api/company-info', (req, res) => {
   try {
-    const raw = fs.readFileSync(COMPANY_FILE, 'utf8');
+    const companyId = req.query.company;
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+
+    const infoFile = getCompanyInfoFile(companyId);
+    if (!fs.existsSync(infoFile)) {
+      return res.json(null);
+    }
+    const raw = fs.readFileSync(infoFile, 'utf8');
     res.json(JSON.parse(raw));
-  } catch {
-    res.json(null);
+  } catch (e) {
+    console.error('Ошибка загрузки company-info:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
   }
 });
 
 // сохранить информацию о компании
 app.post('/api/company-info', (req, res) => {
   try {
+    const companyId = req.query.company || req.body.company;
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+
     // ожидаем объект вида { name: string, logoData: string | null }
-    fs.writeFileSync(COMPANY_FILE, JSON.stringify(req.body, null, 2), 'utf8');
+    const infoFile = getCompanyInfoFile(companyId);
+    fs.writeFileSync(infoFile, JSON.stringify(req.body, null, 2), 'utf8');
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка сохранения company-info:', e);
@@ -58,6 +201,394 @@ app.post('/api/company-info', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Gantt server running on http://localhost:${PORT}`);
+// ========== API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ==========
+
+// Получить список пользователей (для конкретной компании или всех)
+app.get('/api/users', (req, res) => {
+  try {
+    const companyId = req.query.company; // Опционально: фильтр по компании
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return res.json([]);
+    }
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    let users = JSON.parse(raw);
+
+    // Фильтруем по компании, если указана
+    if (companyId) {
+      users = users.filter(u => {
+        // Админы видят всех пользователей
+        if (u.role === 'admin') return true;
+        // Обычные пользователи только если у них есть доступ к компании
+        return u.companies && u.companies.includes(companyId);
+      });
+    }
+
+    // Не возвращаем пароли
+    const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+    res.json(usersWithoutPasswords);
+  } catch (e) {
+    console.error('Ошибка загрузки пользователей:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
+  }
+});
+
+// Добавить нового пользователя
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, login, password, role, companies } = req.body;
+
+    if (!name || !login || !password) {
+      return res.status(400).json({ ok: false, error: 'Не все поля заполнены' });
+    }
+
+    // Загружаем существующих пользователей
+    let users = [];
+    if (fs.existsSync(USERS_FILE)) {
+      const raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    }
+
+    // Проверяем, не существует ли уже пользователь с таким логином
+    if (users.some(u => u.login === login)) {
+      return res.status(400).json({ ok: false, error: 'Пользователь с таким логином уже существует' });
+    }
+
+    // Хешируем пароль
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Добавляем нового пользователя
+    const newUser = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      login: login.trim(),
+      password: hashedPassword,
+      role: role || 'user',
+      companies: Array.isArray(companies) ? companies : [], // Массив ID компаний
+      createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+
+    // Сохраняем
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка добавления пользователя:', e);
+    res.status(500).json({ ok: false, error: 'add_failed' });
+  }
+});
+
+// Удалить пользователя
+app.delete('/api/users/:login', (req, res) => {
+  try {
+    const login = req.params.login;
+    const MAIN_ADMIN_LOGIN = 'Driga_VA';
+
+    // Защита от удаления главного администратора
+    if (login === MAIN_ADMIN_LOGIN) {
+      return res.status(403).json({ ok: false, error: 'Нельзя удалить главного администратора' });
+    }
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    let users = JSON.parse(raw);
+
+    const initialLength = users.length;
+    users = users.filter(u => u.login !== login);
+
+    if (users.length === initialLength) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка удаления пользователя:', e);
+    res.status(500).json({ ok: false, error: 'delete_failed' });
+  }
+});
+
+// Обновление профиля пользователя
+app.put('/api/users/update', async (req, res) => {
+  try {
+    const { oldLogin, newLogin, password } = req.body;
+
+    if (!oldLogin || !newLogin) {
+      return res.status(400).json({ ok: false, error: 'Логин обязателен' });
+    }
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    let users = JSON.parse(raw);
+
+    const userIndex = users.findIndex(u => u.login === oldLogin);
+    if (userIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    // Проверяем, не занят ли новый логин другим пользователем
+    if (newLogin !== oldLogin && users.some(u => u.login === newLogin && u.login !== oldLogin)) {
+      return res.status(400).json({ ok: false, error: 'Пользователь с таким логином уже существует' });
+    }
+
+    // Обновляем логин
+    users[userIndex].login = newLogin.trim();
+
+    // Обновляем пароль, если он указан
+    if (password && password.trim()) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      users[userIndex].password = hashedPassword;
+    }
+
+    // Сохраняем изменения
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка обновления профиля:', e);
+    res.status(500).json({ ok: false, error: 'update_failed' });
+  }
+});
+
+// Обновить доступ пользователя к компаниям
+app.put('/api/users/:login/companies', (req, res) => {
+  try {
+    const { login } = req.params;
+    const { companies } = req.body;
+
+    if (!Array.isArray(companies)) {
+      return res.status(400).json({ ok: false, error: 'companies должен быть массивом' });
+    }
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    let users = JSON.parse(raw);
+
+    const userIndex = users.findIndex(u => u.login === login);
+    if (userIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    // Обновляем список компаний
+    users[userIndex].companies = companies;
+
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка обновления доступа к компаниям:', e);
+    res.status(500).json({ ok: false, error: 'update_failed' });
+  }
+});
+
+// Обновление пользователя админом (имя, роль, компании, пароль)
+app.put('/api/users/:login', async (req, res) => {
+  try {
+    const { login } = req.params;
+    const { name, role, companies, password } = req.body;
+    const MAIN_ADMIN_LOGIN = 'Driga_VA';
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    let users = JSON.parse(raw);
+
+    const userIndex = users.findIndex(u => u.login === login);
+    
+    // Защита главного администратора: нельзя изменить роль или компании
+    if (login === MAIN_ADMIN_LOGIN) {
+      if (role && role !== 'admin') {
+        return res.status(403).json({ ok: false, error: 'Нельзя изменить роль главного администратора' });
+      }
+      if (companies !== undefined) {
+        return res.status(403).json({ ok: false, error: 'Нельзя изменить доступ к компаниям главного администратора' });
+      }
+    }
+    if (userIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
+
+    // Обновляем имя, если указано
+    if (name !== undefined) {
+      users[userIndex].name = name.trim();
+    }
+
+    // Обновляем роль, если указана
+    if (role !== undefined && (role === 'admin' || role === 'user')) {
+      users[userIndex].role = role;
+    }
+
+    // Обновляем список компаний, если указан
+    if (companies !== undefined) {
+      if (!Array.isArray(companies)) {
+        return res.status(400).json({ ok: false, error: 'companies должен быть массивом' });
+      }
+      users[userIndex].companies = companies;
+    }
+
+    // Обновляем пароль, если указан
+    if (password && password.trim()) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      users[userIndex].password = hashedPassword;
+    }
+
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка обновления пользователя:', e);
+    res.status(500).json({ ok: false, error: 'update_failed' });
+  }
+});
+
+// Проверка авторизации пользователя
+app.post('/api/auth', async (req, res) => {
+  try {
+    const { login, password, company } = req.body;
+
+    if (!login || !password) {
+      return res.status(400).json({ ok: false, error: 'Логин и пароль обязательны' });
+    }
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
+    }
+
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    const users = JSON.parse(raw);
+
+    const user = users.find(u => u.login === login);
+    if (!user) {
+      return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
+    }
+
+    // Проверяем пароль
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
+    }
+
+    // Если указана компания, проверяем доступ пользователя к ней
+    if (company) {
+      // Админы имеют доступ ко всем компаниям
+      if (user.role !== 'admin') {
+        const userCompanies = user.companies || [];
+        if (!userCompanies.includes(company)) {
+          return res.status(403).json({ ok: false, error: 'У вас нет доступа к этой компании' });
+        }
+      }
+    }
+
+    // Возвращаем данные пользователя без пароля
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ ok: true, user: userWithoutPassword });
+  } catch (e) {
+    console.error('Ошибка авторизации:', e);
+    res.status(500).json({ ok: false, error: 'auth_failed' });
+  }
+});
+
+// ========== СТАТИЧЕСКИЕ ФАЙЛЫ (после всех API маршрутов) ==========
+// Редирект с корня на страницу авторизации
+app.get('/', (req, res) => {
+  res.redirect('/auth.html');
+});
+
+// отдаём статику из папки 1 (твой index (1) (1).html)
+app.use(express.static(__dirname));
+
+// Инициализация главного администратора
+async function initializeMainAdmin() {
+  try {
+    const MAIN_ADMIN_LOGIN = 'Driga_VA';
+    
+    // Пароль главного админа (можно изменить через переменную окружения)
+    // Дефолтный пароль: Admin2024!
+    const defaultPassword = process.env.MAIN_ADMIN_PASSWORD || 'Admin2024!';
+    const mainAdminPasswordHash = await bcrypt.hash(defaultPassword, 10);
+
+    if (!fs.existsSync(USERS_FILE)) {
+      // Создаём файл с главным админом
+      const mainAdmin = {
+        login: MAIN_ADMIN_LOGIN,
+        name: 'Главный администратор',
+        password: mainAdminPasswordHash,
+        role: 'admin',
+        companies: [] // Админы имеют доступ ко всем компаниям
+      };
+      fs.writeFileSync(USERS_FILE, JSON.stringify([mainAdmin], null, 2), 'utf8');
+      console.log(`✅ Главный администратор "${MAIN_ADMIN_LOGIN}" создан`);
+      return;
+    }
+
+    // Проверяем, существует ли главный админ
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    const users = JSON.parse(raw);
+    const mainAdminExists = users.some(u => u.login === MAIN_ADMIN_LOGIN);
+
+    if (!mainAdminExists) {
+      // Добавляем главного админа
+      const mainAdmin = {
+        login: MAIN_ADMIN_LOGIN,
+        name: 'Главный администратор',
+        password: mainAdminPasswordHash,
+        role: 'admin',
+        companies: []
+      };
+      users.push(mainAdmin);
+      fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+      console.log(`✅ Главный администратор "${MAIN_ADMIN_LOGIN}" добавлен`);
+    } else {
+      // Обновляем данные главного админа (роль и компании), но сохраняем существующий пароль
+      const mainAdminIndex = users.findIndex(u => u.login === MAIN_ADMIN_LOGIN);
+      if (mainAdminIndex !== -1) {
+        // Убеждаемся, что роль админа сохранена и компании пустые
+        users[mainAdminIndex].role = 'admin';
+        users[mainAdminIndex].companies = [];
+        
+        // Обновляем пароль только если указана переменная окружения (для восстановления)
+        if (process.env.MAIN_ADMIN_PASSWORD) {
+          users[mainAdminIndex].password = mainAdminPasswordHash;
+          console.log(`⚠️  Пароль главного администратора обновлён из переменной окружения`);
+        }
+        
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+      }
+    }
+  } catch (error) {
+    console.error('❌ Ошибка инициализации главного администратора:', error);
+  }
+}
+
+// Инициализируем главного админа перед запуском сервера
+initializeMainAdmin().then(() => {
+  // Обработка ошибок при запуске
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Сервер диаграммы Ганта запущен на порту ${PORT}`);
+    console.log(`📁 Данные сохраняются в: ${__dirname}`);
+    console.log(`\n📋 Доступные страницы:`);
+    console.log(`   • Авторизация: http://localhost:${PORT}/auth.html`);
+    console.log(`   • Админ-панель: http://localhost:${PORT}/admin.html`);
+    console.log(`   • График Ганта: http://localhost:${PORT}/implementation_schedule.html`);
+    console.log(`\n💡 После деплоя замените localhost на ваш домен`);
+    console.log(`\n🔐 Главный администратор: Driga_VA`);
+    console.log(`   Пароль по умолчанию: Admin2024!`);
+    console.log(`   Для изменения используйте переменную окружения MAIN_ADMIN_PASSWORD`);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Порт ${PORT} уже занят. Используйте другой порт или остановите процесс, занимающий этот порт.`);
+    } else {
+      console.error('❌ Ошибка сервера:', err);
+    }
+    process.exit(1);
+  });
 });

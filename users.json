@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1764417388634",
+    "name": "Виктор",
+    "login": "Driga_VA",
+    "password": "$2b$10$Qowocd8PI2xyU6nG2VmX7OslMrfMbcQc7Z9yocDkd9nWTx7yAWd02",
+    "role": "admin",
+    "createdAt": "2025-11-29T11:56:28.634Z"
+  },
+  {
+    "id": "1764420879725",
+    "name": "Даня",
+    "login": "Luchka_DS",
+    "password": "$2b$10$scEDPhBQig.YwIfN0p7une3zZPKKVuYlr8Ih/KTS6wrWVvWF2ioBm",
+    "role": "user",
+    "companies": [
+      "lsr"
+    ],
+    "createdAt": "2025-11-29T12:54:39.725Z"
+  },
+  {
+    "id": "1764422144239",
+    "name": "Макс",
+    "login": "Koldrus_MA",
+    "password": "$2b$10$0AHPuGyOaEyt/qUp.oDWqeYFPp.XV4qG.QE9KqmzCrUUk48nbhtfm",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-29T13:15:44.239Z"
+  }
+]

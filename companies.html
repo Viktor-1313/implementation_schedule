@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор компании — Управление графиками</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 50%, #2196f3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+            opacity: 0;
+            animation: fadeInFromFog 1.5s ease-out forwards;
+        }
+
+        /* Анимация появления из тумана */
+        @keyframes fadeInFromFog {
+            0% {
+                opacity: 0;
+                filter: blur(30px);
+                transform: scale(0.95);
+            }
+            50% {
+                opacity: 0.3;
+                filter: blur(15px);
+                transform: scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                filter: blur(0px);
+                transform: scale(1);
+            }
+        }
+
+        /* Эффект тумана при появлении */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(200, 230, 255, 0.4) 0%, transparent 60%),
+                radial-gradient(circle at 30% 30%, rgba(173, 216, 230, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(135, 206, 250, 0.3) 0%, transparent 50%);
+            animation: fogDissolve 1.5s ease-out forwards;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        @keyframes fogDissolve {
+            0% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+        }
+
+        /* Анимированный фон */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(100, 181, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(66, 165, 245, 0.3) 0%, transparent 50%);
+            animation: waveMove 20s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+
+        @keyframes waveMove {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            animation: containerAppear 1.5s ease-out 0.3s both;
+        }
+
+        @keyframes containerAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Анимация растворения при переходе на график */
+        .container.fade-out {
+            animation: fadeOutDissolve 1.2s ease-in-out forwards;
+        }
+
+        @keyframes fadeOutDissolve {
+            0% {
+                opacity: 1;
+                filter: blur(0px);
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                filter: blur(10px);
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0;
+                filter: blur(20px);
+                transform: scale(1.1);
+            }
+        }
+
+        /* Эффект тумана при растворении */
+        .container.fade-out::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(200, 230, 255, 0.6) 0%, transparent 70%),
+                radial-gradient(circle at 30% 30%, rgba(173, 216, 230, 0.5) 0%, transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(135, 206, 250, 0.5) 0%, transparent 60%);
+            animation: fogAppear 1.2s ease-in-out forwards;
+            z-index: 9998;
+            pointer-events: none;
+        }
+
+        @keyframes fogAppear {
+            0% {
+                opacity: 0;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Неприметная кнопка перехода в админ-панель */
+        .admin-panel-link {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(100, 181, 246, 0.1);
+            border: 1px solid rgba(100, 181, 246, 0.2);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: #64b5f6;
+            font-size: 0.75rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+            display: none;
+        }
+
+        .admin-panel-link:hover {
+            opacity: 1;
+            background: rgba(100, 181, 246, 0.2);
+            border-color: rgba(100, 181, 246, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .admin-panel-link::before {
+            content: '⚙';
+            margin-right: 4px;
+            font-size: 0.7rem;
+        }
+
+        .header h1 {
+            color: #1565c0;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #64b5f6;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .companies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .company-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .company-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #42a5f5, #2196f3);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .company-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(33, 150, 243, 0.3);
+        }
+
+        .company-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .company-card .company-logo {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            background: rgba(100, 181, 246, 0.1);
+            padding: 10px;
+        }
+
+        .company-card .company-logo-placeholder {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, rgba(100, 181, 246, 0.2) 0%, rgba(66, 165, 245, 0.1) 100%);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64b5f6;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .company-card h3 {
+            color: #1565c0;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .company-card .company-id {
+            color: #64b5f6;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .company-card .company-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .company-card .company-actions .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 83, 80, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 83, 80, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 167, 38, 0.3);
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4);
+        }
+
+        .btn-link {
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .add-company-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
+            border: 2px dashed rgba(100, 181, 246, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .add-company-card:hover {
+            border-color: #42a5f5;
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-5px);
+        }
+
+        .add-company-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 2rem;
+            color: white;
+            font-weight: 300;
+        }
+
+        .add-company-card h3 {
+            color: #1565c0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        /* Модальное окно удаления компании */
+        .delete-modal {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-modal.show {
+            display: flex;
+        }
+
+        .delete-modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .delete-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .delete-modal-header h2 {
+            color: #1565c0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .delete-modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .delete-modal-close:hover {
+            color: #1565c0;
+        }
+
+        .delete-modal-content p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            white-space: pre-line;
+        }
+
+        .delete-modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            color: #1565c0;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #1565c0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #1565c0;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input[type="file"] {
+            padding: 10px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input[type="file"]:hover {
+            border-color: #42a5f5;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #42a5f5;
+            box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.15);
+        }
+
+        .form-group small {
+            display: block;
+            color: #999;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(129, 199, 132, 0.2);
+            color: #2e7d32;
+            border: 1px solid rgba(129, 199, 132, 0.5);
+        }
+
+        .message.error {
+            background: rgba(239, 83, 80, 0.2);
+            color: #c62828;
+            border: 1px solid rgba(239, 83, 80, 0.5);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+        }
+
+        .empty-state p {
+            color: #90caf9;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Адаптивность для планшетов и мобильных */
+        @media (max-width: 1024px) {
+            .companies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .header {
+                padding: 35px 30px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .company-card {
+                padding: 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .companies-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header {
+                padding: 30px 25px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .company-card {
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            .company-card h3 {
+                font-size: 1.3rem;
+            }
+
+            .company-id {
+                font-size: 0.85rem;
+            }
+
+            .company-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+
+            .add-company-card {
+                padding: 25px;
+                min-height: 180px;
+            }
+
+            .add-company-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .admin-panel-link {
+                top: 10px;
+                right: 10px;
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 25px 20px;
+                border-radius: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 6px;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .company-card {
+                padding: 20px;
+                border-radius: 12px;
+            }
+
+            .company-card h3 {
+                font-size: 1.2rem;
+                margin-bottom: 8px;
+            }
+
+            .company-id {
+                font-size: 0.8rem;
+                margin-bottom: 15px;
+            }
+
+            .company-logo {
+                max-width: 120px;
+                max-height: 90px;
+                margin-bottom: 15px;
+            }
+
+            .company-logo-placeholder {
+                width: 120px;
+                height: 90px;
+                font-size: 0.75rem;
+            }
+
+            .btn {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+
+            .add-company-card {
+                padding: 20px;
+                min-height: 160px;
+            }
+
+            .add-company-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+                margin-bottom: 12px;
+            }
+
+            .add-company-card h3 {
+                font-size: 1rem;
+            }
+
+            .admin-panel-link {
+                top: 8px;
+                right: 8px;
+                padding: 5px 8px;
+                font-size: 0.65rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 25px 20px;
+                margin: 10% auto;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 12px 14px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+
+            .delete-modal-content {
+                padding: 25px 20px;
+                width: 90%;
+            }
+
+            .delete-modal-header h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .company-card {
+                padding: 15px;
+            }
+
+            .company-card h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="admin.html" class="admin-panel-link" id="adminPanelLink" title="Админ-панель">Админ</a>
+            <h1>Выбор компании</h1>
+            <p id="headerSubtitle">Выберите компанию для работы</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div id="companiesGrid" class="companies-grid">
+            <div class="empty-state">
+                <p>Загрузка компаний...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования компании -->
+    <div id="editCompanyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать компанию</h2>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div id="editMessage" class="message"></div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editCompanyId">ID компании</label>
+                    <input type="text" id="editCompanyId" name="editCompanyId" readonly 
+                           style="background: #f5f5f5; cursor: not-allowed;">
+                    <small>ID компании нельзя изменить</small>
+                </div>
+                <div class="form-group">
+                    <label for="editCompanyName">Название компании *</label>
+                    <input type="text" id="editCompanyName" name="editCompanyName" required 
+                           placeholder='ООО "СетлТех"'>
+                </div>
+                <div class="form-group">
+                    <label for="editCompanyLogo">Логотип компании</label>
+                    <input type="file" id="editCompanyLogo" name="editCompanyLogo" accept="image/png,image/jpeg,image/jpg,image/gif">
+                    <small>Рекомендуется PNG или JPG. Максимальный размер: 2MB</small>
+                    <div id="editLogoPreview" style="margin-top: 10px; display: none;">
+                        <img id="editLogoPreviewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid rgba(100, 181, 246, 0.3);">
+                    </div>
+                    <div id="editCurrentLogo" style="margin-top: 10px;"></div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="btn btn-danger" onclick="closeEditModal()" style="flex: 1;">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления компании -->
+    <div id="deleteCompanyModal" class="delete-modal">
+        <div class="delete-modal-content">
+            <div class="delete-modal-header">
+                <h2>Удалить компанию?</h2>
+                <span class="delete-modal-close" onclick="cancelDeleteCompany()">&times;</span>
+            </div>
+            <p id="deleteCompanyText">Вы действительно хотите удалить эту компанию?</p>
+            <div class="delete-modal-actions">
+                <button class="btn btn-danger" onclick="confirmDeleteCompany()">Да, удалить</button>
+                <button class="btn btn-secondary" onclick="cancelDeleteCompany()">Нет</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания компании -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Создать новую компанию</h2>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div id="createMessage" class="message"></div>
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="companyId">ID компании *</label>
+                    <input type="text" id="companyId" name="companyId" required 
+                           placeholder="SetlTech" pattern="[a-zA-Z0-9_-]+"
+                           title="Только латинские буквы, цифры, дефисы и подчеркивания">
+                    <small>Используется в URL. Например: SetlTech, setlsoft, company-1</small>
+                </div>
+                <div class="form-group">
+                    <label for="companyName">Название компании *</label>
+                    <input type="text" id="companyName" name="companyName" required 
+                           placeholder='ООО "СетлТех"'>
+                </div>
+                <div class="form-group">
+                    <label for="companyLogo">Логотип компании</label>
+                    <input type="file" id="companyLogo" name="companyLogo" accept="image/png,image/jpeg,image/jpg,image/gif">
+                    <small>Рекомендуется PNG или JPG. Максимальный размер: 2MB</small>
+                    <div id="logoPreview" style="margin-top: 10px; display: none;">
+                        <img id="logoPreviewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid rgba(100, 181, 246, 0.3);">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="btn btn-danger" onclick="closeCreateModal()" style="flex: 1;">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Создать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let isAdmin = false;
+
+        // Загрузить данные текущего пользователя
+        function loadCurrentUser() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (userStr) {
+                try {
+                    currentUser = JSON.parse(userStr);
+                    isAdmin = currentUser.role === 'admin';
+                    
+                    // Показываем кнопку админ-панели только для администраторов
+                    const adminPanelLink = document.getElementById('adminPanelLink');
+                    if (adminPanelLink) {
+                        adminPanelLink.style.display = isAdmin ? 'block' : 'none';
+                    }
+                    
+                    // Обновляем заголовок страницы
+                    const subtitle = document.getElementById('headerSubtitle');
+                    if (subtitle) {
+                        if (isAdmin) {
+                            subtitle.textContent = `Привет, ${currentUser.name}! Выбери компанию.`;
+                        } else {
+                            subtitle.textContent = `Добро пожаловать, ${currentUser.name}! Выберите компанию для работы`;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки данных пользователя:', e);
+                }
+            }
+            
+            // Если пользователь не авторизован, перенаправляем на страницу авторизации
+            if (!currentUser) {
+                window.location.href = 'auth.html';
+                return;
+            }
+        }
+
+        // Показать сообщение
+        function showMessage(text, type = 'success') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} show`;
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+
+        // Загрузить список компаний
+        async function loadCompanies() {
+            try {
+                const response = await fetch('/api/companies');
+                const allCompanies = await response.json() || [];
+                
+                // Фильтруем компании по доступу пользователя
+                let availableCompanies = [];
+                if (isAdmin) {
+                    // Админы видят все компании
+                    availableCompanies = allCompanies;
+                } else {
+                    // Обычные пользователи видят только свои компании
+                    const userCompanies = currentUser.companies || [];
+                    availableCompanies = allCompanies.filter(c => userCompanies.includes(c.id));
+                }
+                
+                renderCompanies(availableCompanies, allCompanies);
+            } catch (error) {
+                console.error('Ошибка загрузки компаний:', error);
+                showMessage('Ошибка загрузки компаний', 'error');
+            }
+        }
+
+        // Загрузить информацию о компании (для получения картинки)
+        async function loadCompanyInfo(companyId) {
+            try {
+                const response = await fetch(`/api/company-info?company=${companyId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Проверяем, что данные есть и содержат logoData
+                    if (data && data.logoData) {
+                        return data.logoData;
+                    }
+                }
+            } catch (e) {
+                console.warn(`Не удалось загрузить информацию о компании ${companyId}:`, e);
+            }
+            return null;
+        }
+
+        // Отобразить список компаний
+        async function renderCompanies(companies, allCompanies = []) {
+            const grid = document.getElementById('companiesGrid');
+            
+            if (companies.length === 0) {
+                if (isAdmin) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <p>Компании не найдены. Создайте первую компанию.</p>
+                        </div>
+                        <div class="add-company-card" onclick="openCreateModal()">
+                            <div class="add-company-icon">+</div>
+                            <h3>Создать новую компанию</h3>
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <p>У вас нет доступа ни к одной компании. Обратитесь к администратору.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            // Загружаем картинки для всех компаний параллельно
+            const companiesWithLogos = await Promise.all(
+                companies.map(async (company) => {
+                    const logoData = await loadCompanyInfo(company.id);
+                    return { ...company, logoData };
+                })
+            );
+
+            let html = companiesWithLogos.map(company => {
+                const logoHtml = company.logoData 
+                    ? `<img src="${company.logoData}" alt="${company.name}" class="company-logo">`
+                    : `<div class="company-logo-placeholder">Нет логотипа</div>`;
+                
+                // Для админов показываем все кнопки, для пользователей только "Открыть график" и "Копировать ссылку"
+                let actionsHtml = '';
+                if (isAdmin) {
+                    actionsHtml = `
+                        <button class="btn btn-warning" onclick="event.stopPropagation(); editCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                            Редактировать
+                        </button>
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
+                            Открыть график
+                        </button>
+                        <button class="btn btn-link" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
+                            <span style="margin-right: 5px;">📋</span>Копировать ссылку
+                        </button>
+                        <button class="btn btn-danger" onclick="event.stopPropagation(); deleteCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                            Удалить
+                        </button>
+                    `;
+                } else {
+                    actionsHtml = `
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
+                            Открыть график
+                        </button>
+                        <button class="btn btn-link" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
+                            <span style="margin-right: 5px;">📋</span>Копировать ссылку
+                        </button>
+                    `;
+                }
+                
+                return `
+                <div class="company-card" onclick="${isAdmin ? '' : `openCompany('${company.id}')`}">
+                    ${logoHtml}
+                    <h3>${company.name}</h3>
+                    <div class="company-id">ID: ${company.id}</div>
+                    <div class="company-actions">
+                        ${actionsHtml}
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            // Добавляем кнопку создания только для админов
+            if (isAdmin) {
+                html += `
+                    <div class="add-company-card" onclick="openCreateModal()">
+                        <div class="add-company-icon">+</div>
+                        <h3>Создать новую компанию</h3>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // Открыть график компании
+        function openCompany(companyId) {
+            // Сохраняем выбранную компанию
+            localStorage.setItem('gantt-company', companyId);
+            
+            // Получаем контейнер для анимации растворения
+            const container = document.querySelector('.container');
+            if (container) {
+                // Запускаем анимацию растворения
+                container.classList.add('fade-out');
+                
+                // Переходим на страницу графика после завершения анимации
+                setTimeout(function() {
+                    window.location.href = `implementation_schedule.html?company=${companyId}`;
+                }, 1200); // Время анимации
+            } else {
+                // Если контейнер не найден, переходим сразу
+                window.location.href = `implementation_schedule.html?company=${companyId}`;
+            }
+        }
+
+        // Копировать ссылку на компанию в буфер обмена
+        async function copyCompanyLink(companyId) {
+            try {
+                // Автоматически определяем текущий домен
+                const baseUrl = window.location.origin;
+                // Создаем ссылку для просмотра (режим просмотра для неавторизованных пользователей)
+                const link = `${baseUrl}/auth.html?company=${companyId}`;
+                
+                // Копируем в буфер обмена
+                await navigator.clipboard.writeText(link);
+                
+                // Показываем сообщение об успехе
+                showMessage(`Ссылка скопирована: ${link}`, 'success');
+            } catch (error) {
+                console.error('Ошибка копирования ссылки:', error);
+                
+                // Fallback для старых браузеров
+                try {
+                    const baseUrl = window.location.origin;
+                    const link = `${baseUrl}/auth.html?company=${companyId}`;
+                    
+                    // Создаем временный textarea для копирования
+                    const textarea = document.createElement('textarea');
+                    textarea.value = link;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    showMessage(`Ссылка скопирована: ${link}`, 'success');
+                } catch (fallbackError) {
+                    console.error('Ошибка fallback копирования:', fallbackError);
+                    // Показываем ссылку в модальном окне или alert
+                    const baseUrl = window.location.origin;
+                    const link = `${baseUrl}/auth.html?company=${companyId}`;
+                    alert(`Скопируйте ссылку вручную:\n\n${link}`);
+                }
+            }
+        }
+
+        let companyToEdit = null;
+        let companyToDelete = null;
+
+        // Открыть модальное окно редактирования компании (только для админов)
+        async function editCompany(companyId, companyName) {
+            if (!isAdmin) {
+                showMessage('Только администраторы могут редактировать компании', 'error');
+                return;
+            }
+
+            companyToEdit = { id: companyId };
+            const modal = document.getElementById('editCompanyModal');
+            const messageEl = document.getElementById('editMessage');
+            const idInput = document.getElementById('editCompanyId');
+            const nameInput = document.getElementById('editCompanyName');
+            const logoInput = document.getElementById('editCompanyLogo');
+            const preview = document.getElementById('editLogoPreview');
+            const previewImg = document.getElementById('editLogoPreviewImg');
+            const currentLogoDiv = document.getElementById('editCurrentLogo');
+
+            if (!modal || !idInput || !nameInput) return;
+
+            // Заполняем форму данными компании
+            idInput.value = companyId;
+            nameInput.value = companyName;
+
+            // Загружаем текущий логотип
+            try {
+                const logoData = await loadCompanyInfo(companyId);
+                if (logoData) {
+                    currentLogoDiv.innerHTML = `
+                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">Текущий логотип:</p>
+                        <img src="${logoData}" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid rgba(100, 181, 246, 0.3);">
+                    `;
+                } else {
+                    currentLogoDiv.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Логотип не загружен</p>';
+                }
+            } catch (e) {
+                currentLogoDiv.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Логотип не загружен</p>';
+            }
+
+            // Сбрасываем предпросмотр нового логотипа
+            preview.style.display = 'none';
+            previewImg.src = '';
+            logoInput.value = '';
+            messageEl.classList.remove('show');
+
+            modal.classList.add('show');
+        }
+
+        // Закрыть модальное окно редактирования
+        function closeEditModal() {
+            const modal = document.getElementById('editCompanyModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            companyToEdit = null;
+        }
+
+        // Сохранить изменения компании
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!companyToEdit || !isAdmin) {
+                return;
+            }
+
+            const companyId = companyToEdit.id;
+            const companyName = document.getElementById('editCompanyName').value.trim();
+            const logoFile = document.getElementById('editCompanyLogo').files[0];
+            const messageEl = document.getElementById('editMessage');
+
+            if (!companyName) {
+                messageEl.textContent = 'Название компании обязательно';
+                messageEl.className = 'message error show';
+                return;
+            }
+
+            try {
+                // Обновляем информацию о компании (название и логотип)
+                let logoData = null;
+                
+                // Если загружен новый логотип, сжимаем его
+                if (logoFile) {
+                    logoData = await compressImage(logoFile);
+                } else {
+                    // Используем текущий логотип
+                    const currentLogo = await loadCompanyInfo(companyId);
+                    if (currentLogo) {
+                        logoData = currentLogo;
+                    }
+                }
+
+                // Сохраняем информацию о компании
+                const response = await fetch(`/api/company-info?company=${companyId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: companyName,
+                        logoData: logoData
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка сохранения изменений');
+                }
+
+                // Обновляем название компании в списке компаний (если API поддерживает)
+                // Пока просто перезагружаем список
+                messageEl.textContent = 'Изменения успешно сохранены';
+                messageEl.className = 'message success show';
+                
+                setTimeout(() => {
+                    closeEditModal();
+                    loadCompanies();
+                }, 1000);
+            } catch (error) {
+                console.error('Ошибка сохранения изменений:', error);
+                messageEl.textContent = 'Ошибка сохранения изменений';
+                messageEl.className = 'message error show';
+            }
+        });
+
+        // Предпросмотр логотипа при редактировании
+        document.getElementById('editCompanyLogo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('editLogoPreview');
+            const previewImg = document.getElementById('editLogoPreviewImg');
+            
+            if (file) {
+                if (!file.type.match('image.*')) {
+                    alert('Пожалуйста, выберите изображение');
+                    e.target.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Размер файла не должен превышать 2MB');
+                    e.target.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // Открыть модальное окно удаления компании (только для админов)
+        function deleteCompany(companyId, companyName) {
+            if (!isAdmin) {
+                showMessage('Только администраторы могут удалять компании', 'error');
+                return;
+            }
+
+            companyToDelete = { id: companyId, name: companyName };
+            const modal = document.getElementById('deleteCompanyModal');
+            const textEl = document.getElementById('deleteCompanyText');
+            
+            if (textEl) {
+                textEl.textContent = `Вы действительно хотите удалить компанию "${companyName}"?\n\nЭто действие удалит все данные компании и не может быть отменено.`;
+            }
+            
+            if (modal) {
+                modal.classList.add('show');
+            }
+        }
+
+        // Закрыть модальное окно удаления
+        function cancelDeleteCompany() {
+            const modal = document.getElementById('deleteCompanyModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            companyToDelete = null;
+        }
+
+        // Подтвердить удаление компании
+        async function confirmDeleteCompany() {
+            if (!companyToDelete) {
+                return;
+            }
+
+            const { id: companyId, name: companyName } = companyToDelete;
+
+            try {
+                const response = await fetch(`/api/companies/${encodeURIComponent(companyId)}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    showMessage('Компания успешно удалена', 'success');
+                    cancelDeleteCompany();
+                    loadCompanies();
+                } else {
+                    showMessage(result.error || 'Ошибка удаления компании', 'error');
+                    cancelDeleteCompany();
+                }
+            } catch (error) {
+                console.error('Ошибка удаления компании:', error);
+                showMessage('Ошибка удаления компании', 'error');
+                cancelDeleteCompany();
+            }
+        }
+
+        // Открыть модальное окно создания (только для админов)
+        function openCreateModal() {
+            if (!isAdmin) {
+                showMessage('Только администраторы могут создавать компании', 'error');
+                return;
+            }
+            document.getElementById('createModal').classList.add('show');
+            document.getElementById('createForm').reset();
+            document.getElementById('createMessage').classList.remove('show');
+            document.getElementById('logoPreview').style.display = 'none';
+            document.getElementById('logoPreviewImg').src = '';
+        }
+
+        // Функция сжатия изображения
+        function compressImage(file, maxWidth = 800, quality = 0.8) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Масштабируем, если изображение слишком большое
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Конвертируем в base64 с заданным качеством
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(compressedDataUrl);
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Предпросмотр логотипа при выборе файла
+        document.getElementById('companyLogo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('logoPreview');
+            const previewImg = document.getElementById('logoPreviewImg');
+            
+            if (file) {
+                // Проверка типа файла
+                if (!file.type.match('image.*')) {
+                    alert('Пожалуйста, выберите изображение');
+                    e.target.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                // Проверка размера (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Размер файла не должен превышать 2MB');
+                    e.target.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // Закрыть модальное окно создания
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('show');
+        }
+
+        // Создать компанию
+        document.getElementById('createForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const companyId = document.getElementById('companyId').value.trim();
+            const companyName = document.getElementById('companyName').value.trim();
+            const logoFile = document.getElementById('companyLogo').files[0];
+            const messageEl = document.getElementById('createMessage');
+
+            if (!companyId || !companyName) {
+                messageEl.textContent = 'Заполните все обязательные поля';
+                messageEl.className = 'message error show';
+                return;
+            }
+
+            // Проверка формата ID
+            if (!/^[a-zA-Z0-9_-]+$/.test(companyId)) {
+                messageEl.textContent = 'ID может содержать только латинские буквы, цифры, дефисы и подчеркивания';
+                messageEl.className = 'message error show';
+                return;
+            }
+
+            try {
+                // Сначала создаем компанию
+                const response = await fetch('/api/companies', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: companyId,
+                        name: companyName
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.ok) {
+                    messageEl.textContent = result.error || 'Ошибка создания компании';
+                    messageEl.className = 'message error show';
+                    return;
+                }
+
+                // Если есть логотип, сохраняем его
+                if (logoFile) {
+                    // Сжимаем изображение перед отправкой
+                    const compressedLogoData = await compressImage(logoFile);
+                    try {
+                        const logoResponse = await fetch(`/api/company-info?company=${companyId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                name: companyName,
+                                logoData: compressedLogoData
+                            })
+                        });
+                        if (!logoResponse.ok) {
+                            throw new Error('Ошибка сохранения логотипа');
+                        }
+                    } catch (err) {
+                        console.warn('Не удалось сохранить логотип:', err);
+                        messageEl.textContent = 'Компания создана, но не удалось сохранить логотип';
+                        messageEl.className = 'message error show';
+                        setTimeout(() => {
+                            closeCreateModal();
+                            loadCompanies();
+                        }, 2000);
+                        return;
+                    }
+                }
+
+                messageEl.textContent = 'Компания успешно создана';
+                messageEl.className = 'message success show';
+                setTimeout(() => {
+                    closeCreateModal();
+                    loadCompanies();
+                }, 1000);
+            } catch (error) {
+                console.error('Ошибка создания компании:', error);
+                messageEl.textContent = 'Ошибка подключения к серверу';
+                messageEl.className = 'message error show';
+            }
+        });
+
+        // Закрытие модального окна при клике вне его
+        document.getElementById('createModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateModal();
+            }
+        });
+
+        // Закрытие модального окна редактирования при клике вне его
+        document.getElementById('editCompanyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // Закрытие модального окна удаления при клике вне его
+        document.getElementById('deleteCompanyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cancelDeleteCompany();
+            }
+        });
+
+        // Закрытие модальных окон по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const editModal = document.getElementById('editCompanyModal');
+                const deleteModal = document.getElementById('deleteCompanyModal');
+                if (editModal && editModal.classList.contains('show')) {
+                    closeEditModal();
+                } else if (deleteModal && deleteModal.classList.contains('show')) {
+                    cancelDeleteCompany();
+                }
+            }
+        });
+
+        // Загрузить компании при загрузке страницы
+        window.addEventListener('DOMContentLoaded', function() {
+            loadCurrentUser();
+            if (currentUser) {
+                loadCompanies();
+            }
+        });
+    </script>
+</body>
+</html>
+

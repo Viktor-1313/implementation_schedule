@@ -36,59 +36,6 @@
             background: var(--color-bg);
             color: var(--color-text);
             line-height: 1.6;
-            opacity: 0;
-            animation: fadeInFromFog 1.5s ease-out forwards;
-        }
-
-        /* Анимация появления из тумана */
-        @keyframes fadeInFromFog {
-            0% {
-                opacity: 0;
-                filter: blur(30px);
-                transform: scale(0.95);
-            }
-            50% {
-                opacity: 0.3;
-                filter: blur(15px);
-                transform: scale(0.98);
-            }
-            100% {
-                opacity: 1;
-                filter: blur(0px);
-                transform: scale(1);
-            }
-        }
-
-        /* Эффект тумана при появлении */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 50% 50%, rgba(200, 230, 255, 0.4) 0%, transparent 60%),
-                radial-gradient(circle at 30% 30%, rgba(173, 216, 230, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 70% 70%, rgba(135, 206, 250, 0.3) 0%, transparent 50%);
-            animation: fogDissolve 1.5s ease-out forwards;
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        @keyframes fogDissolve {
-            0% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(1.1);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(1);
-            }
         }
 
         .container {
@@ -96,18 +43,6 @@
             max-width: 1800px;
             margin: 0 auto;
             padding: 20px;
-            animation: containerAppear 1.5s ease-out 0.3s both;
-        }
-
-        @keyframes containerAppear {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         header {
@@ -117,346 +52,6 @@
             margin-bottom: 30px;
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
-            position: relative;
-        }
-
-        /* Кнопка профиля в правом верхнем углу */
-        .profile-btn {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .profile-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
-        }
-
-        .profile-btn::before {
-            content: '';
-            width: 20px;
-            height: 20px;
-            border: 3px solid white;
-            border-radius: 50%;
-        }
-
-        .profile-btn::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: white;
-            border-radius: 50%;
-            bottom: 8px;
-            right: 8px;
-        }
-
-        /* Кнопка выхода к выбору компаний */
-        .companies-btn {
-            position: absolute;
-            top: 30px;
-            right: 85px;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .companies-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-
-        .companies-btn::before {
-            content: '';
-            width: 18px;
-            height: 18px;
-            border: 2px solid white;
-            border-radius: 4px;
-            position: relative;
-        }
-
-        .companies-btn::after {
-            content: '';
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: white;
-            border-radius: 50%;
-            top: 4px;
-            left: 4px;
-        }
-
-        /* Кнопка выхода */
-        .logout-btn {
-            position: absolute;
-            top: 85px;
-            right: 30px;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .logout-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4);
-        }
-
-        /* Иконка выхода (стрелка влево) */
-        .logout-btn::before {
-            content: '';
-            width: 0;
-            height: 0;
-            border-right: 12px solid white;
-            border-top: 8px solid transparent;
-            border-bottom: 8px solid transparent;
-            position: relative;
-            right: 2px;
-        }
-
-        /* Подсказка для кнопки выхода (как у редактирования этапов) */
-        .logout-btn::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translate(-50%, 0);
-            padding: 4px 8px;
-            border-radius: 6px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            font-size: 11px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            transform-origin: bottom center;
-            margin-bottom: 8px;
-        }
-
-        .logout-btn:hover::after {
-            opacity: 1;
-            transform: translate(-50%, -6px);
-            transition-delay: 1s;
-        }
-
-        /* Модальное окно редактирования профиля */
-        .profile-modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .profile-modal.show {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding-top: 10vh; /* Поднимаем окно выше */
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .profile-modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease;
-            position: relative;
-            margin-top: 10vh; /* Поднимаем окно выше */
-            cursor: default;
-        }
-
-        .profile-modal-header {
-            cursor: move;
-            user-select: none;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .profile-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .profile-modal-header h2 {
-            color: #1565c0;
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-
-        .profile-modal-close {
-            background: none;
-            border: none;
-            font-size: 2rem;
-            color: #999;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .profile-modal-close:hover {
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .profile-form-group {
-            margin-bottom: 25px;
-        }
-
-        .profile-form-group label {
-            display: block;
-            color: #1565c0;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-        }
-
-        .profile-form-group input {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid rgba(100, 181, 246, 0.3);
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-            color: #1565c0;
-        }
-
-        .profile-form-group input:focus {
-            outline: none;
-            border-color: #42a5f5;
-            box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.15);
-            background: white;
-        }
-
-        .profile-form-group input::placeholder {
-            color: #90caf9;
-        }
-
-        .profile-form-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .profile-btn-save {
-            flex: 1;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
-        }
-
-        .profile-btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
-        }
-
-        .profile-btn-cancel {
-            flex: 1;
-            padding: 14px 24px;
-            background: #e0e0e0;
-            color: #666;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .profile-btn-cancel:hover {
-            background: #d0d0d0;
-        }
-
-        .profile-message {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 0.9rem;
-        }
-
-        .profile-message.success {
-            background: rgba(129, 199, 132, 0.2);
-            color: #2e7d32;
-            border: 1px solid rgba(129, 199, 132, 0.5);
-        }
-
-        .profile-message.error {
-            background: rgba(239, 83, 80, 0.2);
-            color: #c62828;
-            border: 1px solid rgba(239, 83, 80, 0.5);
-        }
-
-        .profile-message.show {
-            display: block;
         }
 
         h1 {
@@ -589,14 +184,6 @@
             margin-left: auto;
         }
 
-        .zoom-controls .btn {
-            min-width: auto !important;
-            width: auto !important;
-            justify-content: center;
-            padding: 6px 8px !important;
-            flex-shrink: 0;
-        }
-
         .zoom-label {
             font-size: 12px;
             color: var(--color-text-secondary);
@@ -633,16 +220,6 @@
             color: #ffffff;
             border-radius: 6px;
             border: 1px solid var(--color-primary-hover);
-            width: 180px;
-            justify-content: flex-start;
-            height: 40px;
-            padding-left: 16px;
-        }
-
-        /* Исключаем кнопки масштаба из фиксированной ширины */
-        .zoom-controls .btn-primary,
-        .zoom-controls .btn-secondary {
-            width: auto;
         }
 
         .controls .btn-primary:hover,
@@ -821,9 +398,9 @@
             opacity: 0.75;
         }
 
-        /* Кнопка переключателя Гант / Таблица — центрируем содержимое */
+        /* Кнопка переключателя Гант / Таблица — слегка сужаем горизонтальные отступы,
+           высота берётся из базового .btn и совпадает с соседними кнопками */
         .view-toggle-btn {
-            justify-content: center !important;
             padding-left: 16px;
             padding-right: 16px;
         }
@@ -833,10 +410,8 @@
            чтобы не фризило из-за анимации высоты и отступов */
         .chart-container,
         .table-section {
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                        box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.45s ease, transform 0.45s ease,
+                        box-shadow 0.45s ease, background-color 0.45s ease;
             position: relative;
         }
 
@@ -844,7 +419,7 @@
         .chart-container:not(.view-active),
         .table-section:not(.view-active) {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
             max-height: 0;
             overflow: hidden;
             margin-bottom: 0;
@@ -866,32 +441,17 @@
         .view-hidden {
             max-height: 0;
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
             overflow: hidden;
             pointer-events: none;
             margin-bottom: 0 !important;
             padding-top: 0 !important;
             padding-bottom: 0 !important;
-            transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                        box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                        margin-bottom 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        padding-top 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-                        padding-bottom 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Подсказка для кнопки "Сбросить план" в стиле редакции этапов */
         .reset-plan-btn {
             position: relative;
-        }
-        
-        /* Блокировка кнопки "Сбросить план" в режиме просмотра */
-        .reset-plan-btn.view-mode-disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
         }
 
         .reset-plan-btn::after {
@@ -1052,44 +612,6 @@
             text-align: center;
             font-size: 11px;
             box-sizing: border-box;
-            flex-shrink: 0;
-        }
-
-        /* Анимация для колонки "Ответственный" в Ганте */
-        .gantt-details-cell.responsible-cell {
-            flex-basis: 0 !important;
-            width: 0 !important;
-            min-width: 0 !important;
-            max-width: 0 !important;
-            opacity: 0;
-            overflow: hidden;
-            padding-left: 0;
-            padding-right: 0;
-            margin-right: 0;
-            border-right: none;
-            flex-shrink: 0;
-            flex-grow: 0;
-            transition: flex-basis 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        min-width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        width 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        padding-left 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        padding-right 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        margin-right 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        border-right 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body.show-responsible .gantt-details-cell.responsible-cell {
-            flex-basis: 200px !important;
-            width: 200px !important;
-            min-width: 150px !important;
-            max-width: 200px !important;
-            opacity: 1;
-            padding-left: 6px;
-            padding-right: 6px;
-            margin-right: 0;
-            border-right: 1px solid var(--color-border);
         }
 
         .gantt-details-input {
@@ -1344,36 +866,11 @@
 
         /* Колонка "Ответственный" в таблице задач — управляем видимостью через класс на body */
         .table-col-responsible {
-            display: table-cell;
-            width: 0 !important;
-            min-width: 0 !important;
-            max-width: 0 !important;
-            opacity: 0;
-            overflow: hidden;
-            padding-left: 0;
-            padding-right: 0;
-            border-left: none;
-            border-right: none;
-            white-space: nowrap;
-            transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        min-width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                        padding-left 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        padding-right 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        border-left 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
-                        border-right 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
         }
 
         body.show-responsible .table-col-responsible {
-            width: 200px !important;
-            min-width: 150px !important;
-            max-width: 300px !important;
-            opacity: 1;
-            padding-left: 12px;
-            padding-right: 12px;
-            border-left: 1px solid var(--color-border);
-            border-right: 1px solid var(--color-border);
+            display: table-cell;
         }
 
         /* Подсказка-комментарий для ячеек Ганта */
@@ -1512,8 +1009,6 @@
             margin-bottom: 20px;
             margin-top: 0;
             overflow-x: auto;
-            overflow-y: auto;
-            max-height: 600px;
             border-bottom: 3px solid var(--color-primary);
         }
 
@@ -1546,10 +1041,6 @@
             font-size: 13px;
             text-align: center;
             vertical-align: middle;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         td {
@@ -1995,9 +1486,6 @@
 <body>
     <div class="container">
         <header>
-            <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" style="display: none;" onclick="logout()"></button>
-            <button class="companies-btn" id="companiesBtn" title="Выбор компании" style="display: none;" onclick="goToCompanies()"></button>
-            <button class="profile-btn" id="profileBtn" title="Редактировать профиль" style="display: none;"></button>
             <h1>
                 <span class="header-icon"></span>
                 <span>График внедрения и обучения системы ICONA</span>
@@ -2041,14 +1529,16 @@
         </div>
 
         <div class="controls">
-            <button class="btn btn-primary" onclick="openPDFExportModal()">
+            <button class="btn btn-primary" onclick="exportPDF()">
                 <span class="btn-icon btn-icon-pdf"></span>
                 <span>Выгрузить в PDF</span>
             </button>
-            <button class="btn btn-primary" onclick="openExcelExportModal()">
-                <span class="btn-icon btn-icon-excel"></span>
-                <span>Выгрузить в Excel</span>
-            </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="btn btn-primary" onclick="openExcelExportModal()">
+                    <span class="btn-icon btn-icon-excel"></span>
+                    <span>Выгрузить в Excel</span>
+                </button>
+            </div>
             <button class="btn btn-secondary view-toggle-btn" onclick="toggleView()">
                 <span class="btn-icon btn-icon-toggle"></span>
                 <span class="view-toggle-label">
@@ -2215,30 +1705,6 @@
         </div>
     </div>
 
-    <div id="pdfExportModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Выгрузка в PDF</h2>
-                <span class="close" onclick="closePDFExportModal()">&times;</span>
-            </div>
-            <p style="margin-bottom: 12px;">
-                Будет сформирован PDF-файл с диаграммой Ганта в выбранном масштабе и детальной таблицей задач с комментариями.
-            </p>
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="pdfScaleMode">Масштаб представления Ганта:</label>
-                <select id="pdfScaleMode">
-                    <option value="day">Дни</option>
-                    <option value="week">Недели</option>
-                    <option value="month">Месяцы</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-primary" onclick="confirmPDFExport()">Выгрузить</button>
-                <button class="btn btn-secondary" onclick="closePDFExportModal()">Отмена</button>
-            </div>
-        </div>
-    </div>
-
     <div id="excelExportModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2325,134 +1791,11 @@
         </div>
     </div>
 
-    <!-- Модальное окно для ошибок валидации дат -->
-    <div id="dateValidationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Некорректный интервал дат</h2>
-                <span class="close" onclick="closeDateValidationModal()">&times;</span>
-            </div>
-            <p id="dateValidationMessage">
-                Дата окончания не может быть раньше даты начала.
-            </p>
-            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
-                <button class="btn btn-primary" onclick="closeDateValidationModal()">Понятно</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Небольшой toast для сообщений по базовому плану -->
     <div id="baselineToast" class="baseline-toast"></div>
 
-    <!-- Модальное окно редактирования профиля -->
-    <div id="profileModal" class="profile-modal">
-        <div class="profile-modal-content">
-            <div class="profile-modal-header">
-                <h2>Редактирование профиля</h2>
-                <button class="profile-modal-close" onclick="closeProfileModal()">&times;</button>
-            </div>
-            <div id="profileMessage" class="profile-message"></div>
-            <form id="profileForm">
-                <div class="profile-form-group">
-                    <label for="profileLogin">Логин</label>
-                    <input type="text" id="profileLogin" name="login" required placeholder="Введите новый логин">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePassword">Новый пароль</label>
-                    <input type="password" id="profilePassword" name="password" placeholder="Оставьте пустым, чтобы не менять">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePasswordConfirm">Подтвердите пароль</label>
-                    <input type="password" id="profilePasswordConfirm" name="passwordConfirm" placeholder="Подтвердите новый пароль">
-                </div>
-                <div class="profile-form-actions">
-                    <button type="button" class="profile-btn-cancel" onclick="closeProfileModal()">Отмена</button>
-                    <button type="submit" class="profile-btn-save">Сохранить изменения</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно редактирования профиля -->
-    <div id="profileModal" class="profile-modal">
-        <div class="profile-modal-content">
-            <div class="profile-modal-header">
-                <h2>Редактирование профиля</h2>
-                <button class="profile-modal-close" onclick="closeProfileModal()">&times;</button>
-            </div>
-            <div id="profileMessage" class="profile-message"></div>
-            <form id="profileForm">
-                <div class="profile-form-group">
-                    <label for="profileLogin">Логин</label>
-                    <input type="text" id="profileLogin" name="login" required placeholder="Введите новый логин">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePassword">Новый пароль</label>
-                    <input type="password" id="profilePassword" name="password" placeholder="Оставьте пустым, чтобы не менять">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePasswordConfirm">Подтвердите пароль</label>
-                    <input type="password" id="profilePasswordConfirm" name="passwordConfirm" placeholder="Подтвердите новый пароль">
-                </div>
-                <div class="profile-form-actions">
-                    <button type="button" class="profile-btn-cancel" onclick="closeProfileModal()">Отмена</button>
-                    <button type="submit" class="profile-btn-save">Сохранить изменения</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         // Данные о задачах из Excel файла
-        // ========== ПОЛУЧЕНИЕ COMPANY ИЗ URL ==========
-        function getCompanyFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('company') || localStorage.getItem('gantt-company') || null;
-        }
-
-        const currentCompany = getCompanyFromURL();
-        if (currentCompany) {
-            localStorage.setItem('gantt-company', currentCompany);
-        }
-
-        // ========== РЕЖИМ ДОСТУПА ==========
-        // Проверяем режим из localStorage (edit или view)
-        const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
-        const isViewMode = ganttMode === 'view';
-        
-        // Функция проверки возможности редактирования
-        function canEdit() {
-            if (isViewMode) {
-                return false;
-            }
-            return true;
-        }
-        
-        // Показываем индикатор режима просмотра
-        if (isViewMode) {
-            document.addEventListener('DOMContentLoaded', function() {
-                const style = document.createElement('style');
-                style.textContent = `
-                    body::after {
-                        content: 'Режим просмотра';
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: rgba(100, 180, 255, 0.9);
-                        color: white;
-                        padding: 10px 20px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        z-index: 10000;
-                        box-shadow: 0 4px 15px rgba(100, 180, 255, 0.3);
-                        pointer-events: none;
-                    }
-                `;
-                document.head.appendChild(style);
-            });
-        }
-
         let projectData = [
             {
                 stage: "Подготовка новой ветки ПО",
@@ -2676,7 +2019,6 @@
         let viewStartDate = null; // если задано, используем как левую границу отображения
         let viewEndDate = null;   // если задано, используем как правую границу отображения
         let isExporting = false;  // специальный режим отрисовки для PDF
-        let saveTimeout = null; // таймер для отложенного сохранения
 
         // Текущая ячейка, для которой открыто меню статуса
         let currentStatusTarget = null; // { taskId, dateStrs }
@@ -2785,11 +2127,10 @@
                     name: companyName,
                     logoData: companyLogoData
                 };
-                const companyParam = currentCompany ? `?company=${currentCompany}` : '';
-                await fetch(`/api/company-info${companyParam}`, {
+                await fetch('/api/company-info', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...payload, company: currentCompany })
+                    body: JSON.stringify(payload)
                 });
             } catch (e) {
                 // На локальной машине/без сервера просто игнорируем ошибку
@@ -2798,10 +2139,6 @@
         }
 
         function handleCompanyNameInput(event) {
-            if (!canEdit()) {
-                event.preventDefault();
-                return; // Блокируем редактирование названия компании в режиме просмотра
-            }
             const raw = event.target.textContent || '';
             const placeholder = event.target.getAttribute('data-placeholder') || 'Введите название компании';
 
@@ -2828,10 +2165,6 @@
         }
 
         function handleCompanyLogoChange(event) {
-            if (!canEdit()) {
-                event.target.value = ''; // Сбрасываем выбор файла
-                return; // Блокируем загрузку логотипа в режиме просмотра
-            }
             const file = event.target.files && event.target.files[0];
             if (!file) return;
 
@@ -2853,8 +2186,7 @@
         async function loadCompanyInfo() {
             // 1. Пытаемся загрузить с сервера, если он есть
             try {
-                const companyParam = currentCompany ? `?company=${currentCompany}` : '';
-                const res = await fetch(`/api/company-info${companyParam}`);
+                const res = await fetch('/api/company-info');
                 if (res.ok) {
                     const data = await res.json();
                     if (data && (data.name || data.logoData)) {
@@ -3153,179 +2485,10 @@
             };
         }
 
-        // Построить полный snapshot состояния графика со всеми данными
-        function createFullGanttSnapshot() {
-            return {
-                version: '1.0',
-                savedAt: new Date().toISOString(),
-                startDate: startDate ? formatDateKey(startDate) : null,
-                tasks: tasks.map(task => ({
-                    id: task.id,
-                    stage: task.stage || '',
-                    substage: task.substage || '',
-                    controlType: task.controlType || '',
-                    name: task.name || '',
-                    days: task.days || 0,
-                    startDate: task.startDate ? formatDateKey(task.startDate) : null,
-                    endDate: task.endDate ? formatDateKey(task.endDate) : null,
-                    dates: Array.isArray(task.dates) ? task.dates.map(d => formatDateKey(d)) : [],
-                    status: task.status || 'pending',
-                    dateStatuses: task.dateStatuses || {},
-                    dateComments: task.dateComments || {},
-                    responsible: task.responsible || '',
-                    baselineDates: Array.isArray(task.baselineDates) ? task.baselineDates.map(d => formatDateKey(d)) : [],
-                    baselineStartDate: task.baselineStartDate ? formatDateKey(task.baselineStartDate) : null,
-                    baselineEndDate: task.baselineEndDate ? formatDateKey(task.baselineEndDate) : null
-                })),
-                settings: {
-                    ganttBarStyle: ganttBarStyle || 'dots',
-                    showResponsible: showResponsible || false,
-                    zoomLevel: zoomLevel || 1
-                }
-            };
-        }
-
-        // Сохранить полное состояние графика на сервер
-        async function saveFullGanttState() {
-            try {
-                if (!currentCompany) {
-                    console.warn('Компания не указана, сохранение пропущено');
-                    return;
-                }
-                const snapshot = createFullGanttSnapshot();
-                const companyParam = `?company=${currentCompany}`;
-                const response = await fetch(`/api/gantt-state${companyParam}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(snapshot)
-                });
-                if (response.ok) {
-                    console.log('✅ Полное состояние графика сохранено');
-                } else {
-                    console.warn('⚠️ Не удалось сохранить полное состояние графика');
-                }
-            } catch (e) {
-                console.warn('Не удалось сохранить полное состояние графика на сервере:', e);
-            }
-        }
-
-        // Автоматическое сохранение с задержкой (debounce)
-        function autoSaveGanttState() {
-            // Очищаем предыдущий таймер
-            if (saveTimeout) {
-                clearTimeout(saveTimeout);
-            }
-            // Устанавливаем новый таймер на 2 секунды
-            saveTimeout = setTimeout(() => {
-                saveFullGanttState();
-            }, 2000);
-        }
-
-        // Загрузить полное состояние графика с сервера
-        async function loadFullGanttState() {
-            try {
-                if (!currentCompany) {
-                    console.warn('Компания не указана, загрузка пропущена');
-                    return false;
-                }
-                const companyParam = `?company=${currentCompany}`;
-                const res = await fetch(`/api/gantt-state${companyParam}`);
-                if (!res.ok) return false;
-                const data = await res.json();
-                if (!data || !data.tasks || !Array.isArray(data.tasks)) return false;
-
-                // Проверяем версию данных (старый формат baseline или новый полный формат)
-                const isFullFormat = data.version && data.version === '1.0';
-
-                if (isFullFormat) {
-                    // Восстанавливаем startDate проекта
-                    if (data.startDate) {
-                        const parts = data.startDate.split('-');
-                        startDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                    }
-
-                    // Восстанавливаем задачи
-                    tasks = data.tasks.map(task => {
-                        const taskObj = {
-                            id: task.id,
-                            stage: task.stage || '',
-                            substage: task.substage || '',
-                            controlType: task.controlType || '',
-                            name: task.name || '',
-                            days: task.days || 0,
-                            status: task.status || 'pending',
-                            dateStatuses: task.dateStatuses || {},
-                            dateComments: task.dateComments || {},
-                            responsible: task.responsible || '',
-                            dates: [],
-                            startDate: null,
-                            endDate: null
-                        };
-
-                        // Восстанавливаем даты
-                        if (task.dates && Array.isArray(task.dates)) {
-                            taskObj.dates = task.dates.map(dateStr => {
-                                const parts = dateStr.split('-');
-                                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                            });
-                            if (taskObj.dates.length > 0) {
-                                taskObj.startDate = taskObj.dates[0];
-                                taskObj.endDate = taskObj.dates[taskObj.dates.length - 1];
-                            }
-                        }
-
-                        // Восстанавливаем baseline данные
-                        if (task.baselineDates && Array.isArray(task.baselineDates)) {
-                            taskObj.baselineDates = task.baselineDates;
-                        }
-                        if (task.baselineStartDate) {
-                            const parts = task.baselineStartDate.split('-');
-                            taskObj.baselineStartDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                        }
-                        if (task.baselineEndDate) {
-                            const parts = task.baselineEndDate.split('-');
-                            taskObj.baselineEndDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                        }
-
-                        return taskObj;
-                    });
-
-                    // Восстанавливаем настройки
-                    if (data.settings) {
-                        if (data.settings.ganttBarStyle) ganttBarStyle = data.settings.ganttBarStyle;
-                        if (data.settings.showResponsible !== undefined) showResponsible = data.settings.showResponsible;
-                        if (data.settings.zoomLevel) zoomLevel = data.settings.zoomLevel;
-                    }
-
-                    // Обновляем счётчик ID
-                    if (tasks.length > 0) {
-                        nextTaskId = Math.max(...tasks.map(t => t.id)) + 1;
-                    }
-
-                    // Перерисовываем график и таблицу
-                    updateStatistics();
-                    renderGantt();
-                    renderTable();
-                    renderStageTabs();
-                    autoSaveGanttState(); // Автоматическое сохранение после загрузки
-
-                    console.log('✅ Полное состояние графика загружено');
-                    return true;
-                } else {
-                    // Старый формат baseline - используем существующую логику
-                    return false;
-                }
-            } catch (e) {
-                console.warn('Не удалось загрузить полное состояние графика с сервера:', e);
-                return false;
-            }
-        }
-
         // Сохранить baseline на сервер (без диалогов, просто best-effort)
         async function saveBaselineToServer(snapshot) {
             try {
-                const companyParam = currentCompany ? `?company=${currentCompany}` : '';
-                await fetch(`/api/gantt-state${companyParam}`, {
+                await fetch('/api/gantt-state', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(snapshot)
@@ -3338,8 +2501,7 @@
         // Загрузить baseline-план с сервера (если он есть)
         async function loadBaselineFromServer() {
             try {
-                const companyParam = currentCompany ? `?company=${currentCompany}` : '';
-                const res = await fetch(`/api/gantt-state${companyParam}`);
+                const res = await fetch('/api/gantt-state');
                 if (!res.ok) return;
                 const data = await res.json();
                 if (!data || !Array.isArray(data.tasks)) return;
@@ -3376,21 +2538,6 @@
             if (modal) {
                 modal.style.display = 'none';
             }
-        }
-
-        // Модальное окно для ошибок валидации дат
-        function openDateValidationModal(message) {
-            const modal = document.getElementById('dateValidationModal');
-            const msgEl = document.getElementById('dateValidationMessage');
-            if (!modal || !msgEl) return;
-            msgEl.textContent = message || 'Дата окончания не может быть раньше даты начала.';
-            modal.style.display = 'block';
-        }
-
-        function closeDateValidationModal() {
-            const modal = document.getElementById('dateValidationModal');
-            if (!modal) return;
-            modal.style.display = 'none';
         }
 
         function confirmBaselineOverwrite() {
@@ -3430,13 +2577,6 @@
         // Вспомогательная функция: применить ширину к элементу колонки
         function applyColumnWidth(element, key) {
             if (!element || !ganttColumnWidths[key]) return;
-            
-            // Для колонки "Ответственный" CSS управляет шириной через анимацию
-            // Не применяем инлайн-стили, чтобы не перезаписывать CSS анимацию
-            if (key === 'responsible') {
-                return;
-            }
-            
             const w = ganttColumnWidths[key];
             element.style.width = w + 'px';
             element.style.minWidth = w + 'px';
@@ -3488,9 +2628,6 @@
             span.textContent = displayName;
 
             span.addEventListener('dblclick', () => {
-                if (!canEdit()) {
-                    return; // Блокируем редактирование в режиме просмотра
-                }
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'gantt-task-input';
@@ -3651,17 +2788,12 @@
             const header = document.createElement('div');
             header.className = 'gantt-header';
 
-            // Обертка для первой строки (label + details header)
-            const headerFirstRow = document.createElement('div');
-            headerFirstRow.className = 'gantt-header-first-row';
-            headerFirstRow.style.display = 'flex';
-
             const headerLabel = document.createElement('div');
             headerLabel.className = 'gantt-header-label';
             headerLabel.textContent = 'Задача';
             applyColumnWidth(headerLabel, 'label');
             addColumnResizer(headerLabel, 'label');
-            headerFirstRow.appendChild(headerLabel);
+            header.appendChild(headerLabel);
 
             // Заголовки для дополнительных колонок: даты и рабочие дни
             const detailsHeader = document.createElement('div');
@@ -3670,7 +2802,7 @@
                 <div class="gantt-details-cell">Дата начала</div>
                 <div class="gantt-details-cell">Дата окончания</div>
                 <div class="gantt-details-cell">Рабочих дней</div>
-                <div class="gantt-details-cell responsible-cell">Ответственный</div>
+                ${showResponsible ? '<div class="gantt-details-cell">Ответственный</div>' : ''}
             `;
 
             const headerCells = detailsHeader.querySelectorAll('.gantt-details-cell');
@@ -3685,12 +2817,11 @@
             if (headerCells[2]) {
                 applyColumnWidth(headerCells[2], 'days');
             }
-            if (headerCells[3]) {
+            if (showResponsible && headerCells[3]) {
                 applyColumnWidth(headerCells[3], 'responsible');
             }
 
-            headerFirstRow.appendChild(detailsHeader);
-            header.appendChild(headerFirstRow);
+            header.appendChild(detailsHeader);
 
             const datesRow = document.createElement('div');
             datesRow.className = 'gantt-header-dates-row';
@@ -3843,22 +2974,23 @@
                 detailsRow.appendChild(endCell);
                 detailsRow.appendChild(daysCell);
 
-                // Ячейка "Ответственный" всегда создается для анимации
-                const respCell = document.createElement('div');
-                respCell.className = 'gantt-details-cell responsible-cell';
-                if (task.responsible) {
-                    respCell.setAttribute('data-tooltip', task.responsible);
+                if (showResponsible) {
+                    const respCell = document.createElement('div');
+                    respCell.className = 'gantt-details-cell';
+                    if (task.responsible) {
+                        respCell.setAttribute('data-tooltip', task.responsible);
+                    }
+                    const respInput = document.createElement('input');
+                    respInput.type = 'text';
+                    respInput.className = 'gantt-details-input';
+                    respInput.value = task.responsible || '';
+                    respInput.setAttribute('data-index', index);
+                    respInput.setAttribute('data-field', 'responsible');
+                    respInput.addEventListener('change', onTaskTableInputChange);
+                    respCell.appendChild(respInput);
+                    applyColumnWidth(respCell, 'responsible');
+                    detailsRow.appendChild(respCell);
                 }
-                const respInput = document.createElement('input');
-                respInput.type = 'text';
-                respInput.className = 'gantt-details-input';
-                respInput.value = task.responsible || '';
-                respInput.setAttribute('data-index', index);
-                respInput.setAttribute('data-field', 'responsible');
-                respInput.addEventListener('change', onTaskTableInputChange);
-                respCell.appendChild(respInput);
-                applyColumnWidth(respCell, 'responsible');
-                detailsRow.appendChild(respCell);
                 row.appendChild(detailsRow);
 
             timelineUnits.forEach((unit, unitIdx) => {
@@ -3950,10 +3082,6 @@
                             event.stopPropagation();
                             handleTaskRowClick(task.id, event);
 
-                            if (!canEdit()) {
-                                return; // Блокируем изменение статуса в режиме просмотра
-                            }
-
                             if (ganttBarStyle === 'segments') {
                                 // Режим полос — меняем статус по всей задаче
                                 const allDates = task.dates.map(d => formatDateKey(d));
@@ -4005,10 +3133,6 @@
                 });
 
                 row.addEventListener('drop', (e) => {
-                    if (!canEdit()) {
-                        e.preventDefault();
-                        return;
-                    }
                     if (draggingTaskId === null || draggingTaskId === task.id) return;
                     e.preventDefault();
                     row.classList.remove('gantt-row-drop-target');
@@ -4164,12 +3288,8 @@
                 }
 
                 // Drag & drop для таблицы
-                row.draggable = canEdit(); // Блокируем drag&drop в режиме просмотра
+                row.draggable = true;
                 row.addEventListener('dragstart', (e) => {
-                    if (!canEdit()) {
-                        e.preventDefault();
-                        return;
-                    }
                     draggingTaskId = task.id;
                     row.classList.add('dragging');
                     if (e.dataTransfer) {
@@ -4194,10 +3314,6 @@
                 });
 
                 row.addEventListener('drop', (e) => {
-                    if (!canEdit()) {
-                        e.preventDefault();
-                        return;
-                    }
                     if (draggingTaskId === null || draggingTaskId === task.id) return;
                     e.preventDefault();
                     row.classList.remove('table-row-drop-target');
@@ -4245,11 +3361,6 @@
 
         // Обработка изменения полей в детальной таблице
         function onTaskTableInputChange(event) {
-            if (!canEdit()) {
-                event.preventDefault();
-                event.target.blur();
-                return; // Блокируем редактирование в режиме просмотра
-            }
             const input = event.target;
             const index = parseInt(input.getAttribute('data-index'), 10);
             const field = input.getAttribute('data-field');
@@ -4291,28 +3402,8 @@
                 task.control = input.value || '';
             } else if (field === 'startDate') {
                 task.startDate = parseDateFromInput(input.value);
-
-                // Если уже есть дата окончания и она стала раньше даты начала — подтягиваем её вперёд
-                if (task.startDate && task.endDate && task.endDate < task.startDate) {
-                    task.endDate = new Date(task.startDate);
-                    // Обновляем все связанные инпуты даты окончания (и в таблице, и в Ганте)
-                    document
-                        .querySelectorAll(`input[data-index="${index}"][data-field="endDate"]`)
-                        .forEach(inp => {
-                            inp.value = formatDateForInput(task.endDate);
-                        });
-                }
             } else if (field === 'endDate') {
-                const newEnd = parseDateFromInput(input.value);
-
-                // Правило: дата окончания не может быть раньше даты начала
-                if (task.startDate && newEnd && newEnd < task.startDate) {
-                    task.endDate = new Date(task.startDate);
-                    input.value = formatDateForInput(task.endDate);
-                    openDateValidationModal('Дата окончания не может быть раньше даты начала.');
-                } else {
-                    task.endDate = newEnd;
-                }
+                task.endDate = parseDateFromInput(input.value);
             } else if (field === 'days') {
                 const val = parseInt(input.value, 10);
                 task.days = isNaN(val) || val < 0 ? 0 : val;
@@ -4438,7 +3529,6 @@
             // Всегда обновляем диаграмму Ганта, чтобы обновить input поля в ней
             renderGantt();
             renderTable();
-            autoSaveGanttState(); // Автоматическое сохранение после изменения задачи
         }
 
         // Пересчитать все задачи после указанного индекса в строгой последовательности
@@ -4511,9 +3601,6 @@
 
         // Вставка новой задачи под выбранной (Insert)
         function insertTaskBelowSelected() {
-            if (!canEdit()) {
-                return; // Блокируем добавление задач в режиме просмотра
-            }
             const baseId = getPrimarySelectedTaskId();
             if (baseId === null) return;
 
@@ -4557,14 +3644,10 @@
 
             // Выделяем только что созданную строку
             selectTask(newTask.id);
-            autoSaveGanttState(); // Автоматическое сохранение после добавления задачи
         }
 
         // Удаление выбранных задач (Delete)
         function deleteSelectedTask() {
-            if (!canEdit()) {
-                return; // Блокируем удаление задач в режиме просмотра
-            }
             if (!selectedTaskIds.size) return;
 
             // Получаем индексы всех выделенных задач
@@ -4618,7 +3701,6 @@
             renderTable();
 
             applySelectionHighlight();
-            autoSaveGanttState(); // Автоматическое сохранение после удаления задачи
         }
 
         // Окно подтверждения удаления
@@ -4643,329 +3725,129 @@
             cancelDeleteTask();
         }
 
-// Экспорт в PDF: детальный Гант по выбранному масштабу + таблица задач с комментариями
-function exportPDF(scaleMode = 'day') {
-    if (!tasks || !tasks.length) return;
+        // Экспорт в PDF
+        function exportPDF() {
+            const chartContainer = document.querySelector('.chart-container');
+            const ganttChart = document.getElementById('ganttChart');
+            const logoEl = document.getElementById('companyLogo');
+            const nameDisplay = document.getElementById('companyNameDisplay');
 
-    const logoEl = document.getElementById('companyLogo');
-    const nameDisplay = document.getElementById('companyNameDisplay');
+            if (!chartContainer || !ganttChart) return;
 
-    // Контейнер для экспорта
-    const exportWrapper = document.createElement('div');
-    exportWrapper.style.padding = '16px';
-    exportWrapper.style.background = '#ffffff';
-    exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'sans-serif';
-    exportWrapper.style.fontSize = '10px';
-    exportWrapper.style.color = '#000';
+            // Сохраняем текущие настройки вида
+            const prevViewStart = viewStartDate;
+            const prevViewEnd = viewEndDate;
+            const prevIsExporting = isExporting;
 
-    // --- Шапка с логотипом и названием компании ---
-    const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.alignItems = 'center';
-    header.style.gap = '16px';
-    header.style.marginBottom = '12px';
+            // Для экспорта показываем весь проект до последней задачи.
+            // ВАЖНО: zoomLevel не трогаем, чтобы сохранить режим "дни / недели / месяцы".
+            isExporting = true;
+            viewStartDate = null;
+            viewEndDate = null;
+            renderGantt();
 
-    if (logoEl) {
-        const logoClone = logoEl.cloneNode(true);
-        logoClone.style.width = '40px';
-        logoClone.style.height = '40px';
-        logoClone.style.borderRadius = '8px';
-        logoClone.style.border = '1px solid #e0e0e0';
-        logoClone.style.objectFit = 'contain';
-        logoClone.style.background = '#fafafa';
-        logoClone.style.padding = '4px';
-        header.appendChild(logoClone);
-    }
+            // Готовим временный контейнер для экспорта
+            const exportWrapper = document.createElement('div');
+            exportWrapper.style.padding = '16px';
+            exportWrapper.style.background = '#ffffff';
+            exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'sans-serif';
 
-    const nameBlock = document.createElement('div');
-    const title = document.createElement('div');
-    title.textContent = 'График внедрения и обучения системы ICONA';
-    title.style.fontSize = '14px';
-    title.style.fontWeight = '600';
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.alignItems = 'center';
+            header.style.gap = '16px';
+            header.style.marginBottom = '16px';
 
-    const company = document.createElement('div');
-    const currentNameText =
-        nameDisplay && nameDisplay.classList.contains('has-value')
-            ? nameDisplay.textContent
-            : '';
-    company.textContent = currentNameText || 'Название компании';
-    company.style.marginTop = '2px';
-    company.style.fontSize = '12px';
-    company.style.fontWeight = '600';
-
-    nameBlock.appendChild(title);
-    nameBlock.appendChild(company);
-    header.appendChild(nameBlock);
-    exportWrapper.appendChild(header);
-
-    // --- Подготовка временной шкалы по выбранному масштабу ---
-    const timelineUnits = buildExportTimeline(scaleMode);
-    if (!timelineUnits.length) return;
-
-    const scaleLabel = getExportScaleLabel(scaleMode);
-    const ganttTitle = document.createElement('div');
-    ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
-    ganttTitle.style.fontSize = '12px';
-    ganttTitle.style.fontWeight = '600';
-    ganttTitle.style.margin = '4px 0 6px 0';
-    exportWrapper.appendChild(ganttTitle);
-
-    // Функция для создания ячейки с границей
-    const addCellBorder = (td) => {
-        td.style.border = '1px solid #cccccc';
-        td.style.padding = '2px 3px';
-    };
-
-    // Цвета статусов
-    const statusColors = {
-        pending: '#1e88e5',
-        'in-progress': '#ff9800',
-        completed: '#4caf50',
-        'weekend-manual': '#ffe0e0',
-        'holiday-manual': '#fff9c4'
-    };
-
-        // Разбиваем временную шкалу на чанки для разбиения по страницам.
-        // В PDF ширина страницы ограничена, поэтому если брать слишком много
-        // "дней" на один лист, правые колонки просто обрезаются браузером.
-        // Уменьшаем количество дней на страницу, чтобы все даты помещались
-        // в границы листа и не "терялись" между страницами.
-        const unitsPerPage = scaleMode === 'day' ? 22 : scaleMode === 'week' ? 12 : 6;
-    const chunks = [];
-    for (let i = 0; i < timelineUnits.length; i += unitsPerPage) {
-        chunks.push(timelineUnits.slice(i, i + unitsPerPage));
-    }
-
-    // Создаём таблицу для каждого чанка (страница)
-    chunks.forEach((chunk, chunkIdx) => {
-        if (chunkIdx > 0) {
-            const pageBreak = document.createElement('div');
-            pageBreak.style.pageBreakBefore = 'always';
-            pageBreak.style.height = '12px';
-            exportWrapper.appendChild(pageBreak);
-        }
-
-        const ganttTable = document.createElement('table');
-        ganttTable.style.borderCollapse = 'collapse';
-        ganttTable.style.width = '100%';
-        ganttTable.style.fontSize = '8px';
-
-        // Заголовок таблицы
-        const headerTr = document.createElement('tr');
-        const baseHeaders = ['Задача', 'Ответственный', 'Дата начала', 'Дата окончания', 'Рабочих дней'];
-        baseHeaders.forEach(text => {
-            const th = document.createElement('th');
-            th.textContent = text;
-            th.style.background = '#f5f5f5';
-            th.style.color = '#222222';
-            th.style.fontWeight = '600';
-            th.style.fontSize = '8px';
-            th.style.whiteSpace = 'nowrap';
-            addCellBorder(th);
-            headerTr.appendChild(th);
-        });
-
-        chunk.forEach(unit => {
-            const th = document.createElement('th');
-            th.textContent = unit.label;
-            th.style.background = '#e3f2fd';
-            th.style.color = '#222222';
-            th.style.fontWeight = '600';
-            th.style.fontSize = '7px';
-            th.style.whiteSpace = 'nowrap';
-            addCellBorder(th);
-            headerTr.appendChild(th);
-        });
-
-        ganttTable.appendChild(headerTr);
-
-        // Строки задач
-        tasks.forEach(task => {
-            const tr = document.createElement('tr');
-
-            const baseValues = [
-                task.task,
-                task.responsible || '',
-                task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
-                task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
-                task.days != null ? String(task.days) : ''
-            ];
-
-            baseValues.forEach((val, idx) => {
-                const td = document.createElement('td');
-                td.textContent = val;
-                td.style.fontSize = '8px';
-                if (idx === 0) td.style.whiteSpace = 'nowrap';
-                addCellBorder(td);
-                tr.appendChild(td);
-            });
-
-            const dateSet = new Set(
-                Array.isArray(task.dates) ? task.dates.map(d => formatDateKey(d)) : []
-            );
-            const statuses = task.dateStatuses || {};
-
-            chunk.forEach(unit => {
-                const td = document.createElement('td');
-                addCellBorder(td);
-
-                const unitStart = unit.start.getTime();
-                const unitEnd = unit.end.getTime();
-
-                // Проверяем, есть ли рабочие дни задачи в этом интервале
-                let hasWorkday = false;
-                let intervalStatus = 'pending';
-
-                if (Array.isArray(task.dates)) {
-                    const daysInUnit = task.dates.filter(d => {
-                        const t = d.getTime();
-                        return t >= unitStart && t <= unitEnd;
-                    });
-
-                    if (daysInUnit.length > 0) {
-                        hasWorkday = true;
-                        // Для дней берём статус конкретного дня, для недель/месяцев — приоритет
-                        if (scaleMode === 'day' && daysInUnit.length === 1) {
-                            const key = formatDateKey(daysInUnit[0]);
-                            intervalStatus = statuses[key] || 'pending';
-                        } else {
-                            const statusesInUnit = new Set();
-                            daysInUnit.forEach(d => {
-                                const key = formatDateKey(d);
-                                const s = statuses[key];
-                                if (s) statusesInUnit.add(s);
-                            });
-                            if (statusesInUnit.has('completed')) intervalStatus = 'completed';
-                            else if (statusesInUnit.has('in-progress')) intervalStatus = 'in-progress';
-                            else if (statusesInUnit.has('weekend-manual')) intervalStatus = 'weekend-manual';
-                            else if (statusesInUnit.has('holiday-manual')) intervalStatus = 'holiday-manual';
-                            else intervalStatus = 'pending';
-                        }
-                    }
-                }
-
-                if (hasWorkday) {
-                    const color = statusColors[intervalStatus] || statusColors.pending;
-                    td.style.background = color;
-                }
-
-                tr.appendChild(td);
-            });
-
-            ganttTable.appendChild(tr);
-        });
-
-        exportWrapper.appendChild(ganttTable);
-    });
-
-    // --- Разрыв страницы перед детальной таблицей ---
-    const pageBreak = document.createElement('div');
-    pageBreak.style.pageBreakBefore = 'always';
-    pageBreak.style.height = '12px';
-    exportWrapper.appendChild(pageBreak);
-
-    // --- Таблица 2: детальная таблица задач с комментариями ---
-    const detailTitle = document.createElement('div');
-    detailTitle.textContent = 'Детальная таблица задач';
-    detailTitle.style.fontSize = '12px';
-    detailTitle.style.fontWeight = '600';
-    detailTitle.style.margin = '4px 0 6px 0';
-    exportWrapper.appendChild(detailTitle);
-
-    const detailTable = document.createElement('table');
-    detailTable.style.borderCollapse = 'collapse';
-    detailTable.style.width = '100%';
-
-    const detailHeaderTr = document.createElement('tr');
-    [
-        '№ п/п',
-        'Этап',
-        'Вид контроля',
-        'Мероприятие',
-        'Рабочих дней',
-        'Ответственный',
-        'Дата начала',
-        'Дата окончания',
-        'Комментарии по датам'
-    ].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.background = '#f5f5f5';
-        th.style.color = '#222222';
-        th.style.fontWeight = '600';
-        th.style.fontSize = '9px';
-        th.style.whiteSpace = 'nowrap';
-        addCellBorder(th);
-        detailHeaderTr.appendChild(th);
-    });
-    detailTable.appendChild(detailHeaderTr);
-
-    tasks.forEach((task, index) => {
-        const tr = document.createElement('tr');
-
-        let commentsSummary = '';
-        if (task.dateComments) {
-            const entries = Object.entries(task.dateComments)
-                .filter(([, text]) => text && String(text).trim().length > 0)
-                .sort(([d1], [d2]) => (d1 < d2 ? -1 : d1 > d2 ? 1 : 0))
-                .map(([date, text]) => `${date}: ${String(text).trim()}`);
-            commentsSummary = entries.join('; ');
-        }
-
-        const cells = [
-            index + 1,
-            task.stage || '',
-            task.control || '',
-            task.task || '',
-            task.days != null ? String(task.days) : '',
-            task.responsible || '',
-            task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
-            task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
-            commentsSummary
-        ];
-
-        cells.forEach((val, idx) => {
-            const td = document.createElement('td');
-            td.textContent = val;
-            td.style.fontSize = '9px';
-            if (idx === 3 || idx === 8) {
-                td.style.whiteSpace = 'normal';
-            } else {
-                td.style.whiteSpace = 'nowrap';
+            // Клон логотипа
+            if (logoEl) {
+                const logoClone = logoEl.cloneNode(true);
+                logoClone.style.width = '48px';
+                logoClone.style.height = '48px';
+                logoClone.style.borderRadius = '8px';
+                logoClone.style.border = '1px solid #e0e0e0';
+                logoClone.style.objectFit = 'contain';
+                logoClone.style.background = '#fafafa';
+                logoClone.style.padding = '4px';
+                header.appendChild(logoClone);
             }
-            addCellBorder(td);
-            tr.appendChild(td);
-        });
 
-        detailTable.appendChild(tr);
-    });
+            // Название компании
+            const nameBlock = document.createElement('div');
+            const title = document.createElement('div');
+            title.textContent = 'График внедрения и обучения системы ICONA';
+            title.style.fontSize = '16px';
+            title.style.fontWeight = '600';
 
-    exportWrapper.appendChild(detailTable);
+            const company = document.createElement('div');
+            const currentNameText = nameDisplay && nameDisplay.classList.contains('has-value')
+                ? nameDisplay.textContent
+                : '';
+            company.textContent = currentNameText || 'Название компании';
+            company.style.marginTop = '4px';
+            company.style.fontSize = '14px';
+            company.style.fontWeight = '600';
 
-    // --- Генерация PDF ---
-    document.body.appendChild(exportWrapper);
+            nameBlock.appendChild(title);
+            nameBlock.appendChild(company);
+            header.appendChild(nameBlock);
 
-    const opt = {
-        margin: 10,
-        filename: 'График_внедрения_ICONA.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 2
-        },
-        jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a3' }
-    };
+            exportWrapper.appendChild(header);
 
-    html2pdf()
-        .set(opt)
-        .from(exportWrapper)
-        .save()
-        .then(() => {
-            document.body.removeChild(exportWrapper);
-        })
-        .catch(() => {
-            document.body.removeChild(exportWrapper);
-        });
-}
+            // Клон диаграммы Ганта (без горизонтального скролла)
+            const chartCloneWrapper = document.createElement('div');
+            const ganttClone = ganttChart.cloneNode(true);
+            chartCloneWrapper.style.overflow = 'visible';
+            chartCloneWrapper.style.borderTop = '1px solid #e0e0e0';
+            chartCloneWrapper.style.marginTop = '8px';
+            chartCloneWrapper.style.paddingTop = '8px';
+
+            // Устанавливаем ширину по полной прокрутке, чтобы влез весь горизонтальный диапазон
+            const fullWidth = ganttChart.scrollWidth || ganttChart.getBoundingClientRect().width;
+            chartCloneWrapper.style.width = fullWidth + 'px';
+
+            chartCloneWrapper.appendChild(ganttClone);
+            exportWrapper.appendChild(chartCloneWrapper);
+
+            document.body.appendChild(exportWrapper);
+
+            // Дополнительное масштабирование всего блока экспорта,
+            // чтобы вписать и ширину, и высоту в пределы canvas html2canvas
+            // На этом шаге мы не трогаем zoomLevel и не масштабируем exportWrapper,
+            // чтобы избежать проблем с пустым рендером в html2canvas. Масштабом
+            // управляет сам html2canvas через параметр scale.
+
+            const opt = {
+                margin: 10,
+                filename: 'График_внедрения_ICONA.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2
+                },
+                // Используем формат A3, чтобы диаграмма занимала максимум доступного места
+                jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a3' }
+            };
+
+            html2pdf()
+                .set(opt)
+                .from(exportWrapper)
+                .save()
+                .then(() => {
+                    document.body.removeChild(exportWrapper);
+
+                    // Восстанавливаем исходные настройки вида
+                    isExporting = prevIsExporting;
+                    viewStartDate = prevViewStart;
+                    viewEndDate = prevViewEnd;
+                    renderGantt();
+                })
+                .catch(() => {
+                    document.body.removeChild(exportWrapper);
+                    isExporting = prevIsExporting;
+                    viewStartDate = prevViewStart;
+                    viewEndDate = prevViewEnd;
+                    renderGantt();
+                });
+        }
 
         // Построение временной шкалы для экспорта в Excel (дни/недели/месяцы/годы)
         function buildExportTimeline(scaleMode) {
@@ -5408,30 +4290,6 @@ function exportPDF(scaleMode = 'day') {
             exportExcel();
         }
 
-        function openPDFExportModal() {
-            const modal = document.getElementById('pdfExportModal');
-            if (modal) {
-                modal.style.display = 'block';
-            }
-        }
-
-        function closePDFExportModal() {
-            const modal = document.getElementById('pdfExportModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function confirmPDFExport() {
-            const selectEl = document.getElementById('pdfScaleMode');
-            const rawMode = selectEl ? String(selectEl.value || '').toLowerCase() : 'day';
-            let scaleMode = 'day';
-            if (rawMode.startsWith('week') || rawMode.startsWith('нед')) scaleMode = 'week';
-            else if (rawMode.startsWith('month') || rawMode.startsWith('мес')) scaleMode = 'month';
-            closePDFExportModal();
-            exportPDF(scaleMode);
-        }
-
         // Изменение даты начала
         function editStartDate() {
             const modal = document.getElementById('editModal');
@@ -5459,9 +4317,6 @@ function exportPDF(scaleMode = 'day') {
 
         // Сброс плана к дефолтному состоянию (как в исходном коде)
         function resetSchedule() {
-            if (!canEdit()) {
-                return; // Блокируем сброс плана в режиме просмотра
-            }
             startDate = new Date(INITIAL_START_DATE);
             initializeTasks();
         }
@@ -5544,21 +4399,27 @@ function exportPDF(scaleMode = 'day') {
             if (!chartContainer || !tableSection) return;
 
             if (currentView === 'gantt') {
-                // Сначала показываем Гант сразу, чтобы не было моргания
-                chartContainer.classList.remove('view-hidden');
-                chartContainer.classList.add('view-active');
-                
-                // Затем скрываем таблицу
+                // Скрываем таблицу - уезжает вниз
                 tableSection.classList.remove('view-active');
                 tableSection.classList.add('view-hidden');
-            } else {
-                // Сначала показываем таблицу сразу, чтобы не было моргания
-                tableSection.classList.remove('view-hidden');
-                tableSection.classList.add('view-active');
                 
-                // Затем скрываем Гант
+                // Показываем Гант - появляется снизу
+                chartContainer.classList.remove('view-hidden');
+                // Небольшая задержка для плавной анимации
+                setTimeout(() => {
+                    chartContainer.classList.add('view-active');
+                }, 50);
+            } else {
+                // Скрываем Гант - уезжает вниз
                 chartContainer.classList.remove('view-active');
                 chartContainer.classList.add('view-hidden');
+                
+                // Показываем таблицу - появляется снизу
+                tableSection.classList.remove('view-hidden');
+                // Небольшая задержка для плавной анимации
+                setTimeout(() => {
+                    tableSection.classList.add('view-active');
+                }, 50);
             }
         }
 
@@ -5650,9 +4511,6 @@ function exportPDF(scaleMode = 'day') {
         }
 
         function confirmDeleteStage() {
-            if (!canEdit()) {
-                return; // Блокируем удаление этапов в режиме просмотра
-            }
             if (pendingStageToDelete) {
                 deleteStage(pendingStageToDelete);
             }
@@ -5667,13 +4525,10 @@ function exportPDF(scaleMode = 'day') {
             stageConfig.forEach((shortName, index) => {
                 const item = document.createElement('div');
                 item.className = 'stage-settings-item';
-                item.draggable = canEdit(); // Блокируем drag&drop этапов в режиме просмотра
+                item.draggable = true;
                 item.dataset.index = String(index);
 
                 item.addEventListener('dragstart', () => {
-                    if (!canEdit()) {
-                        return;
-                    }
                     draggedStageIndex = index;
                     item.classList.add('dragging');
                 });
@@ -5688,10 +4543,6 @@ function exportPDF(scaleMode = 'day') {
                 });
 
                 item.addEventListener('drop', (e) => {
-                    if (!canEdit()) {
-                        e.preventDefault();
-                        return;
-                    }
                     e.preventDefault();
                     if (draggedStageIndex === null) return;
                     const targetIndex = parseInt(item.dataset.index, 10);
@@ -5733,9 +4584,6 @@ function exportPDF(scaleMode = 'day') {
                 deleteBtn.type = 'button';
                 deleteBtn.innerHTML = '<span>✕</span><span>Удалить</span>';
                 deleteBtn.addEventListener('click', () => {
-                    if (!canEdit()) {
-                        return; // Блокируем удаление этапов в режиме просмотра
-                    }
                     openStageDeleteModal(shortName);
                 });
 
@@ -5951,25 +4799,6 @@ function exportPDF(scaleMode = 'day') {
                         task.dateComments[key] = commentText.trim();
                     }
                 });
-            } else if (status === 'pending') {
-                // Возврат к статусу "Запланировано"
-                // Удаляем статусы "в работе" и "завершено" для выбранных дат
-                targetDates.forEach(d => {
-                    const key = formatDateKey(d);
-                    if (task.dateStatuses[key] === 'in-progress' || task.dateStatuses[key] === 'completed') {
-                        delete task.dateStatuses[key];
-                    }
-                });
-                
-                // Если все даты задачи вернулись к "запланировано", меняем общий статус задачи
-                const hasInProgressOrCompleted = task.dates.some(d => {
-                    const key = formatDateKey(d);
-                    return task.dateStatuses[key] === 'in-progress' || task.dateStatuses[key] === 'completed';
-                });
-                
-                if (!hasInProgressOrCompleted) {
-                    task.status = 'pending';
-                }
             } else if (status === 'weekend-manual') {
                 // Применяем статус ко всем датам периода
                 targetDates.forEach(d => {
@@ -5990,7 +4819,6 @@ function exportPDF(scaleMode = 'day') {
                 renderGantt();
             }
             renderTable();
-            autoSaveGanttState(); // Автоматическое сохранение после изменения статуса/комментария
         }
 
         // Обработчики кликов по пунктам меню статуса
@@ -6046,297 +4874,11 @@ function exportPDF(scaleMode = 'day') {
             }
         }
 
-        // ========== РЕДАКТИРОВАНИЕ ПРОФИЛЯ ==========
-        let currentUser = null;
-
-        // Загрузить данные текущего пользователя
-        function loadCurrentUser() {
-            const userStr = localStorage.getItem('gantt-user');
-            if (userStr) {
-                try {
-                    currentUser = JSON.parse(userStr);
-                    // Показываем кнопки профиля и выбора компаний только для авторизованных пользователей
-                    const profileBtn = document.getElementById('profileBtn');
-                    const companiesBtn = document.getElementById('companiesBtn');
-                    if (profileBtn) {
-                        profileBtn.style.display = 'flex';
-                    }
-                    if (companiesBtn) {
-                        companiesBtn.style.display = 'flex';
-                    }
-                    const logoutBtn = document.getElementById('logoutBtn');
-                    if (logoutBtn) {
-                        logoutBtn.style.display = 'flex';
-                    }
-                } catch (e) {
-                    console.error('Ошибка загрузки данных пользователя:', e);
-                }
-            }
-        }
-
-        // Переход на страницу выбора компаний
-        function goToCompanies() {
-            window.location.href = 'companies.html';
-        }
-
-        // Выход из системы
-        function logout() {
-            // Очищаем данные авторизации из localStorage
-            localStorage.removeItem('gantt-user');
-            localStorage.removeItem('gantt-mode');
-            localStorage.removeItem('gantt-company');
-            
-            // Перенаправляем на страницу авторизации
-            window.location.href = 'auth.html';
-        }
-
-        // Перетаскивание модального окна
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-        let initialPosition = { x: 0, y: 0 };
-
-        function initProfileModalDrag() {
-            const modal = document.getElementById('profileModal');
-            const modalContent = modal?.querySelector('.profile-modal-content');
-            const modalHeader = modal?.querySelector('.profile-modal-header');
-            
-            if (!modalContent || !modalHeader) return;
-
-            modalHeader.addEventListener('mousedown', function(e) {
-                if (e.target.classList.contains('profile-modal-close')) {
-                    return; // Не перетаскиваем при клике на кнопку закрытия
-                }
-                
-                isDragging = true;
-                const rect = modalContent.getBoundingClientRect();
-                
-                // Вычисляем смещение от точки клика до левого верхнего угла окна
-                dragOffset.x = e.clientX - rect.left;
-                dragOffset.y = e.clientY - rect.top;
-                
-                // Сохраняем начальную позицию окна
-                initialPosition.x = rect.left;
-                initialPosition.y = rect.top;
-                
-                // Переключаем на fixed позиционирование для корректного перетаскивания
-                modalContent.style.position = 'fixed';
-                modalContent.style.left = rect.left + 'px';
-                modalContent.style.top = rect.top + 'px';
-                modalContent.style.margin = '0';
-                modalContent.style.transition = 'none';
-                
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', function(e) {
-                if (!isDragging) return;
-                
-                const modalContent = document.querySelector('.profile-modal-content');
-                if (!modalContent) return;
-
-                // Вычисляем новую позицию так, чтобы точка клика оставалась под курсором
-                let newX = e.clientX - dragOffset.x;
-                let newY = e.clientY - dragOffset.y;
-                
-                // Ограничиваем перемещение границами экрана
-                const maxX = window.innerWidth - modalContent.offsetWidth;
-                const maxY = window.innerHeight - modalContent.offsetHeight;
-                
-                newX = Math.max(0, Math.min(newX, maxX));
-                newY = Math.max(0, Math.min(newY, maxY));
-                
-                modalContent.style.left = newX + 'px';
-                modalContent.style.top = newY + 'px';
-            });
-
-            document.addEventListener('mouseup', function() {
-                if (isDragging) {
-                    isDragging = false;
-                    const modalContent = document.querySelector('.profile-modal-content');
-                    if (modalContent) {
-                        // Возвращаем transition для плавных анимаций
-                        modalContent.style.transition = '';
-                        // Оставляем position: fixed, чтобы окно осталось на месте
-                    }
-                }
-            });
-        }
-
-        // Открыть модальное окно профиля
-        function openProfileModal() {
-            const modal = document.getElementById('profileModal');
-            const modalContent = modal?.querySelector('.profile-modal-content');
-            const loginInput = document.getElementById('profileLogin');
-            if (modal && currentUser && loginInput) {
-                loginInput.value = currentUser.login || '';
-                document.getElementById('profilePassword').value = '';
-                document.getElementById('profilePasswordConfirm').value = '';
-                document.getElementById('profileMessage').classList.remove('show');
-                
-                // Сбрасываем позицию при открытии
-                if (modalContent) {
-                    modalContent.style.position = '';
-                    modalContent.style.left = '';
-                    modalContent.style.top = '';
-                    modalContent.style.margin = '';
-                    modalContent.style.transform = '';
-                }
-                
-                modal.classList.add('show');
-            }
-        }
-
-        // Закрыть модальное окно профиля
-        function closeProfileModal() {
-            const modal = document.getElementById('profileModal');
-            if (modal) {
-                modal.classList.remove('show');
-            }
-        }
-
-        // Сохранить изменения профиля
-        async function saveProfile(event) {
-            event.preventDefault();
-            
-            const loginInput = document.getElementById('profileLogin');
-            const passwordInput = document.getElementById('profilePassword');
-            const passwordConfirmInput = document.getElementById('profilePasswordConfirm');
-            const messageEl = document.getElementById('profileMessage');
-            
-            const newLogin = loginInput.value.trim();
-            const newPassword = passwordInput.value;
-            const passwordConfirm = passwordConfirmInput.value;
-
-            // Проверка паролей
-            if (newPassword && newPassword !== passwordConfirm) {
-                messageEl.textContent = 'Пароли не совпадают';
-                messageEl.className = 'profile-message error show';
-                return;
-            }
-
-            if (newPassword && newPassword.length < 6) {
-                messageEl.textContent = 'Пароль должен содержать минимум 6 символов';
-                messageEl.className = 'profile-message error show';
-                return;
-            }
-
-            if (!newLogin) {
-                messageEl.textContent = 'Логин не может быть пустым';
-                messageEl.className = 'profile-message error show';
-                return;
-            }
-
-            try {
-                const updateData = {
-                    oldLogin: currentUser.login,
-                    newLogin: newLogin,
-                    password: newPassword || null
-                };
-
-                const response = await fetch('/api/users/update', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updateData)
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                    // Обновляем данные пользователя в localStorage
-                    currentUser.login = newLogin;
-                    localStorage.setItem('gantt-user', JSON.stringify(currentUser));
-                    
-                    messageEl.textContent = 'Профиль успешно обновлён';
-                    messageEl.className = 'profile-message success show';
-                    
-                    setTimeout(() => {
-                        closeProfileModal();
-                    }, 1500);
-                } else {
-                    messageEl.textContent = result.error || 'Ошибка обновления профиля';
-                    messageEl.className = 'profile-message error show';
-                }
-            } catch (error) {
-                console.error('Ошибка обновления профиля:', error);
-                messageEl.textContent = 'Ошибка подключения к серверу';
-                messageEl.className = 'profile-message error show';
-            }
-        }
-
-        // Проверка доступа пользователя к компании
-        async function checkCompanyAccess() {
-            if (!currentCompany) {
-                // Если компания не указана, разрешаем доступ (для обратной совместимости)
-                return true;
-            }
-
-            const userStr = localStorage.getItem('gantt-user');
-            if (!userStr) {
-                // Если пользователь не авторизован, разрешаем доступ (режим просмотра)
-                return true;
-            }
-
-            try {
-                const user = JSON.parse(userStr);
-                // Админы имеют доступ ко всем компаниям
-                if (user.role === 'admin') {
-                    return true;
-                }
-                // Проверяем, есть ли у пользователя доступ к компании
-                const userCompanies = user.companies || [];
-                return userCompanies.includes(currentCompany);
-            } catch (e) {
-                console.error('Ошибка проверки доступа:', e);
-                return true; // В случае ошибки разрешаем доступ
-            }
-        }
-
         // Инициализация при загрузке
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Проверяем доступ к компании перед загрузкой данных
-            const hasAccess = await checkCompanyAccess();
-            if (!hasAccess && currentCompany) {
-                alert('У вас нет доступа к этой компании. Вы будете перенаправлены на страницу авторизации.');
-                window.location.href = `auth.html?company=${currentCompany}`;
-                return;
-            }
-
-            // Пытаемся загрузить полное состояние графика
-            const fullStateLoaded = await loadFullGanttState();
-            if (!fullStateLoaded) {
-                // Если полное состояние не загружено, инициализируем задачи по умолчанию
-                initializeTasks();
-                // Загружаем baseline для обратной совместимости
-                loadBaselineFromServer();
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTasks();
             loadCompanyInfo();
-            loadCurrentUser();
-            
-            // Обработчики для профиля
-            const profileBtn = document.getElementById('profileBtn');
-            if (profileBtn) {
-                profileBtn.addEventListener('click', openProfileModal);
-            }
-            
-            const profileForm = document.getElementById('profileForm');
-            if (profileForm) {
-                profileForm.addEventListener('submit', saveProfile);
-            }
-
-            // Инициализация перетаскивания модального окна
-            initProfileModalDrag();
-
-            // Закрытие модального окна при клике вне его
-            const profileModal = document.getElementById('profileModal');
-            if (profileModal) {
-                profileModal.addEventListener('click', function(e) {
-                    if (e.target === profileModal && !isDragging) {
-                        closeProfileModal();
-                    }
-                });
-            }
+            loadBaselineFromServer();
 
             const chartContainer = document.querySelector('.chart-container');
             const tableSection = document.querySelector('.table-section');
@@ -6346,15 +4888,9 @@ function exportPDF(scaleMode = 'day') {
             const companyLogoWrapper = document.getElementById('companyLogoWrapper');
 
             if (companyNameDisplay) {
-                // Блокируем редактирование названия компании в режиме просмотра
-                if (isViewMode) {
-                    companyNameDisplay.contentEditable = 'false';
-                    companyNameDisplay.style.cursor = 'default';
-                } else {
-                    companyNameDisplay.addEventListener('focus', handleCompanyNameFocus);
-                    companyNameDisplay.addEventListener('input', handleCompanyNameInput);
-                    companyNameDisplay.addEventListener('blur', handleCompanyNameInput);
-                }
+                companyNameDisplay.addEventListener('focus', handleCompanyNameFocus);
+                companyNameDisplay.addEventListener('input', handleCompanyNameInput);
+                companyNameDisplay.addEventListener('blur', handleCompanyNameInput);
             }
 
             if (companyLogoInput) {
@@ -6363,9 +4899,6 @@ function exportPDF(scaleMode = 'day') {
 
             if (companyLogoWrapper && companyLogoInput) {
                 companyLogoWrapper.addEventListener('click', () => {
-                    if (!canEdit()) {
-                        return; // Блокируем клик по логотипу в режиме просмотра
-                    }
                     companyLogoInput.click();
                 });
             }
@@ -6376,14 +4909,6 @@ function exportPDF(scaleMode = 'day') {
             // Инициализируем подсветку переключателя "Гант / Таблица" и активной панели
             updateViewToggleUI();
             updateViewPanelsUI();
-            
-            // Блокируем кнопку "Сбросить план" в режиме просмотра
-            if (isViewMode) {
-                const resetBtn = document.querySelector('.reset-plan-btn');
-                if (resetBtn) {
-                    resetBtn.classList.add('view-mode-disabled');
-                }
-            }
 
             // Отслеживаем нажатие/отжатие клавиши Z (или той же физической клавиши в русской раскладке)
             window.addEventListener('keydown', (event) => {
@@ -6394,9 +4919,6 @@ function exportPDF(scaleMode = 'day') {
 
                 // Вставка новой задачи под выделенной по клавише Insert
                 if (event.key === 'Insert') {
-                    if (!canEdit()) {
-                        return; // Блокируем Insert в режиме просмотра
-                    }
                     const target = event.target;
                     // Не перехватываем нажатие, если фокус в инпуте/селекте/редактируемом элементе
                     if (
@@ -6414,9 +4936,6 @@ function exportPDF(scaleMode = 'day') {
 
                 // Удаление выбранной задачи по клавише Delete (с подтверждением)
                 if (event.key === 'Delete') {
-                    if (!canEdit()) {
-                        return; // Блокируем Delete в режиме просмотра
-                    }
                     const target = event.target;
                     if (
                         target instanceof HTMLInputElement ||

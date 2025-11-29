@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Управление пользователями</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 50%, #2196f3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Анимированный фон с волнами */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(100, 181, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(66, 165, 245, 0.3) 0%, transparent 50%);
+            animation: waveMove 20s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes waveMove {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Кнопка выхода из админ-панели */
+        .logout-admin-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 167, 38, 0.1);
+            border: 1px solid rgba(255, 167, 38, 0.3);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: #ffa726;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .logout-admin-btn:hover {
+            background: rgba(255, 167, 38, 0.2);
+            border-color: rgba(255, 167, 38, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.2);
+        }
+
+        .logout-admin-btn::before {
+            content: '←';
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(100, 181, 246, 0.1) 0%, transparent 70%);
+            animation: rotate  20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+            position: relative;
+        }
+
+        .header-icon::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid white;
+            border-radius: 8px;
+            transform: rotate(45deg);
+        }
+
+        .header-icon::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 2px;
+            top: 8px;
+            left: 8px;
+        }
+
+        .header h1 {
+            color: #1565c0;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #64b5f6;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .admin-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .panel-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(33, 150, 243, 0.3);
+        }
+
+        .panel-section h2 {
+            color: #1565c0;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #42a5f5;
+            position: relative;
+            font-weight: 700;
+        }
+
+        .panel-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #42a5f5, #2196f3);
+            border-radius: 3px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #1565c0;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .form-group label::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid #42a5f5;
+            border-radius: 4px;
+            background: rgba(66, 165, 245, 0.1);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1565c0;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #42a5f5;
+            box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.15);
+            background: white;
+        }
+
+        .form-group input::placeholder {
+            color: #90caf9;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(239, 83, 80, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 83, 80, 0.4);
+        }
+
+        .users-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .users-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .users-list::-webkit-scrollbar-track {
+            background: rgba(100, 181, 246, 0.1);
+            border-radius: 10px;
+        }
+
+        .users-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #42a5f5, #2196f3);
+            border-radius: 10px;
+        }
+
+        .user-item {
+            background: linear-gradient(135deg, rgba(100, 181, 246, 0.1) 0%, rgba(66, 165, 245, 0.05) 100%);
+            border: 2px solid rgba(100, 181, 246, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #42a5f5, #2196f3);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .user-item:hover {
+            background: linear-gradient(135deg, rgba(100, 181, 246, 0.2) 0%, rgba(66, 165, 245, 0.1) 100%);
+            transform: translateX(8px);
+            border-color: rgba(66, 165, 245, 0.4);
+            box-shadow: 0 5px 20px rgba(33, 150, 243, 0.2);
+        }
+
+        .user-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .user-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            box-shadow: 0 3px 10px rgba(33, 150, 243, 0.3);
+            position: relative;
+        }
+
+        .user-avatar::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 3px solid white;
+            border-radius: 50%;
+        }
+
+        .user-avatar::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: #1565c0;
+            margin-bottom: 5px;
+            font-size: 1.05rem;
+        }
+
+        .user-login {
+            color: #64b5f6;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .user-role {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .user-role.admin {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+            color: white;
+        }
+
+        .user-role.user {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            color: white;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            width: auto;
+        }
+
+        .message {
+            padding: 18px 24px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 2px solid;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: rgba(129, 199, 132, 0.2);
+            color: #2e7d32;
+            border-color: rgba(129, 199, 132, 0.5);
+        }
+
+        .message.error {
+            background: rgba(239, 83, 80, 0.2);
+            color: #c62828;
+            border-color: rgba(239, 83, 80, 0.5);
+        }
+
+        .message.warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: #e65100;
+            border-color: rgba(255, 152, 0, 0.5);
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #90caf9;
+        }
+
+        .empty-state-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .empty-state-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 4px solid #90caf9;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+
+        .empty-state-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 4px solid #90caf9;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        /* Модальное окно редактирования пользователя */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            color: #1565c0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #1565c0;
+        }
+
+        /* Чекбоксы компаний */
+        .company-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .company-checkbox:hover {
+            background: rgba(100, 181, 246, 0.1);
+        }
+
+        .company-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #42a5f5;
+        }
+
+        .company-checkbox input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .company-checkbox label {
+            cursor: pointer;
+            color: #1565c0;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .company-checkbox:has(input[type="checkbox"]:disabled) {
+            opacity: 0.6;
+        }
+
+        .company-checkbox:has(input[type="checkbox"]:disabled):hover {
+            background: transparent;
+        }
+
+        /* Модальное окно удаления пользователя */
+        .delete-user-modal {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-user-modal.show {
+            display: flex;
+        }
+
+        .delete-user-modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .delete-user-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .delete-user-modal-header h2 {
+            color: #1565c0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .delete-user-modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .delete-user-modal-close:hover {
+            color: #1565c0;
+        }
+
+        .delete-user-modal-content p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            white-space: pre-line;
+        }
+
+        .delete-user-modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        /* Адаптивность для планшетов и мобильных */
+        @media (max-width: 1024px) {
+            .admin-panel {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .header {
+                padding: 35px 30px;
+            }
+
+            .panel-section {
+                padding: 30px;
+            }
+
+            .users-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .admin-panel {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header {
+                padding: 30px 25px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .panel-section {
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            .panel-section h2 {
+                font-size: 1.4rem;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 12px 14px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+
+            .user-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .user-actions {
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .user-actions .btn {
+                width: 100%;
+            }
+
+            .users-list {
+                grid-template-columns: 1fr;
+            }
+
+            .logout-admin-btn {
+                top: 15px;
+                right: 15px;
+                padding: 7px 14px;
+                font-size: 0.8rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 25px 20px;
+                margin: 5% auto;
+            }
+
+            .modal-header h2 {
+                font-size: 1.4rem;
+            }
+
+            .delete-user-modal-content {
+                padding: 25px 20px;
+                width: 90%;
+            }
+
+            .delete-user-modal-header h2 {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 25px 20px;
+                border-radius: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 6px;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .panel-section {
+                padding: 20px;
+                border-radius: 12px;
+            }
+
+            .panel-section h2 {
+                font-size: 1.2rem;
+                margin-bottom: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-group label {
+                font-size: 0.9rem;
+                margin-bottom: 8px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 10px 12px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+                border-radius: 10px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+                border-radius: 10px;
+            }
+
+            .user-item {
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .user-name {
+                font-size: 1rem;
+            }
+
+            .user-login {
+                font-size: 0.8rem;
+            }
+
+            .user-role {
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+
+            .logout-admin-btn {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 20px 15px;
+                margin: 10% auto;
+                border-radius: 12px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .company-checkbox {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+
+            .delete-user-modal-content {
+                padding: 20px 15px;
+                width: 90%;
+                border-radius: 12px;
+            }
+
+            .delete-user-modal-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .delete-user-modal-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .delete-user-modal-actions .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .panel-section {
+                padding: 15px;
+            }
+
+            .panel-section h2 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="logout-admin-btn" onclick="logoutFromAdmin()" title="Выход в выбор компаний">
+                Выход
+            </button>
+            <div class="header-content">
+                <div class="header-icon"></div>
+                <h1>Админ-панель</h1>
+                <p>Управление пользователями системы диаграммы Ганта</p>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <!-- Выбор компании -->
+        <div class="panel-section" style="margin-bottom: 30px;">
+            <h2>Выбор компании</h2>
+            <div class="form-group">
+                <label for="companySelect">Компания</label>
+                <select id="companySelect" name="companySelect" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
+                    <option value="">Все компании</option>
+                </select>
+            </div>
+            <div style="margin-top: 15px;">
+                <a href="companies.html" class="btn btn-primary" style="text-decoration: none; display: inline-block; width: auto; padding: 12px 24px;">
+                    Управление компаниями
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-panel">
+            <!-- Форма регистрации -->
+            <div class="panel-section">
+                <h2>Добавить пользователя</h2>
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label for="userName">Имя пользователя</label>
+                        <input type="text" id="userName" name="userName" required placeholder="Введите имя">
+                    </div>
+                    <div class="form-group">
+                        <label for="userLogin">Логин</label>
+                        <input type="text" id="userLogin" name="userLogin" required placeholder="Введите логин">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Пароль</label>
+                        <input type="password" id="userPassword" name="userPassword" required placeholder="Введите пароль">
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Роль</label>
+                        <select id="userRole" name="userRole" required>
+                            <option value="user">Пользователь</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить пользователя</button>
+                </form>
+            </div>
+
+            <!-- Список пользователей -->
+            <div class="panel-section">
+                <h2>Список пользователей</h2>
+                <div id="usersList" class="users-list">
+                    <div class="empty-state">
+                        <div class="empty-state-icon"></div>
+                        <p>Загрузка пользователей...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления пользователя -->
+    <div id="deleteUserModal" class="delete-user-modal">
+        <div class="delete-user-modal-content">
+            <div class="delete-user-modal-header">
+                <h2>Удалить пользователя?</h2>
+                <span class="delete-user-modal-close" onclick="cancelDeleteUser()">&times;</span>
+            </div>
+            <p id="deleteUserText">Вы действительно хотите удалить этого пользователя?</p>
+            <div class="delete-user-modal-actions">
+                <button class="btn btn-danger" onclick="confirmDeleteUser()">Да, удалить</button>
+                <button class="btn btn-secondary" onclick="cancelDeleteUser()">Нет</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования пользователя -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать пользователя</h2>
+                <button class="modal-close" onclick="closeEditUserModal()">&times;</button>
+            </div>
+            <div id="editUserMessage" class="message"></div>
+            <form id="editUserForm">
+                <div class="form-group">
+                    <label for="editUserName">Имя пользователя *</label>
+                    <input type="text" id="editUserName" name="editUserName" required placeholder="Введите имя">
+                </div>
+                <div class="form-group">
+                    <label for="editUserLogin">Логин</label>
+                    <input type="text" id="editUserLogin" name="editUserLogin" readonly 
+                           style="background: #f5f5f5; cursor: not-allowed;">
+                    <small>Логин нельзя изменить</small>
+                </div>
+                <div class="form-group">
+                    <label for="editUserPassword">Новый пароль</label>
+                    <input type="password" id="editUserPassword" name="editUserPassword" 
+                           placeholder="Оставьте пустым, чтобы не менять">
+                </div>
+                <div class="form-group">
+                    <label for="editUserRole">Роль *</label>
+                    <select id="editUserRole" name="editUserRole" required>
+                        <option value="user">Пользователь</option>
+                        <option value="admin">Администратор</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUserCompanies">Доступ к компаниям</label>
+                    <div id="editUserCompaniesList" style="max-height: 200px; overflow-y: auto; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; padding: 10px; background: rgba(255, 255, 255, 0.9);">
+                        <p style="color: #999; font-size: 0.9rem;">Загрузка списка компаний...</p>
+                    </div>
+                    <small>Выберите компании, к которым у пользователя будет доступ (для администраторов доступ ко всем компаниям)</small>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="btn btn-danger" onclick="closeEditUserModal()" style="flex: 1;">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentCompanyId = '';
+        let allCompanies = [];
+        let allUsers = [];
+
+        // Показать сообщение
+        function showMessage(text, type = 'success') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} show`;
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+
+        // Загрузить список компаний
+        async function loadCompanies() {
+            try {
+                const response = await fetch('/api/companies');
+                allCompanies = await response.json() || [];
+                const companySelect = document.getElementById('companySelect');
+                
+                // Очищаем и заполняем список компаний
+                companySelect.innerHTML = '<option value="">Все компании</option>';
+                allCompanies.forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = `${company.name} (${company.id})`;
+                    companySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки компаний:', error);
+            }
+        }
+
+        // Загрузить список пользователей
+        async function loadUsers() {
+            try {
+                const url = currentCompanyId ? `/api/users?company=${currentCompanyId}` : '/api/users';
+                const response = await fetch(url);
+                allUsers = await response.json() || [];
+                renderUsers(allUsers);
+            } catch (error) {
+                console.error('Ошибка загрузки пользователей:', error);
+                showMessage('Ошибка загрузки пользователей', 'error');
+            }
+        }
+
+        // Отобразить список пользователей
+        function renderUsers(users) {
+            const usersList = document.getElementById('usersList');
+            const MAIN_ADMIN_LOGIN = 'Driga_VA';
+            
+            if (users.length === 0) {
+                usersList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"></div>
+                        <p>Пользователи не найдены</p>
+                    </div>
+                `;
+                return;
+            }
+
+            usersList.innerHTML = users.map((user, index) => {
+                const userCompanies = user.companies || [];
+                const companiesText = user.role === 'admin' 
+                    ? 'Доступ ко всем компаниям' 
+                    : (userCompanies.length > 0 
+                        ? `Компании: ${userCompanies.join(', ')}` 
+                        : 'Нет доступа к компаниям');
+                
+                // Экранируем данные для безопасной передачи
+                const safeLogin = user.login.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeName = user.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const companiesJson = JSON.stringify(user.companies || []).replace(/"/g, '&quot;');
+                
+                // Проверяем, является ли пользователь главным админом
+                const isMainAdmin = user.login === MAIN_ADMIN_LOGIN;
+                
+                return `
+                <div class="user-item">
+                    <div class="user-info">
+                        <div class="user-avatar"></div>
+                        <div class="user-name">${user.name}${isMainAdmin ? ' <span style="color: #ff9800; font-size: 0.85rem;">(Главный админ)</span>' : ''}</div>
+                        <div class="user-login">Логин: ${user.login}</div>
+                        <div style="color: #64b5f6; font-size: 0.85rem; margin-top: 5px;">${companiesText}</div>
+                        <span class="user-role ${user.role}">${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</span>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-primary btn-small" 
+                                data-user-login="${safeLogin}"
+                                data-user-name="${safeName}"
+                                data-user-role="${user.role}"
+                                data-user-companies="${companiesJson}"
+                                onclick="editUserFromButton(this)">Редактировать</button>
+                        ${isMainAdmin ? '' : `<button class="btn btn-danger btn-small" onclick="deleteUser('${safeLogin}')">Удалить</button>`}
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // Добавить пользователя
+        document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const role = document.getElementById('userRole').value;
+            const formData = {
+                name: document.getElementById('userName').value.trim(),
+                login: document.getElementById('userLogin').value.trim(),
+                password: document.getElementById('userPassword').value,
+                role: role,
+                companies: role === 'admin' ? [] : (currentCompanyId ? [currentCompanyId] : [])
+            };
+
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    showMessage('Пользователь успешно добавлен', 'success');
+                    document.getElementById('addUserForm').reset();
+                    loadUsers();
+                } else {
+                    showMessage(result.error || 'Ошибка добавления пользователя', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка добавления пользователя:', error);
+                showMessage('Ошибка добавления пользователя', 'error');
+            }
+        });
+
+        let userToEdit = null;
+
+        // Открыть модальное окно редактирования пользователя из кнопки
+        async function editUserFromButton(button) {
+            const login = button.getAttribute('data-user-login');
+            const name = button.getAttribute('data-user-name');
+            const role = button.getAttribute('data-user-role');
+            const companiesJson = button.getAttribute('data-user-companies');
+            
+            let companies = [];
+            try {
+                companies = JSON.parse(companiesJson.replace(/&quot;/g, '"'));
+            } catch (e) {
+                console.warn('Ошибка парсинга компаний:', e);
+            }
+            
+            await editUser(login, name, role, companies);
+        }
+
+        // Открыть модальное окно редактирования пользователя
+        async function editUser(login, name, role, companies) {
+            userToEdit = { login, name, role, companies: companies || [] };
+            const modal = document.getElementById('editUserModal');
+            const messageEl = document.getElementById('editUserMessage');
+            const nameInput = document.getElementById('editUserName');
+            const loginInput = document.getElementById('editUserLogin');
+            const passwordInput = document.getElementById('editUserPassword');
+            const roleSelect = document.getElementById('editUserRole');
+            const companiesList = document.getElementById('editUserCompaniesList');
+
+            if (!modal || !nameInput || !loginInput || !roleSelect || !companiesList) return;
+
+            // Проверяем, является ли пользователь главным админом
+            const isMainAdmin = login === MAIN_ADMIN_LOGIN;
+
+            // Заполняем форму данными пользователя
+            nameInput.value = name;
+            loginInput.value = login;
+            loginInput.readOnly = true;
+            passwordInput.value = '';
+            roleSelect.value = role;
+            messageEl.classList.remove('show');
+
+            // Для главного админа отключаем изменение роли и компаний
+            if (isMainAdmin) {
+                roleSelect.disabled = true;
+                roleSelect.style.cursor = 'not-allowed';
+                roleSelect.style.opacity = '0.6';
+                if (companiesList) {
+                    companiesList.style.pointerEvents = 'none';
+                    companiesList.style.opacity = '0.6';
+                }
+                // Показываем предупреждение
+                messageEl.textContent = 'Внимание: для главного администратора нельзя изменить роль и доступ к компаниям';
+                messageEl.className = 'message warning show';
+            } else {
+                roleSelect.disabled = false;
+                roleSelect.style.cursor = 'pointer';
+                roleSelect.style.opacity = '1';
+                if (companiesList) {
+                    companiesList.style.pointerEvents = 'auto';
+                    companiesList.style.opacity = '1';
+                }
+            }
+
+            // Загружаем список компаний для чекбоксов
+            await loadCompaniesForEdit(companies);
+
+            // Если роль администратор, отключаем чекбоксы
+            if (role === 'admin') {
+                const checkboxes = companiesList.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.disabled = true;
+                    cb.checked = false;
+                });
+            }
+
+            modal.classList.add('show');
+        }
+
+        // Загрузить список компаний для редактирования
+        async function loadCompaniesForEdit(userCompanies) {
+            const companiesList = document.getElementById('editUserCompaniesList');
+            if (!companiesList) return;
+
+            try {
+                const response = await fetch('/api/companies');
+                const companies = await response.json() || [];
+                
+                if (companies.length === 0) {
+                    companiesList.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Компании не найдены</p>';
+                    return;
+                }
+
+                companiesList.innerHTML = companies.map(company => {
+                    const isChecked = userCompanies.includes(company.id);
+                    return `
+                        <div class="company-checkbox">
+                            <input type="checkbox" id="company_${company.id}" value="${company.id}" ${isChecked ? 'checked' : ''}>
+                            <label for="company_${company.id}">${company.name} (${company.id})</label>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки компаний:', error);
+                companiesList.innerHTML = '<p style="color: #ef5350; font-size: 0.9rem;">Ошибка загрузки компаний</p>';
+            }
+        }
+
+        // Закрыть модальное окно редактирования пользователя
+        function closeEditUserModal() {
+            const modal = document.getElementById('editUserModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            userToEdit = null;
+            document.getElementById('editUserForm').reset();
+        }
+
+        // Обработка изменения роли в форме редактирования
+        document.getElementById('editUserRole').addEventListener('change', function(e) {
+            const role = e.target.value;
+            const companiesList = document.getElementById('editUserCompaniesList');
+            
+            if (role === 'admin') {
+                // Если роль администратор, отключаем все чекбоксы
+                if (companiesList) {
+                    const checkboxes = companiesList.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.disabled = true;
+                        cb.checked = false;
+                    });
+                }
+            } else {
+                // Если роль пользователь, включаем чекбоксы обратно
+                if (companiesList) {
+                    const checkboxes = companiesList.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.disabled = false;
+                    });
+                }
+            }
+        });
+
+        // Сохранить изменения пользователя
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!userToEdit) {
+                return;
+            }
+
+            const name = document.getElementById('editUserName').value.trim();
+            const password = document.getElementById('editUserPassword').value;
+            const role = document.getElementById('editUserRole').value;
+            const companiesList = document.getElementById('editUserCompaniesList');
+            const messageEl = document.getElementById('editUserMessage');
+
+            if (!name) {
+                messageEl.textContent = 'Имя пользователя обязательно';
+                messageEl.className = 'message error show';
+                return;
+            }
+
+            // Проверяем, является ли пользователь главным админом
+            const isMainAdmin = userToEdit.login === MAIN_ADMIN_LOGIN;
+
+            // Собираем выбранные компании (только если роль не админ и не главный админ)
+            const selectedCompanies = [];
+            if (role !== 'admin' && companiesList && !isMainAdmin) {
+                const checkboxes = companiesList.querySelectorAll('input[type="checkbox"]:checked');
+                checkboxes.forEach(cb => {
+                    selectedCompanies.push(cb.value);
+                });
+            }
+
+            try {
+                const updateData = {
+                    name: name
+                };
+
+                // Для главного админа не отправляем роль и компании
+                if (!isMainAdmin) {
+                    updateData.role = role;
+                    updateData.companies = role === 'admin' ? [] : selectedCompanies;
+                }
+
+                // Добавляем пароль только если он указан
+                if (password && password.trim()) {
+                    if (password.length < 6) {
+                        messageEl.textContent = 'Пароль должен содержать минимум 6 символов';
+                        messageEl.className = 'message error show';
+                        return;
+                    }
+                    updateData.password = password;
+                }
+
+                const response = await fetch(`/api/users/${encodeURIComponent(userToEdit.login)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    messageEl.textContent = 'Пользователь успешно обновлён';
+                    messageEl.className = 'message success show';
+                    setTimeout(() => {
+                        closeEditUserModal();
+                        loadUsers();
+                    }, 1000);
+                } else {
+                    messageEl.textContent = result.error || 'Ошибка обновления пользователя';
+                    messageEl.className = 'message error show';
+                }
+            } catch (error) {
+                console.error('Ошибка обновления пользователя:', error);
+                messageEl.textContent = 'Ошибка подключения к серверу';
+                messageEl.className = 'message error show';
+            }
+        });
+
+        let userToDelete = null;
+        const MAIN_ADMIN_LOGIN = 'Driga_VA';
+
+        // Открыть модальное окно удаления пользователя
+        function deleteUser(login) {
+            // Защита от удаления главного администратора
+            if (login === MAIN_ADMIN_LOGIN) {
+                showMessage('Нельзя удалить главного администратора', 'error');
+                return;
+            }
+
+            // Находим имя пользователя из списка
+            const user = allUsers.find(u => u.login === login);
+            const userName = user ? user.name : login;
+
+            userToDelete = { login, name: userName };
+            const modal = document.getElementById('deleteUserModal');
+            const textEl = document.getElementById('deleteUserText');
+            
+            if (textEl) {
+                textEl.textContent = `Вы действительно хотите удалить пользователя "${userName}" (${login})?\n\nЭто действие нельзя отменить.`;
+            }
+            
+            if (modal) {
+                modal.classList.add('show');
+            }
+        }
+
+        // Закрыть модальное окно удаления пользователя
+        function cancelDeleteUser() {
+            const modal = document.getElementById('deleteUserModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            userToDelete = null;
+        }
+
+        // Подтвердить удаление пользователя
+        async function confirmDeleteUser() {
+            if (!userToDelete) {
+                return;
+            }
+
+            const { login } = userToDelete;
+
+            try {
+                const response = await fetch(`/api/users/${encodeURIComponent(login)}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    showMessage('Пользователь успешно удалён', 'success');
+                    cancelDeleteUser();
+                    loadUsers();
+                } else {
+                    showMessage(result.error || 'Ошибка удаления пользователя', 'error');
+                    cancelDeleteUser();
+                }
+            } catch (error) {
+                console.error('Ошибка удаления пользователя:', error);
+                showMessage('Ошибка удаления пользователя', 'error');
+                cancelDeleteUser();
+            }
+        }
+
+        // Обработчик изменения выбранной компании
+        document.getElementById('companySelect').addEventListener('change', function(e) {
+            currentCompanyId = e.target.value;
+            loadUsers();
+        });
+
+        // Закрытие модального окна редактирования при клике вне его
+        document.getElementById('editUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditUserModal();
+            }
+        });
+
+        // Закрытие модального окна удаления пользователя при клике вне его
+        document.getElementById('deleteUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cancelDeleteUser();
+            }
+        });
+
+        // Закрытие модальных окон по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const editModal = document.getElementById('editUserModal');
+                const deleteModal = document.getElementById('deleteUserModal');
+                if (editModal && editModal.classList.contains('show')) {
+                    closeEditUserModal();
+                } else if (deleteModal && deleteModal.classList.contains('show')) {
+                    cancelDeleteUser();
+                }
+            }
+        });
+
+        // Проверка авторизации и роли администратора
+        function checkAuth() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (!userStr) {
+                window.location.href = 'auth.html';
+                return false;
+            }
+
+            try {
+                const currentUser = JSON.parse(userStr);
+                if (currentUser.role !== 'admin') {
+                    // Если пользователь не админ, перенаправляем на страницу выбора компаний
+                    window.location.href = 'companies.html';
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                console.error('Ошибка загрузки данных пользователя:', e);
+                window.location.href = 'auth.html';
+                return false;
+            }
+        }
+
+        // Выход из админ-панели (переход на страницу выбора компаний)
+        function logoutFromAdmin() {
+            window.location.href = 'companies.html';
+        }
+
+        // Загрузить компании и пользователей при загрузке страницы
+        window.addEventListener('DOMContentLoaded', function() {
+            // Проверяем авторизацию перед загрузкой данных
+            if (!checkAuth()) {
+                return;
+            }
+            loadCompanies();
+            loadUsers();
+        });
+    </script>
+</body>
+</html>

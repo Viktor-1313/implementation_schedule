@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация — График внедрения ICONA</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Контейнер для авторизации */
+        #auth-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(135deg, rgba(135, 206, 250, 0.3) 0%, rgba(176, 224, 230, 0.4) 50%, rgba(173, 216, 230, 0.3) 100%),
+                radial-gradient(circle at 30% 50%, rgba(100, 180, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(135, 206, 250, 0.15) 0%, transparent 50%);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Canvas для волн */
+        #auth-waves-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Светлячки */
+        .firefly {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.8),
+                0 0 20px rgba(255, 255, 255, 0.6),
+                0 0 30px rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            z-index: 2;
+            will-change: transform;
+        }
+
+        /* Тело формы авторизации */
+        .auth-body {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(135, 206, 250, 0.3);
+            border-radius: 20px;
+            padding: 50px 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 
+                0 20px 60px rgba(100, 180, 255, 0.2),
+                inset 0 0 100px rgba(255, 255, 255, 0.1);
+        }
+
+        form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(100, 180, 255, 0.4);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.4);
+            color: rgba(30, 60, 90, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .form-input::placeholder {
+            color: rgba(100, 150, 200, 0.6);
+        }
+
+        .form-input:focus {
+            border-color: rgba(100, 180, 255, 0.8);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 180, 255, 0.3);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .password-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(100, 150, 200, 0.7);
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.3s ease;
+            z-index: 1;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        /* Креативная иконка - звезда/снежинка */
+        .password-toggle::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            background: currentColor;
+            clip-path: polygon(
+                50% 0%,
+                61% 35%,
+                98% 35%,
+                68% 57%,
+                79% 91%,
+                50% 70%,
+                21% 91%,
+                32% 57%,
+                2% 35%,
+                39% 35%
+            );
+        }
+
+        .password-toggle::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: currentColor;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            opacity: 0.3;
+        }
+
+        /* Состояние "показать пароль" - звезда вращается и становится ярче */
+        .password-toggle.show-password::before {
+            transform: rotate(180deg);
+            opacity: 1;
+            filter: brightness(1.5);
+        }
+
+        .password-toggle.show-password::after {
+            opacity: 0.6;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .password-toggle:hover {
+            color: rgba(100, 180, 255, 1);
+            background: rgba(100, 180, 255, 0.15);
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        .password-toggle:hover::before {
+            transform: rotate(90deg);
+            filter: brightness(1.3);
+        }
+
+        .password-toggle.show-password:hover::before {
+            transform: rotate(270deg);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, rgba(100, 180, 255, 0.8) 0%, rgba(135, 206, 250, 0.9) 100%);
+            color: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(100, 180, 255, 0.3);
+        }
+
+        .auth-btn:hover {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(25, 118, 210, 0.5);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        .view-mode-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.3);
+            color: rgba(100, 180, 255, 0.9);
+            border: 2px solid rgba(100, 180, 255, 0.5);
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .view-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: #42a5f5;
+            color: #1976d2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(66, 165, 245, 0.3);
+        }
+
+        .view-mode-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Сообщение об ошибке */
+        .auth-error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .auth-body {
+                padding: 40px 30px;
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-body {
+                padding: 30px 20px;
+            }
+
+            .form-input {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .auth-btn {
+                padding: 12px;
+            }
+        }
+
+        /* Анимация растворения */
+        #auth-container.fade-out {
+            animation: fadeOutDissolve 1.2s ease-in-out forwards;
+        }
+
+        @keyframes fadeOutDissolve {
+            0% {
+                opacity: 1;
+                filter: blur(0px);
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                filter: blur(10px);
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0;
+                filter: blur(20px);
+                transform: scale(1.1);
+            }
+        }
+
+        /* Эффект тумана при растворении */
+        #auth-container.fade-out::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 30% 30%, rgba(200, 230, 255, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 70% 70%, rgba(173, 216, 230, 0.2) 0%, transparent 40%);
+            animation: fogSpread 1.2s ease-in-out forwards;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        @keyframes fogSpread {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+        }
+
+        /* Логотип в левом верхнем углу */
+        .auth-logo-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            width: 203px; /* Увеличен еще на 30% (156px * 1.3) */
+            height: auto;
+            opacity: 0.9;
+            transition: opacity 0.3s ease, filter 0.3s ease;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .auth-logo-top:hover {
+            opacity: 1;
+            filter: drop-shadow(0 0 15px rgba(100, 180, 255, 0.6)) 
+                    drop-shadow(0 0 30px rgba(135, 206, 250, 0.4));
+        }
+
+        .auth-logo-top img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        @media (max-width: 768px) {
+            .auth-logo-top {
+                width: 169px; /* Увеличен еще на 30% (130px * 1.3) */
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-logo-top {
+                width: 135px; /* Увеличен еще на 30% (104px * 1.3) */
+                top: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="auth-container">
+        <div class="auth-logo-top">
+            <img src="logo.png" alt="Logo">
+        </div>
+        <canvas id="auth-waves-canvas"></canvas>
+        <div class="firefly" id="auth-firefly-1"></div>
+        <div class="firefly" id="auth-firefly-2"></div>
+        <div class="firefly" id="auth-firefly-3"></div>
+        <div class="firefly" id="auth-firefly-4"></div>
+        <div class="firefly" id="auth-firefly-5"></div>
+        <div class="firefly" id="auth-firefly-6"></div>
+        <div class="firefly" id="auth-firefly-7"></div>
+        <div class="firefly" id="auth-firefly-8"></div>
+        <div class="firefly" id="auth-firefly-9"></div>
+        <div class="firefly" id="auth-firefly-10"></div>
+        <div class="firefly" id="auth-firefly-11"></div>
+        <div class="firefly" id="auth-firefly-12"></div>
+        
+            <div class="auth-body">
+            <form id="auth-form">
+                <div id="auth-error" class="auth-error" style="display: none;"></div>
+                <div class="form-group">
+                    <input type="text" id="auth-login" class="form-input" placeholder="Введите ваш логин..." autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="auth-password" class="form-input" placeholder="Введите пароль" autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" id="passwordToggle" onclick="togglePassword('auth-password')"></button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn">Войти</button>
+            </form>
+            <button type="button" class="view-mode-btn" id="view-mode-btn">Режим просмотра</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== ВОЛНЫ ==========
+        let wavesAnimationId = null;
+        let wavesCanvas = null;
+        let wavesCtx = null;
+        let wavesWidth = 0;
+        let wavesHeight = 0;
+        const wavesBuffer = [];
+        const wavesBufferSize = 150;
+        let wavesBufferIndex = 0;
+        const wavesMouse = { x: 0, y: 0, active: false };
+
+        function initWaves() {
+            const container = document.getElementById('auth-container');
+            if (!container) return;
+
+            wavesCanvas = document.getElementById('auth-waves-canvas');
+            if (!wavesCanvas) return;
+
+            wavesCtx = wavesCanvas.getContext('2d');
+            
+            // Инициализация размеров
+            const containerRect = container.getBoundingClientRect();
+            wavesWidth = containerRect.width;
+            wavesHeight = containerRect.height;
+            wavesCanvas.width = wavesWidth;
+            wavesCanvas.height = wavesHeight;
+
+            // Заполняем буфер нулями
+            for (let i = 0; i < wavesBufferSize; i++) {
+                wavesBuffer[i] = { x: 0, y: 0, radius: 0, life: 0 };
+            }
+            wavesBufferIndex = 0;
+
+            // Обработчик движения мыши внутри контейнера
+            container.addEventListener('mousemove', function(e) {
+                const rect = container.getBoundingClientRect();
+                wavesMouse.x = e.clientX - rect.left;
+                wavesMouse.y = e.clientY - rect.top;
+                wavesMouse.active = true;
+                
+                // Добавляем волну в буфер
+                wavesBuffer[wavesBufferIndex] = {
+                    x: wavesMouse.x,
+                    y: wavesMouse.y,
+                    radius: 0,
+                    life: 1
+                };
+                wavesBufferIndex = (wavesBufferIndex + 1) % wavesBufferSize;
+            });
+
+            container.addEventListener('mouseleave', () => {
+                wavesMouse.active = false;
+            });
+
+            // Функция рисования волны в стиле liquid glass
+            function drawWave(wave) {
+                const gradient = wavesCtx.createRadialGradient(
+                    wave.x, wave.y, Math.max(0, wave.radius - 20),
+                    wave.x, wave.y, wave.radius
+                );
+                
+                // Голубые оттенки для волн
+                const alpha = 0.4 * wave.life;
+                gradient.addColorStop(0, `rgba(100, 180, 255, ${alpha * 0.9})`);
+                gradient.addColorStop(0.3, `rgba(135, 206, 250, ${alpha * 0.7})`);
+                gradient.addColorStop(0.6, `rgba(173, 216, 230, ${alpha * 0.5})`);
+                gradient.addColorStop(0.8, `rgba(176, 224, 230, ${alpha * 0.3})`);
+                gradient.addColorStop(1, `rgba(200, 230, 255, 0)`);
+                
+                wavesCtx.beginPath();
+                wavesCtx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                wavesCtx.fillStyle = gradient;
+                wavesCtx.fill();
+                
+                // Легкая обводка в голубых тонах
+                wavesCtx.strokeStyle = `rgba(100, 180, 255, ${0.3 * wave.life})`;
+                wavesCtx.lineWidth = 1.5;
+                wavesCtx.stroke();
+            }
+
+            // Анимация волн
+            function animateWaves() {
+                const container = document.getElementById('auth-container');
+                if (!container || !wavesCanvas) {
+                    if (wavesAnimationId) {
+                        cancelAnimationFrame(wavesAnimationId);
+                        wavesAnimationId = null;
+                    }
+                    return;
+                }
+
+                // Обновляем размеры если контейнер изменился
+                const containerRect = container.getBoundingClientRect();
+                if (containerRect.width !== wavesWidth || containerRect.height !== wavesHeight) {
+                    wavesWidth = containerRect.width;
+                    wavesHeight = containerRect.height;
+                    wavesCanvas.width = wavesWidth;
+                    wavesCanvas.height = wavesHeight;
+                }
+
+                // Очищаем canvas с легкой прозрачностью для следов (голубой оттенок)
+                wavesCtx.fillStyle = 'rgba(200, 230, 255, 0.03)';
+                wavesCtx.fillRect(0, 0, wavesWidth, wavesHeight);
+                
+                // Обновляем и рисуем все волны
+                for (let i = 0; i < wavesBufferSize; i++) {
+                    const wave = wavesBuffer[i];
+                    
+                    if (wave.life > 0) {
+                        // Обновляем волну
+                        wave.radius += 2.5;
+                        wave.life -= 0.01;
+                        
+                        // Рисуем волну
+                        drawWave(wave);
+                    }
+                }
+                
+                // Легкое свечение под курсором в голубых тонах
+                if (wavesMouse.active) {
+                    const gradient = wavesCtx.createRadialGradient(
+                        wavesMouse.x, wavesMouse.y, 0,
+                        wavesMouse.x, wavesMouse.y, 60
+                    );
+                    gradient.addColorStop(0, 'rgba(100, 180, 255, 0.25)');
+                    gradient.addColorStop(0.5, 'rgba(135, 206, 250, 0.15)');
+                    gradient.addColorStop(1, 'rgba(173, 216, 230, 0)');
+                    
+                    wavesCtx.fillStyle = gradient;
+                    wavesCtx.beginPath();
+                    wavesCtx.arc(wavesMouse.x, wavesMouse.y, 60, 0, Math.PI * 2);
+                    wavesCtx.fill();
+                }
+                
+                wavesAnimationId = requestAnimationFrame(animateWaves);
+                
+                // Обновляем качание логотипа от волн
+                updateLogoWaveSway();
+            }
+
+            // Запуск анимации
+            animateWaves();
+
+            // Обработка изменения размера окна
+            window.addEventListener('resize', () => {
+                const container = document.getElementById('auth-container');
+                if (container && wavesCanvas) {
+                    const rect = container.getBoundingClientRect();
+                    wavesWidth = rect.width;
+                    wavesHeight = rect.height;
+                    wavesCanvas.width = wavesWidth;
+                    wavesCanvas.height = wavesHeight;
+                }
+            });
+        }
+
+        // ========== СВЕТЛЯЧКИ ==========
+        let fireflyAnimationIds = [];
+        const fireflies = [];
+        let mouseX = 0;
+        let mouseY = 0;
+
+        function initFireflies() {
+            const container = document.getElementById('auth-container');
+            if (!container) return;
+
+            // Инициализация всех светлячков
+            for (let i = 1; i <= 12; i++) {
+                const firefly = document.getElementById(`auth-firefly-${i}`);
+                if (!firefly) continue;
+
+                const fireflyData = {
+                    element: firefly,
+                    x: 0,
+                    y: 0,
+                    vx: 0,
+                    vy: 0,
+                    id: i
+                };
+
+                // Начальная позиция - случайная внутри контейнера
+                const containerRect = container.getBoundingClientRect();
+                fireflyData.x = Math.random() * (containerRect.width - 20) + 10;
+                fireflyData.y = Math.random() * (containerRect.height - 20) + 10;
+                
+                // Начальная скорость (разная для каждого)
+                fireflyData.vx = (Math.random() - 0.5) * 2;
+                fireflyData.vy = (Math.random() - 0.5) * 2;
+
+                fireflies.push(fireflyData);
+            }
+
+            // Обработчик движения мыши для светлячков
+            container.addEventListener('mousemove', function(e) {
+                const rect = container.getBoundingClientRect();
+                mouseX = e.clientX - rect.left;
+                mouseY = e.clientY - rect.top;
+            });
+
+            function animateFireflies() {
+                const container = document.getElementById('auth-container');
+                if (!container) {
+                    fireflyAnimationIds.forEach(id => cancelAnimationFrame(id));
+                    fireflyAnimationIds = [];
+                    return;
+                }
+
+                const containerRect = container.getBoundingClientRect();
+                const fireflySize = 8;
+                const speed = 1.5;
+                const bounceDamping = 0.8;
+                const escapeSpeed = 3;
+                const escapeRadius = 100;
+
+                fireflies.forEach(firefly => {
+                    // Проверка расстояния до курсора
+                    const distance = Math.sqrt(
+                        Math.pow(mouseX - firefly.x, 2) + Math.pow(mouseY - firefly.y, 2)
+                    );
+                    const isMouseNear = distance < escapeRadius;
+
+                    // Убегание от курсора
+                    if (isMouseNear) {
+                        const dx = firefly.x - mouseX;
+                        const dy = firefly.y - mouseY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist > 0) {
+                            firefly.vx = (dx / dist) * escapeSpeed;
+                            firefly.vy = (dy / dist) * escapeSpeed;
+                        }
+                    } else {
+                        // Обычное движение с небольшим случайным ускорением
+                        firefly.vx += (Math.random() - 0.5) * 0.1;
+                        firefly.vy += (Math.random() - 0.5) * 0.1;
+                        
+                        // Ограничение максимальной скорости
+                        const maxSpeed = 3;
+                        const currentSpeed = Math.sqrt(firefly.vx * firefly.vx + firefly.vy * firefly.vy);
+                        if (currentSpeed > maxSpeed) {
+                            firefly.vx = (firefly.vx / currentSpeed) * maxSpeed;
+                            firefly.vy = (firefly.vy / currentSpeed) * maxSpeed;
+                        }
+                    }
+
+                    // Обновление позиции
+                    firefly.x += firefly.vx * speed;
+                    firefly.y += firefly.vy * speed;
+
+                    // Отскок от стен
+                    if (firefly.x <= fireflySize) {
+                        firefly.x = fireflySize;
+                        firefly.vx = Math.abs(firefly.vx) * bounceDamping;
+                    } else if (firefly.x >= containerRect.width - fireflySize) {
+                        firefly.x = containerRect.width - fireflySize;
+                        firefly.vx = -Math.abs(firefly.vx) * bounceDamping;
+                    }
+
+                    if (firefly.y <= fireflySize) {
+                        firefly.y = fireflySize;
+                        firefly.vy = Math.abs(firefly.vy) * bounceDamping;
+                    } else if (firefly.y >= containerRect.height - fireflySize) {
+                        firefly.y = containerRect.height - fireflySize;
+                        firefly.vy = -Math.abs(firefly.vy) * bounceDamping;
+                    }
+
+                    // Применение позиции
+                    firefly.element.style.left = firefly.x + 'px';
+                    firefly.element.style.top = firefly.y + 'px';
+                });
+
+                const animationId = requestAnimationFrame(animateFireflies);
+                fireflyAnimationIds = [animationId];
+            }
+
+            // Запуск анимации
+            animateFireflies();
+        }
+
+        // ========== ПЕРЕКЛЮЧЕНИЕ ВИДИМОСТИ ПАРОЛЯ ==========
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const toggleBtn = document.getElementById('passwordToggle');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (toggleBtn) {
+                    toggleBtn.classList.add('show-password');
+                }
+            } else {
+                input.type = 'password';
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('show-password');
+                }
+            }
+        }
+
+        // ========== ПОЛУЧЕНИЕ ПАРАМЕТРА COMPANY ИЗ URL ==========
+        function getCompanyFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('company') || null;
+        }
+
+        // ========== ОБРАБОТКА ФОРМЫ ==========
+        document.getElementById('auth-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const container = document.getElementById('auth-container');
+            const form = document.getElementById('auth-form');
+            const loginInput = document.getElementById('auth-login');
+            const passwordInput = document.getElementById('auth-password');
+            const errorMessage = document.getElementById('auth-error');
+            
+            const login = loginInput.value.trim();
+            const password = passwordInput.value;
+            const company = getCompanyFromURL();
+            
+            // Отключаем форму
+            form.style.pointerEvents = 'none';
+            
+            // Скрываем предыдущие ошибки
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+            
+            try {
+                // Проверяем авторизацию через API (без проверки компании - пользователь выберет на следующей странице)
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ login, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok && result.user) {
+                    // Сохраняем режим редактирования и данные пользователя
+                    localStorage.setItem('gantt-mode', 'edit');
+                    localStorage.setItem('gantt-user', JSON.stringify(result.user));
+                    // Не сохраняем company при авторизации - пользователь выберет на следующей странице
+                    
+                    // Останавливаем анимации
+                    if (wavesAnimationId) {
+                        cancelAnimationFrame(wavesAnimationId);
+                    }
+                    fireflyAnimationIds.forEach(id => cancelAnimationFrame(id));
+                    
+                    // Запускаем анимацию растворения
+                    container.classList.add('fade-out');
+                    
+                    // Переходим на страницу выбора компании после завершения анимации
+                    setTimeout(function() {
+                        window.location.href = 'companies.html';
+                    }, 1200); // Время анимации
+                } else {
+                    // Показываем ошибку
+                    if (errorMessage) {
+                        errorMessage.textContent = result.error || 'Неверный логин или пароль';
+                        errorMessage.style.display = 'block';
+                    }
+                    form.style.pointerEvents = 'auto';
+                }
+            } catch (error) {
+                console.error('Ошибка авторизации:', error);
+                if (errorMessage) {
+                    errorMessage.textContent = 'Ошибка подключения к серверу';
+                    errorMessage.style.display = 'block';
+                }
+                form.style.pointerEvents = 'auto';
+            }
+        });
+
+        // ========== ОБРАБОТКА КНОПКИ РЕЖИМА ПРОСМОТРА ==========
+        document.getElementById('view-mode-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const container = document.getElementById('auth-container');
+            const viewBtn = document.getElementById('view-mode-btn');
+            const company = getCompanyFromURL();
+            
+            // Отключаем кнопку
+            viewBtn.style.pointerEvents = 'none';
+            
+            // Сохраняем режим просмотра
+            localStorage.setItem('gantt-mode', 'view');
+            // Если компания указана в URL, сохраняем её и переходим сразу к графику
+            // Иначе переходим на страницу выбора компании
+            if (company) {
+                localStorage.setItem('gantt-company', company);
+            }
+            
+            // Останавливаем анимации
+            if (wavesAnimationId) {
+                cancelAnimationFrame(wavesAnimationId);
+            }
+            fireflyAnimationIds.forEach(id => cancelAnimationFrame(id));
+            
+            // Запускаем анимацию растворения
+            container.classList.add('fade-out');
+            
+            // Переходим на страницу выбора компании или сразу к графику, если компания указана
+            setTimeout(function() {
+                if (company) {
+                    window.location.href = `implementation_schedule.html?company=${company}`;
+                } else {
+                    window.location.href = 'companies.html';
+                }
+            }, 1200); // Время анимации
+        });
+
+        // ========== ЭФФЕКТ НАКЛОНА ЛОГОТИПА ЗА МЫШКОЙ И КАЧАНИЕ НА ВОЛНАХ ==========
+        let logoWaveSway = { x: 0, y: 0 }; // Текущее качание от волн
+        let logoMouseTilt = { x: 0, y: 0 }; // Наклон от мыши
+        
+        function initLogoTilt() {
+            const logo = document.querySelector('.auth-logo-top');
+            const logoImg = logo?.querySelector('img');
+            if (!logo || !logoImg) return;
+
+            // Наклон за мышкой
+            logo.addEventListener('mousemove', function(e) {
+                const rect = logo.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const mouseX = e.clientX - centerX;
+                const mouseY = e.clientY - centerY;
+                
+                // Максимальный угол наклона (в градусах)
+                const maxTilt = 15;
+                
+                // Вычисляем углы наклона (обратные значения для естественного движения)
+                logoMouseTilt.y = (mouseX / (rect.width / 2)) * maxTilt;
+                logoMouseTilt.x = -(mouseY / (rect.height / 2)) * maxTilt;
+                
+                updateLogoTransform(logoImg);
+            });
+
+            logo.addEventListener('mouseleave', function() {
+                // Сбрасываем наклон от мыши, но оставляем качание от волн
+                logoMouseTilt.x = 0;
+                logoMouseTilt.y = 0;
+                updateLogoTransform(logoImg);
+            });
+        }
+
+        // Функция обновления трансформации логотипа (объединяет наклон от мыши и качание от волн)
+        function updateLogoTransform(logoImg) {
+            const totalRotateX = logoMouseTilt.x + logoWaveSway.x;
+            const totalRotateY = logoMouseTilt.y + logoWaveSway.y;
+            const scale = logoMouseTilt.x !== 0 || logoMouseTilt.y !== 0 ? 1.05 : 1;
+            
+            logoImg.style.transform = `perspective(1000px) rotateX(${totalRotateX}deg) rotateY(${totalRotateY}deg) scale(${scale})`;
+        }
+
+        // Функция вычисления качания логотипа от волн
+        function updateLogoWaveSway() {
+            const logo = document.querySelector('.auth-logo-top');
+            const logoImg = logo?.querySelector('img');
+            if (!logo || !logoImg || !wavesBuffer) return;
+
+            const logoRect = logo.getBoundingClientRect();
+            const containerRect = document.getElementById('auth-container')?.getBoundingClientRect();
+            if (!containerRect) return;
+
+            // Позиция центра логотипа относительно контейнера
+            const logoCenterX = logoRect.left + logoRect.width / 2 - containerRect.left;
+            const logoCenterY = logoRect.top + logoRect.height / 2 - containerRect.top;
+
+            let totalSwayX = 0;
+            let totalSwayY = 0;
+            let waveCount = 0;
+
+            // Проходим по всем активным волнам
+            for (let i = 0; i < wavesBufferSize; i++) {
+                const wave = wavesBuffer[i];
+                
+                if (wave.life > 0 && wave.radius > 0) {
+                    // Расстояние от центра логотипа до центра волны
+                    const dx = wave.x - logoCenterX;
+                    const dy = wave.y - logoCenterY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Максимальное расстояние влияния волны на логотип
+                    const maxInfluenceDistance = wave.radius + 100;
+                    
+                    if (distance < maxInfluenceDistance) {
+                        // Сила влияния волны (уменьшается с расстоянием и временем жизни)
+                        const influence = (1 - distance / maxInfluenceDistance) * wave.life * 0.3;
+                        
+                        // Направление качания (перпендикулярно направлению волны)
+                        // Волна создает качание в направлении от центра волны
+                        const angle = Math.atan2(dy, dx);
+                        const swayStrength = influence * 8; // Максимальный угол качания 8 градусов
+                        
+                        // Качание влево-вправо и вверх-вниз на основе направления волны
+                        totalSwayX += Math.sin(angle) * swayStrength;
+                        totalSwayY += Math.cos(angle) * swayStrength;
+                        
+                        waveCount++;
+                    }
+                }
+            }
+
+            // Усредняем влияние всех волн
+            if (waveCount > 0) {
+                logoWaveSway.x = totalSwayX / waveCount;
+                logoWaveSway.y = totalSwayY / waveCount;
+            } else {
+                // Плавно возвращаем к нулю, если нет активных волн
+                logoWaveSway.x *= 0.9;
+                logoWaveSway.y *= 0.9;
+            }
+
+            // Обновляем трансформацию логотипа
+            const logoImgElement = logo.querySelector('img');
+            if (logoImgElement) {
+                updateLogoTransform(logoImgElement);
+            }
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        window.addEventListener('DOMContentLoaded', function() {
+            initWaves();
+            initFireflies();
+            initLogoTilt();
+        });
+    </script>
+</body>
+</html>
+
