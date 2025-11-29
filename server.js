@@ -150,6 +150,11 @@ app.get('/api/gantt-state', (req, res) => {
 app.post('/api/gantt-state', (req, res) => {
   try {
     const companyId = req.query.company || req.body.company;
+    console.log('📥 POST /api/gantt-state получен');
+    console.log('   companyId из query:', req.query.company);
+    console.log('   companyId из body:', req.body.company);
+    console.log('   Итоговый companyId:', companyId);
+    
     if (!companyId || !isValidCompanyId(companyId)) {
       console.error('❌ Ошибка: не указан или неверный ID компании:', companyId);
       return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
@@ -159,14 +164,35 @@ app.post('/api/gantt-state', (req, res) => {
     console.log('💾 Сохранение графика для компании:', companyId);
     console.log('📁 Путь к файлу:', dataFile);
     console.log('📦 Размер данных:', JSON.stringify(req.body).length, 'байт');
+    console.log('📊 Количество задач в данных:', req.body.tasks ? req.body.tasks.length : 'нет');
     
-    fs.writeFileSync(dataFile, JSON.stringify(req.body, null, 2), 'utf8');
-    console.log('✅ График успешно сохранен в файл:', dataFile);
+    // Проверяем, что директория существует
+    const dir = path.dirname(dataFile);
+    if (!fs.existsSync(dir)) {
+      console.log('📁 Создание директории:', dir);
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Сохраняем данные
+    const dataToSave = req.body;
+    fs.writeFileSync(dataFile, JSON.stringify(dataToSave, null, 2), 'utf8');
+    
+    // Проверяем, что файл действительно создан
+    if (fs.existsSync(dataFile)) {
+      const stats = fs.statSync(dataFile);
+      console.log('✅ График успешно сохранен в файл:', dataFile);
+      console.log('✅ Размер сохраненного файла:', stats.size, 'байт');
+    } else {
+      console.error('❌ Файл не был создан после записи!');
+      throw new Error('Файл не был создан');
+    }
     
     res.json({ ok: true });
   } catch (e) {
     console.error('❌ Ошибка сохранения gantt-state:', e);
-    console.error('Стек ошибки:', e.stack);
+    console.error('   Тип ошибки:', e.constructor.name);
+    console.error('   Сообщение:', e.message);
+    console.error('   Стек ошибки:', e.stack);
     res.status(500).json({ ok: false, error: 'save_failed', message: e.message });
   }
 });

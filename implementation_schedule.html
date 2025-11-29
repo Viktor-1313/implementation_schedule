@@ -3890,38 +3890,72 @@
             try {
                 if (!currentCompany) {
                     console.warn('⚠️ Компания не указана, сохранение пропущено. currentCompany:', currentCompany);
+                    console.warn('⚠️ URL:', window.location.href);
+                    console.warn('⚠️ localStorage gantt-company:', localStorage.getItem('gantt-company'));
                     return;
                 }
+                
+                if (isViewMode) {
+                    console.warn('⚠️ Режим просмотра, сохранение пропущено');
+                    return;
+                }
+                
                 const snapshot = createFullGanttSnapshot();
                 const companyParam = `?company=${currentCompany}`;
+                const url = `/api/gantt-state${companyParam}`;
+                
                 console.log('💾 Сохранение графика для компании:', currentCompany);
                 console.log('📦 Размер данных:', JSON.stringify(snapshot).length, 'байт');
+                console.log('🔗 URL запроса:', url);
+                console.log('📊 Количество задач:', snapshot.tasks ? snapshot.tasks.length : 0);
                 
-                const response = await fetch(`/api/gantt-state${companyParam}`, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(snapshot)
                 });
                 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Ошибка HTTP:', response.status, response.statusText);
+                    console.error('❌ Текст ошибки:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
                 const responseData = await response.json();
                 
-                if (response.ok) {
+                if (responseData && responseData.ok) {
                     console.log('✅ Полное состояние графика сохранено успешно');
+                    console.log('✅ Ответ сервера:', responseData);
                 } else {
-                    console.error('❌ Ошибка сохранения графика:', response.status, responseData);
-                    alert('Не удалось сохранить изменения. Проверьте консоль браузера для деталей.');
+                    console.error('❌ Сервер вернул ошибку:', responseData);
+                    throw new Error(responseData.error || 'Неизвестная ошибка сохранения');
                 }
             } catch (e) {
                 console.error('❌ Ошибка при сохранении графика на сервере:', e);
-                alert('Ошибка сохранения: ' + e.message);
+                console.error('❌ Стек ошибки:', e.stack);
+                alert('Ошибка сохранения: ' + e.message + '\n\nПроверьте консоль браузера для деталей.');
             }
         }
 
         // Автоматическое сохранение с задержкой (debounce)
         function autoSaveGanttState() {
+            console.log('🔄 autoSaveGanttState вызвана');
+            console.log('   currentCompany:', currentCompany);
+            console.log('   isViewMode:', isViewMode);
+            console.log('   URL:', window.location.href);
+            
             if (!currentCompany) {
                 console.warn('⚠️ autoSaveGanttState: компания не определена, сохранение пропущено');
-                return;
+                console.warn('   Попытка получить из localStorage:', localStorage.getItem('gantt-company'));
+                // Попытка восстановить из localStorage
+                const savedCompany = localStorage.getItem('gantt-company');
+                if (savedCompany) {
+                    currentCompany = savedCompany;
+                    console.log('✅ Компания восстановлена из localStorage:', currentCompany);
+                } else {
+                    return;
+                }
             }
             
             if (isViewMode) {
@@ -3932,6 +3966,7 @@
             // Очищаем предыдущий таймер
             if (saveTimeout) {
                 clearTimeout(saveTimeout);
+                console.log('   Предыдущий таймер очищен');
             }
             
             console.log('⏱️ Запланировано автоматическое сохранение через 2 секунды');
