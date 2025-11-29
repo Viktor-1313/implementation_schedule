@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Выбор компании — Управление графиками</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
@@ -723,6 +723,8 @@
                 width: 100%;
                 padding: 12px;
                 font-size: 0.9rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
             .add-company-card {
@@ -793,6 +795,8 @@
             .btn {
                 padding: 10px;
                 font-size: 0.85rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
             .add-company-card {
@@ -1114,16 +1118,16 @@
                 let actionsHtml = '';
                 if (isAdmin) {
                     actionsHtml = `
-                        <button class="btn btn-warning" onclick="event.stopPropagation(); editCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); editCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
                             Редактировать
                         </button>
                         <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
                             Открыть график
                         </button>
-                        <button class="btn btn-link" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
                             <span style="margin-right: 5px;">📋</span>Копировать ссылку
                         </button>
-                        <button class="btn btn-danger" onclick="event.stopPropagation(); deleteCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); deleteCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
                             Удалить
                         </button>
                     `;
@@ -1132,7 +1136,7 @@
                         <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
                             Открыть график
                         </button>
-                        <button class="btn btn-link" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
                             <span style="margin-right: 5px;">📋</span>Копировать ссылку
                         </button>
                     `;

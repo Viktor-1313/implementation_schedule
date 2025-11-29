@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>График внедрения и обучения системы ICONA</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -556,11 +556,10 @@
             gap: 20px;
         }
 
-        .company-logo-upload {
+        .company-logo-display {
             display: flex;
             align-items: center;
             gap: 10px;
-            cursor: pointer;
             position: relative;
         }
 
@@ -605,6 +604,8 @@
             font-style: italic;
             min-height: 32px;
             outline: none;
+            cursor: default;
+            user-select: none;
         }
 
         .company-name-display.has-value {
@@ -1900,6 +1901,8 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: var(--shadow-sm);
+            min-width: 120px;
+            text-align: center;
         }
 
         .stage-tab-btn:hover {
@@ -2087,7 +2090,7 @@
                 align-items: center;
             }
 
-            .company-logo-upload {
+            .company-logo-display {
                 width: 100%;
                 max-width: 300px;
             }
@@ -2167,7 +2170,7 @@
                 padding: 15px;
             }
 
-            .company-logo-upload {
+            .company-logo-display {
                 width: 100%;
                 max-width: 250px;
             }
@@ -2200,6 +2203,8 @@
                 padding: 12px;
                 font-size: 0.9rem;
                 justify-content: center;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
             .btn-icon {
@@ -2251,6 +2256,20 @@
             .gantt-chart {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                position: relative;
+            }
+
+            .gantt-chart::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .gantt-chart::-webkit-scrollbar-thumb {
+                background: #90caf9;
+                border-radius: 4px;
+            }
+
+            .gantt-chart::-webkit-scrollbar-track {
+                background: #e3f2fd;
             }
 
             .gantt-label {
@@ -2274,10 +2293,31 @@
             }
 
             /* Таблица задач на мобильных */
+            .tasks-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+                width: 100%;
+            }
+
+            .tasks-table-wrapper::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .tasks-table-wrapper::-webkit-scrollbar-thumb {
+                background: #90caf9;
+                border-radius: 4px;
+            }
+
+            .tasks-table-wrapper::-webkit-scrollbar-track {
+                background: #e3f2fd;
+            }
+
             .tasks-table {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 font-size: 0.85rem;
+                min-width: 800px; /* Минимальная ширина для читаемости */
             }
 
             .tasks-table th,
@@ -2308,6 +2348,21 @@
                 flex-wrap: wrap;
                 gap: 8px;
                 padding: 10px;
+                flex-direction: column;
+            }
+
+            .stage-tabs-buttons {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .stage-tab-btn {
+                flex: 1;
+                min-width: calc(50% - 4px);
+                padding: 10px 12px;
+                font-size: 0.85rem;
             }
 
             .stage-tab {
@@ -2375,6 +2430,8 @@
             .btn {
                 padding: 10px;
                 font-size: 0.85rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
             /* Кнопки управления на маленьких экранах */
@@ -2402,8 +2459,12 @@
 
             .gantt-label {
                 min-width: 80px;
+                max-width: 80px;
                 font-size: 0.65rem;
                 padding: 6px 4px;
+                word-break: break-word;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .gantt-header-cell {
@@ -2416,6 +2477,15 @@
                 min-width: 25px;
             }
 
+            /* Улучшенный скролл для мобильных */
+            .gantt-chart {
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: #90caf9 #e3f2fd;
+            }
+
             .tasks-table {
                 font-size: 0.75rem;
             }
@@ -2424,11 +2494,22 @@
             .tasks-table td {
                 padding: 6px 4px;
                 font-size: 0.7rem;
+                white-space: nowrap;
             }
 
             .tasks-table-input {
                 padding: 4px 6px;
                 font-size: 0.7rem;
+                width: 100%;
+                min-width: 60px;
+            }
+
+            /* Улучшенный скролл для таблицы на мобильных */
+            .tasks-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: #90caf9 #e3f2fd;
             }
 
             .statistics {
@@ -2449,6 +2530,23 @@
 
             .stage-tabs {
                 padding: 8px;
+                flex-direction: column;
+            }
+
+            .stage-tabs-buttons {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .stage-tab-btn {
+                flex: 1;
+                min-width: calc(50% - 3px);
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                padding: 8px 10px;
+                font-size: 0.75rem;
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
             .stage-tab {
@@ -2480,6 +2578,40 @@
             .profile-form-group input {
                 padding: 10px;
                 font-size: 16px; /* Предотвращает зум на iOS */
+            }
+        }
+
+        /* Landscape ориентация для мобильных */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .container {
+                padding: 8px;
+            }
+
+            header {
+                padding: 15px 12px;
+                margin-bottom: 10px;
+            }
+
+            header h1 {
+                font-size: 1.1rem;
+            }
+
+            .controls {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+
+            .gantt-chart {
+                max-height: 50vh;
+            }
+
+            .tasks-table-wrapper {
+                max-height: 40vh;
             }
         }
 
@@ -2549,17 +2681,14 @@
             </h1>
             <p class="header-subtitle">Интерактивная визуализация плана цифровизации процессов</p>
             <div class="company-info">
-                <div class="company-logo-upload" id="companyLogoWrapper">
+                <div class="company-logo-display" id="companyLogoWrapper">
                     <img id="companyLogo" class="company-logo-preview" src="favicon.png" alt="Логотип компании">
-                    <input type="file" id="companyLogoInput" accept="image/png" style="display: none;">
-                    <span id="companyLogoHint" class="company-logo-hint">Выберите файл</span>
                 </div>
                 <div class="company-name-block">
                     <span class="company-name-label">Название компании</span>
                     <div
                         id="companyNameDisplay"
                         class="company-name-display"
-                        contenteditable="true"
                         data-placeholder="Введите название компании"
                     >Введите название компании</div>
                 </div>
@@ -3316,7 +3445,6 @@
 
         function applyCompanyInfoToUI() {
             const logoEl = document.getElementById('companyLogo');
-            const logoHint = document.getElementById('companyLogoHint');
             const nameDisplay = document.getElementById('companyNameDisplay');
 
             if (logoEl) {
@@ -3325,10 +3453,6 @@
                 } else {
                     logoEl.src = 'favicon.png';
                 }
-            }
-
-            if (logoHint) {
-                logoHint.style.display = companyLogoData ? 'none' : 'inline';
             }
 
             if (nameDisplay) {
@@ -6947,28 +7071,20 @@ function exportPDF(scaleMode = 'day') {
             const companyLogoWrapper = document.getElementById('companyLogoWrapper');
 
             if (companyNameDisplay) {
-                // Блокируем редактирование названия компании в режиме просмотра
-                if (isViewMode) {
-                    companyNameDisplay.contentEditable = 'false';
-                    companyNameDisplay.style.cursor = 'default';
-                } else {
-                    companyNameDisplay.addEventListener('focus', handleCompanyNameFocus);
-                    companyNameDisplay.addEventListener('input', handleCompanyNameInput);
-                    companyNameDisplay.addEventListener('blur', handleCompanyNameInput);
-                }
+                // Убираем возможность редактирования названия компании на странице графика
+                // Редактирование доступно только через админ-панель или страницу выбора компаний
+                companyNameDisplay.contentEditable = 'false';
+                companyNameDisplay.style.cursor = 'default';
             }
 
+            // Убираем возможность загрузки логотипа на странице графика
+            // Загрузка доступна только через админ-панель или страницу выбора компаний
             if (companyLogoInput) {
-                companyLogoInput.addEventListener('change', handleCompanyLogoChange);
+                companyLogoInput.style.display = 'none';
             }
-
-            if (companyLogoWrapper && companyLogoInput) {
-                companyLogoWrapper.addEventListener('click', () => {
-                    if (!canEdit()) {
-                        return; // Блокируем клик по логотипу в режиме просмотра
-                    }
-                    companyLogoInput.click();
-                });
+            
+            if (companyLogoWrapper) {
+                companyLogoWrapper.style.cursor = 'default';
             }
 
             // Инициализируем вкладки этапов на основе текущей конфигурации
