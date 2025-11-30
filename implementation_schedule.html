@@ -559,6 +559,7 @@
         .company-logo-display {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             position: relative;
         }
@@ -2148,6 +2149,12 @@
             .company-logo-display {
                 width: 100%;
                 max-width: 300px;
+                justify-content: center;
+                margin: 0 auto;
+            }
+            
+            .company-logo-preview {
+                margin: 0 auto;
             }
 
             .company-name-block {
@@ -2239,16 +2246,21 @@
                 flex-direction: column;
                 gap: 15px;
                 padding: 15px;
+                align-items: center;
             }
 
             .company-logo-display {
                 width: 100%;
                 max-width: 250px;
+                justify-content: center;
+                margin: 0 auto;
             }
 
             .company-logo-preview {
                 max-width: 200px;
                 max-height: 150px;
+                margin: 0 auto;
+                display: block;
             }
 
             .company-name-display {
@@ -2566,11 +2578,19 @@
 
             .company-info {
                 padding: 12px;
+                align-items: center;
+            }
+            
+            .company-logo-display {
+                justify-content: center;
+                margin: 0 auto;
             }
 
             .company-logo-preview {
                 max-width: 150px;
                 max-height: 120px;
+                margin: 0 auto;
+                display: block;
             }
 
             .company-name-display {
@@ -3150,6 +3170,21 @@
             <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
                 <button class="btn btn-primary" onclick="confirmDeleteStage()">Да, удалить</button>
                 <button class="btn btn-secondary" onclick="cancelDeleteStage()">Нет</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetPlanConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Сбросить план?</h2>
+                <span class="close" onclick="cancelResetPlan()">&times;</span>
+            </div>
+            <p>Вы действительно хотите сбросить все даты, статусы и комментарии до значений по умолчанию?</p>
+            <p style="color: #f44336; font-weight: 500; margin-top: 10px;">Это действие не может быть отменено.</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+                <button class="btn btn-primary" onclick="confirmResetPlan()">Да, сбросить</button>
+                <button class="btn btn-secondary" onclick="cancelResetPlan()">Нет</button>
             </div>
         </div>
     </div>
@@ -6688,13 +6723,104 @@ async function exportPDF(scaleMode = 'day') {
             document.getElementById('editModal').style.display = 'none';
         }
 
-        // Сброс плана к дефолтному состоянию (как в исходном коде)
+        // Открыть модальное окно подтверждения сброса плана
         function resetSchedule() {
+            if (!canEdit()) {
+                return; // Блокируем сброс плана в режиме просмотра
+            }
+            const modal = document.getElementById('resetPlanConfirmModal');
+            if (modal) {
+                modal.style.display = 'block';
+                
+                // На мобильных устройствах позиционируем модальное окно рядом с кнопкой
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    // Находим кнопку "Сбросить план"
+                    const resetButton = document.querySelector('.reset-plan-btn');
+                    
+                    if (resetButton) {
+                        const modalContent = modal.querySelector('.modal-content');
+                        if (modalContent) {
+                            const buttonRect = resetButton.getBoundingClientRect();
+                            
+                            // Позиционируем модальное окно так, чтобы оно было видно рядом с кнопкой
+                            // Вычисляем позицию: если кнопка в нижней половине экрана - показываем над ней, иначе - под ней
+                            const viewportHeight = window.innerHeight;
+                            const buttonBottom = buttonRect.bottom;
+                            const spaceBelow = viewportHeight - buttonBottom;
+                            const spaceAbove = buttonRect.top;
+                            
+                            // Вычисляем позицию относительно viewport (так как modal имеет position: fixed)
+                            let topPosition;
+                            if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+                                // Показываем над кнопкой
+                                topPosition = buttonRect.top - 250; // высота модального окна примерно 250px
+                            } else {
+                                // Показываем под кнопкой
+                                topPosition = buttonRect.bottom + 20; // небольшой отступ
+                            }
+                            
+                            // Убеждаемся, что окно не выходит за пределы экрана
+                            const minTop = 20;
+                            const maxTop = viewportHeight - 300;
+                            topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
+                            
+                            modalContent.style.position = 'absolute';
+                            modalContent.style.top = topPosition + 'px';
+                            modalContent.style.left = '50%';
+                            modalContent.style.transform = 'translateX(-50%)';
+                            modalContent.style.margin = '0';
+                            modalContent.style.width = 'calc(100% - 40px)';
+                            modalContent.style.maxWidth = '500px';
+                        }
+                    }
+                } else {
+                    // На десктопе сбрасываем стили (используется стандартное центрирование через CSS)
+                    const modalContent = modal.querySelector('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.position = '';
+                        modalContent.style.top = '';
+                        modalContent.style.left = '';
+                        modalContent.style.transform = '';
+                        modalContent.style.margin = '';
+                        modalContent.style.width = '';
+                        modalContent.style.maxWidth = '';
+                    }
+                }
+            }
+        }
+
+        // Закрыть модальное окно подтверждения сброса плана
+        function cancelResetPlan() {
+            const modal = document.getElementById('resetPlanConfirmModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Сбрасываем стили позиционирования
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.position = '';
+                    modalContent.style.top = '';
+                    modalContent.style.left = '';
+                    modalContent.style.transform = '';
+                    modalContent.style.margin = '';
+                    modalContent.style.width = '';
+                    modalContent.style.maxWidth = '';
+                }
+            }
+        }
+
+        // Подтвердить сброс плана к дефолтному состоянию
+        function confirmResetPlan() {
             if (!canEdit()) {
                 return; // Блокируем сброс плана в режиме просмотра
             }
             startDate = new Date(INITIAL_START_DATE);
             initializeTasks();
+            renderGantt();
+            renderTable();
+            updateStatistics();
+            autoSaveGanttState(); // Автоматическое сохранение после сброса
+            cancelResetPlan(); // Закрываем модальное окно
         }
 
         function toggleView() {
@@ -7371,6 +7497,11 @@ async function exportPDF(scaleMode = 'day') {
                 cancelDeleteTask();
             }
 
+            const resetPlanModal = document.getElementById('resetPlanConfirmModal');
+            if (target === resetPlanModal) {
+                cancelResetPlan();
+            }
+
             const gantt = document.querySelector('.chart-container');
             const table = document.querySelector('.table-section');
 
@@ -7378,10 +7509,11 @@ async function exportPDF(scaleMode = 'day') {
             const insideTable = table && table.contains(target);
             const insideMenu = menu && menu.contains(target);
             const insideDeleteModal = deleteModal && deleteModal.contains(target);
+            const insideResetPlanModal = resetPlanModal && resetPlanModal.contains(target);
 
             // Клик по пустому месту вне диаграммы/таблицы/меню/модалок
             // снимает выделение задач
-            if (!insideGantt && !insideTable && !insideMenu && !insideDeleteModal) {
+            if (!insideGantt && !insideTable && !insideMenu && !insideDeleteModal && !insideResetPlanModal) {
                 clearSelection();
             }
         }
@@ -7837,6 +7969,21 @@ async function exportPDF(scaleMode = 'day') {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         confirmDeleteTask();
+                        return;
+                    }
+                }
+
+                // Если открыто окно подтверждения сброса плана — обрабатываем только его
+                const resetPlanModal = document.getElementById('resetPlanConfirmModal');
+                if (resetPlanModal && resetPlanModal.style.display === 'block') {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancelResetPlan();
+                        return;
+                    }
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        confirmResetPlan();
                         return;
                     }
                 }

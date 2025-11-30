@@ -30,6 +30,8 @@
         /* Светлячки */
         .firefly {
             position: fixed;
+            left: 0;
+            top: 0;
             width: 8px;
             height: 8px;
             background: rgba(255, 255, 255, 0.9);
@@ -94,7 +96,7 @@
             }
         }
 
-        /* Анимированный фон */
+        /* Статичный фон (без анимации для производительности) */
         body::before {
             content: '';
             position: fixed;
@@ -105,17 +107,8 @@
             background: 
                 radial-gradient(circle at 20% 30%, rgba(100, 181, 246, 0.3) 0%, transparent 50%),
                 radial-gradient(circle at 80% 70%, rgba(66, 165, 245, 0.3) 0%, transparent 50%);
-            animation: waveMove 20s ease-in-out infinite;
             z-index: 0;
             pointer-events: none;
-        }
-
-        /* Перекрываем старый градиентный фон body, так как теперь используем фон из auth.html */
-
-
-        @keyframes waveMove {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-20px) scale(1.1); }
         }
 
         .container {
@@ -194,7 +187,6 @@
 
         .header {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 40px;
             margin-bottom: 30px;
@@ -217,7 +209,7 @@
             font-size: 0.75rem;
             text-decoration: none;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
             opacity: 0.6;
             display: none;
         }
@@ -257,12 +249,11 @@
 
         .company-card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
             border: 1px solid rgba(100, 181, 246, 0.3);
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
@@ -346,7 +337,7 @@
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             flex: 1;
         }
 
@@ -396,12 +387,11 @@
 
         .add-company-card {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
             border: 2px dashed rgba(100, 181, 246, 0.5);
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -608,7 +598,7 @@
             border: 2px solid rgba(100, 181, 246, 0.3);
             border-radius: 10px;
             font-size: 1rem;
-            transition: all 0.3s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .form-group input[type="file"] {
@@ -663,7 +653,6 @@
             text-align: center;
             padding: 60px 40px;
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
             border: 1px solid rgba(100, 181, 246, 0.3);
@@ -1799,33 +1788,43 @@
                 // Начальная скорость (разная для каждого)
                 fireflyData.vx = (Math.random() - 0.5) * 2;
                 fireflyData.vy = (Math.random() - 0.5) * 2;
+                
+                // Устанавливаем начальную позицию через transform
+                firefly.element.style.transform = `translate(${fireflyData.x}px, ${fireflyData.y}px)`;
 
                 fireflies.push(fireflyData);
             }
 
-            // Функция обновления позиции курсора для светлячков
+            // Функция обновления позиции курсора для светлячков с throttling
+            let lastMouseUpdate = 0;
+            const mouseUpdateThrottle = 50; // Обновляем позицию максимум раз в 50ms
+            
             function updateMousePosition(clientX, clientY) {
-                mouseX = clientX;
-                mouseY = clientY;
+                const now = Date.now();
+                if (now - lastMouseUpdate >= mouseUpdateThrottle) {
+                    mouseX = clientX;
+                    mouseY = clientY;
+                    lastMouseUpdate = now;
+                }
             }
 
-            // Обработчик движения мыши для светлячков
+            // Обработчик движения мыши для светлячков с throttling
             document.addEventListener('mousemove', function(e) {
                 updateMousePosition(e.clientX, e.clientY);
-            });
+            }, { passive: true });
 
             // Обработчики touch событий для светлячков на мобильных
             document.addEventListener('touchstart', function(e) {
                 if (e.touches.length > 0) {
                     updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
                 }
-            });
+            }, { passive: true });
 
             document.addEventListener('touchmove', function(e) {
                 if (e.touches.length > 0) {
                     updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
                 }
-            });
+            }, { passive: true });
 
             function animateFireflies() {
                 if (fireflies.length === 0) {
@@ -1893,9 +1892,8 @@
                         firefly.vy = -Math.abs(firefly.vy) * bounceDamping;
                     }
 
-                    // Применение позиции
-                    firefly.element.style.left = firefly.x + 'px';
-                    firefly.element.style.top = firefly.y + 'px';
+                    // Применение позиции через transform для лучшей производительности
+                    firefly.element.style.transform = `translate(${firefly.x}px, ${firefly.y}px)`;
                 });
 
                 const animationId = requestAnimationFrame(animateFireflies);
