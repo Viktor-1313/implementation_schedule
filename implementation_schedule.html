@@ -1098,6 +1098,9 @@
             flex-direction: column;
             min-width: 100%;
             font-size: 12px;
+            position: relative;
+            /* Ограничиваем область, чтобы sticky-элементы не выходили за пределы */
+            contain: layout style paint;
         }
 
         .gantt-header {
@@ -1112,6 +1115,7 @@
 
         .gantt-header-label {
             min-width: 180px;
+            max-width: 180px;
             padding: 10px 10px;
             border-right: 2px solid var(--color-border);
             background: var(--color-bg);
@@ -1121,6 +1125,9 @@
             text-align: center;
             font-size: 16px;
             font-weight: 700;
+            box-sizing: border-box;
+            /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
+            clip-path: inset(0);
         }
 
         .gantt-details-header {
@@ -1282,6 +1289,7 @@
 
         .gantt-label {
             min-width: 180px;
+            max-width: 180px;
             padding: 8px 10px;
             border-right: 2px solid var(--color-border);
             background: var(--color-bg);
@@ -1290,6 +1298,9 @@
             position: sticky;
             left: 0;
             z-index: 5;
+            box-sizing: border-box;
+            /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
+            clip-path: inset(0);
         }
 
         .gantt-task-input {
@@ -2290,10 +2301,44 @@
             }
 
             /* График Ганта на мобильных */
+            .chart-container {
+                isolation: isolate;
+                contain: layout style;
+                position: relative;
+                z-index: 1;
+                max-width: 100%;
+                overflow: hidden;
+            }
+
             .gantt-chart {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 position: relative;
+                isolation: isolate;
+                contain: layout style;
+                max-width: 100%;
+                box-sizing: border-box;
+                z-index: 1;
+            }
+
+            /* На мобильных отключаем sticky для колонки названий, чтобы она не перекрывала график */
+            .gantt-header-label,
+            .gantt-label {
+                position: static !important; /* Отключаем sticky на мобильных */
+                max-width: 100%;
+                width: 100%;
+                min-width: auto;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                z-index: auto;
+            }
+
+            /* Ячейки графика */
+            .gantt-row .gantt-cell {
+                position: relative;
+                z-index: 1;
+                background: var(--color-bg);
             }
 
             .gantt-chart::-webkit-scrollbar {
@@ -2310,9 +2355,28 @@
             }
 
             .gantt-label {
-                min-width: 100px;
+                min-width: 120px;
+                max-width: 120px;
+                width: 120px;
                 font-size: 0.7rem;
                 padding: 8px 6px;
+                z-index: auto;
+                position: static !important; /* Отключаем sticky на мобильных */
+            }
+
+            .gantt-header-label {
+                min-width: 120px;
+                max-width: 120px;
+                width: 120px;
+                z-index: auto;
+                position: static !important; /* Отключаем sticky на мобильных */
+            }
+
+            /* Убеждаемся, что график не перекрывается */
+            .gantt-cell,
+            .gantt-header-cell {
+                position: relative;
+                z-index: 1;
             }
 
             .gantt-header-cell {
@@ -2330,11 +2394,24 @@
             }
 
             /* Таблица задач на мобильных */
+            .table-section {
+                isolation: isolate;
+                contain: layout style;
+                position: relative;
+                z-index: 1;
+                max-width: 100%;
+                overflow: hidden;
+            }
+
             .tasks-table-wrapper {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 position: relative;
                 width: 100%;
+                max-width: 100%;
+                isolation: isolate;
+                contain: layout style;
+                box-sizing: border-box;
             }
 
             .tasks-table-wrapper::-webkit-scrollbar {
@@ -3885,13 +3962,17 @@
                 version: '1.0',
                 savedAt: new Date().toISOString(),
                 startDate: startDate ? formatDateKey(startDate) : null,
-                tasks: tasks.map(task => ({
-                    id: task.id,
-                    stage: task.stage || '',
-                    substage: task.substage || '',
-                    controlType: task.controlType || '',
-                    name: task.name || '',
-                    days: task.days || 0,
+                tasks: tasks.map(task => {
+                    // Синхронизируем task и name перед сохранением
+                    const taskName = task.task || task.name || '';
+                    return {
+                        id: task.id,
+                        stage: task.stage || '',
+                        substage: task.substage || '',
+                        controlType: task.controlType || '',
+                        name: taskName,
+                        task: taskName, // Сохраняем также в поле task для обратной совместимости
+                        days: task.days || 0,
                     startDate: task.startDate ? formatDateKey(task.startDate) : null,
                     endDate: task.endDate ? formatDateKey(task.endDate) : null,
                     dates: Array.isArray(task.dates) ? task.dates.map(d => formatDateKey(d)) : [],
@@ -3902,7 +3983,8 @@
                     baselineDates: Array.isArray(task.baselineDates) ? task.baselineDates.map(d => formatDateKey(d)) : [],
                     baselineStartDate: task.baselineStartDate ? formatDateKey(task.baselineStartDate) : null,
                     baselineEndDate: task.baselineEndDate ? formatDateKey(task.baselineEndDate) : null
-                })),
+                    };
+                }),
                 settings: {
                     ganttBarStyle: ganttBarStyle || 'dots',
                     showResponsible: showResponsible || false,
@@ -4086,13 +4168,27 @@
 
                     // Восстанавливаем задачи
                     tasks = data.tasks.map(task => {
+                        // Правильно восстанавливаем названия задач с обратной совместимостью
+                        let taskName = '';
+                        let taskNameField = '';
+                        
+                        // Приоритет: task.task > task.name > пустая строка
+                        if (task.task) {
+                            taskName = task.task;
+                            taskNameField = task.task;
+                        } else if (task.name) {
+                            taskName = task.name;
+                            taskNameField = task.name;
+                        }
+                        
+                        // Синхронизируем оба поля
                         const taskObj = {
                             id: task.id,
                             stage: task.stage || '',
                             substage: task.substage || '',
                             controlType: task.controlType || '',
-                            name: task.name || '',
-                            task: task.name || task.task || '', // Для обратной совместимости
+                            name: taskName,
+                            task: taskNameField,
                             days: task.days || 0,
                             status: task.status || 'pending',
                             dateStatuses: task.dateStatuses || {},
@@ -4988,15 +5084,14 @@
                 // Подставляем текст названия задачи в input
                 const titleInput = row.querySelector('input[data-field="taskTitle"]');
                 if (titleInput) {
-                    if (!task.task && !task.name) {
-                        task.task = 'Новая задача';
-                        task.name = 'Новая задача';
+                    // Синхронизируем поля task и name
+                    if (task.task && !task.name) {
+                        task.name = task.task;
                     } else if (task.name && !task.task) {
                         task.task = task.name;
-                    } else if (task.task && !task.name) {
-                        task.name = task.task;
                     }
-                    titleInput.value = task.task || task.name || 'Новая задача';
+                    // Используем существующее название или пустую строку (не устанавливаем "Новая задача" автоматически)
+                    titleInput.value = task.task || task.name || '';
                 }
 
                 // Поле этапа — редактируется только хвост после "Этап N."
