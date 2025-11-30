@@ -2395,23 +2395,28 @@
 
             /* Таблица задач на мобильных */
             .table-section {
-                isolation: isolate;
-                contain: layout style;
                 position: relative;
                 z-index: 1;
                 max-width: 100%;
-                overflow: hidden;
+                overflow-x: auto;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Отключаем sticky для шапки таблицы на мобильных, чтобы не блокировать прокрутку */
+            #tasksTable thead th {
+                position: static !important;
             }
 
             .tasks-table-wrapper {
                 overflow-x: auto;
+                overflow-y: visible;
                 -webkit-overflow-scrolling: touch;
                 position: relative;
                 width: 100%;
                 max-width: 100%;
-                isolation: isolate;
-                contain: layout style;
                 box-sizing: border-box;
+                touch-action: pan-x pan-y; /* Разрешаем прокрутку на мобильных */
             }
 
             .tasks-table-wrapper::-webkit-scrollbar {
@@ -2428,8 +2433,7 @@
             }
 
             .tasks-table {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+                width: 100%;
                 font-size: 0.85rem;
                 min-width: 800px; /* Минимальная ширина для читаемости */
             }

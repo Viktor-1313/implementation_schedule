@@ -82,12 +82,16 @@
             box-shadow: 
                 0 20px 60px rgba(100, 180, 255, 0.2),
                 inset 0 0 100px rgba(255, 255, 255, 0.1);
+            pointer-events: auto; /* Гарантируем, что форма кликабельна */
+            touch-action: manipulation; /* Улучшаем отзывчивость на touch */
         }
 
         form {
             width: 100%;
             display: flex;
             flex-direction: column;
+            pointer-events: auto; /* Гарантируем, что форма кликабельна */
+            touch-action: manipulation; /* Улучшаем отзывчивость на touch */
         }
 
         .form-group {
@@ -608,20 +612,64 @@
                 wavesMouse.active = false;
             });
 
+            // Функция проверки, находится ли тап на форме или интерактивном элементе
+            function isTouchOnFormOrInteractive(touchX, touchY, element) {
+                if (!element) return false;
+                
+                // Проверяем, является ли элемент интерактивным
+                const tagName = element.tagName.toLowerCase();
+                const interactiveTags = ['input', 'button', 'select', 'textarea', 'a', 'label'];
+                if (interactiveTags.includes(tagName)) return true;
+                
+                // Проверяем, находится ли элемент внутри формы
+                const authBody = document.querySelector('.auth-body');
+                if (authBody) {
+                    const bodyRect = authBody.getBoundingClientRect();
+                    // Проверяем, попадает ли точка тапа внутрь формы
+                    if (touchX >= bodyRect.left && touchX <= bodyRect.right &&
+                        touchY >= bodyRect.top && touchY <= bodyRect.bottom) {
+                        return true;
+                    }
+                }
+                
+                // Проверяем, находится ли элемент внутри формы по DOM
+                if (element.closest('.auth-body') || element.closest('form')) {
+                    return true;
+                }
+                
+                return false;
+            }
+
             // Обработчики touch событий для мобильных устройств
             container.addEventListener('touchstart', function(e) {
-                e.preventDefault(); // Предотвращаем скролл при создании волн
-                const rect = container.getBoundingClientRect();
                 const touch = e.touches[0];
+                if (!touch) return;
+                
+                // Проверяем, не кликается ли на форму или интерактивный элемент
+                if (isTouchOnFormOrInteractive(touch.clientX, touch.clientY, e.target)) {
+                    // Если клик на форме или интерактивном элементе, не блокируем и не создаем волну
+                    return;
+                }
+                
+                e.preventDefault(); // Предотвращаем скролл при создании волн (только вне формы)
+                const rect = container.getBoundingClientRect();
                 addWave(touch.clientX - rect.left, touch.clientY - rect.top);
-            });
+            }, { passive: false });
 
             container.addEventListener('touchmove', function(e) {
-                e.preventDefault(); // Предотвращаем скролл при движении пальца
-                const rect = container.getBoundingClientRect();
                 const touch = e.touches[0];
+                if (!touch) return;
+                
+                // Проверяем, не движется ли палец над формой или интерактивным элементом
+                if (isTouchOnFormOrInteractive(touch.clientX, touch.clientY, e.target)) {
+                    // Если движение над формой или интерактивным элементом, не блокируем
+                    return;
+                }
+                
+                e.preventDefault(); // Предотвращаем скролл при движении пальца (только вне формы)
+                const rect = container.getBoundingClientRect();
                 addWave(touch.clientX - rect.left, touch.clientY - rect.top);
-            });
+            }, { passive: false });
 
             container.addEventListener('touchend', function(e) {
                 wavesMouse.active = false;
@@ -777,16 +825,51 @@
                 updateMousePosition(e.clientX, e.clientY);
             });
 
+            // Функция проверки, находится ли тап на форме (для светлячков)
+            function isTouchOnFormForFireflies(touchX, touchY, element) {
+                if (!element) return false;
+                
+                // Проверяем, является ли элемент интерактивным
+                const tagName = element.tagName.toLowerCase();
+                const interactiveTags = ['input', 'button', 'select', 'textarea', 'a', 'label'];
+                if (interactiveTags.includes(tagName)) return true;
+                
+                // Проверяем, находится ли тап внутри формы по координатам
+                const authBody = document.querySelector('.auth-body');
+                if (authBody) {
+                    const bodyRect = authBody.getBoundingClientRect();
+                    if (touchX >= bodyRect.left && touchX <= bodyRect.right &&
+                        touchY >= bodyRect.top && touchY <= bodyRect.bottom) {
+                        return true;
+                    }
+                }
+                
+                // Проверяем по DOM
+                if (element.closest('.auth-body') || element.closest('form')) {
+                    return true;
+                }
+                
+                return false;
+            }
+
             // Обработчики touch событий для светлячков на мобильных
             container.addEventListener('touchstart', function(e) {
                 if (e.touches.length > 0) {
-                    updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
+                    const touch = e.touches[0];
+                    // Не обновляем позицию курсора, если тап на форме
+                    if (!isTouchOnFormForFireflies(touch.clientX, touch.clientY, e.target)) {
+                        updateMousePosition(touch.clientX, touch.clientY);
+                    }
                 }
             });
 
             container.addEventListener('touchmove', function(e) {
                 if (e.touches.length > 0) {
-                    updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
+                    const touch = e.touches[0];
+                    // Не обновляем позицию курсора, если движение над формой
+                    if (!isTouchOnFormForFireflies(touch.clientX, touch.clientY, e.target)) {
+                        updateMousePosition(touch.clientX, touch.clientY);
+                    }
                 }
             });
 
