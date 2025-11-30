@@ -2453,7 +2453,7 @@
                 font-size: 0.7rem;
             }
 
-            /* Кнопки управления на мобильных - вертикальное выравнивание с одинаковыми отступами */
+            /* Кнопки управления на планшетах - вертикальное выравнивание с одинаковыми отступами */
             .profile-btn,
             .companies-btn,
             .companies-bottom-btn,
@@ -2468,11 +2468,11 @@
             }
 
             .companies-bottom-btn {
-                top: 75px; /* 25px + 40px (высота) + 10px (отступ) */
+                top: 77px; /* 25px (top первой) + 40px (высота первой) + 12px (отступ) = 77px */
             }
 
             .logout-btn {
-                top: 125px; /* 75px + 40px (высота) + 10px (отступ) */
+                top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
             }
         }
 
@@ -2563,11 +2563,11 @@
             }
 
             .companies-bottom-btn {
-                top: 63px; /* 15px + 38px (высота) + 10px (отступ) */
+                top: 65px; /* 15px (top первой) + 38px (высота первой) + 12px (отступ) = 65px */
             }
 
             .logout-btn {
-                top: 111px; /* 63px + 38px (высота) + 10px (отступ) */
+                top: 115px; /* 65px (top второй) + 38px (высота второй) + 12px (отступ) = 115px */
             }
 
             .profile-btn::before {
@@ -2894,11 +2894,11 @@
             }
 
             .companies-bottom-btn {
-                top: 57px; /* 12px + 35px (высота) + 10px (отступ) */
+                top: 59px; /* 12px (top первой) + 35px (высота первой) + 12px (отступ) = 59px */
             }
 
             .logout-btn {
-                top: 102px; /* 57px + 35px (высота) + 10px (отступ) */
+                top: 106px; /* 59px (top второй) + 35px (высота второй) + 12px (отступ) = 106px */
             }
 
             .gantt-label {
@@ -8784,6 +8784,67 @@ async function exportPDF(scaleMode = 'day') {
                     const direction = event.deltaY > 0 ? -1 : 1; // вниз = отдаление, вверх = приближение
                     const step = 0.1 * direction;
                     setZoom(zoomLevel + step);
+                }, { passive: false });
+            }
+
+            // Pinch-to-zoom для мобильных устройств и планшетов
+            if (chartContainer) {
+                let initialDistance = 0;
+                let initialZoom = zoomLevel;
+                let isPinching = false;
+
+                // Функция для вычисления расстояния между двумя точками касания
+                function getDistance(touch1, touch2) {
+                    const dx = touch2.clientX - touch1.clientX;
+                    const dy = touch2.clientY - touch1.clientY;
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                // Проверка, является ли устройство мобильным или планшетом
+                function isMobileOrTablet() {
+                    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                           (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches);
+                }
+
+                chartContainer.addEventListener('touchstart', (event) => {
+                    if (!isMobileOrTablet()) return;
+                    
+                    if (event.touches.length === 2) {
+                        event.preventDefault();
+                        isPinching = true;
+                        initialDistance = getDistance(event.touches[0], event.touches[1]);
+                        initialZoom = zoomLevel;
+                    }
+                }, { passive: false });
+
+                chartContainer.addEventListener('touchmove', (event) => {
+                    if (!isMobileOrTablet() || !isPinching) return;
+                    
+                    if (event.touches.length === 2) {
+                        event.preventDefault();
+                        
+                        const currentDistance = getDistance(event.touches[0], event.touches[1]);
+                        const scale = currentDistance / initialDistance;
+                        
+                        // Применяем масштабирование с плавностью
+                        const newZoom = initialZoom * scale;
+                        setZoom(newZoom);
+                    }
+                }, { passive: false });
+
+                chartContainer.addEventListener('touchend', (event) => {
+                    if (!isMobileOrTablet()) return;
+                    
+                    if (event.touches.length < 2) {
+                        isPinching = false;
+                        initialDistance = 0;
+                    }
+                }, { passive: false });
+
+                chartContainer.addEventListener('touchcancel', (event) => {
+                    if (!isMobileOrTablet()) return;
+                    isPinching = false;
+                    initialDistance = 0;
                 }, { passive: false });
             }
         });
