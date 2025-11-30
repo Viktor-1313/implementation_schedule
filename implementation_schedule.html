@@ -6418,6 +6418,69 @@ async function exportPDF(scaleMode = 'day') {
             const modal = document.getElementById('excelExportModal');
             if (modal) {
                 modal.style.display = 'block';
+                
+                // На мобильных устройствах позиционируем модальное окно рядом с кнопкой
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    // Находим кнопку "Выгрузить в Excel"
+                    const buttons = document.querySelectorAll('.btn');
+                    let excelButton = null;
+                    for (let btn of buttons) {
+                        if (btn.textContent && btn.textContent.includes('Выгрузить в Excel')) {
+                            excelButton = btn;
+                            break;
+                        }
+                    }
+                    
+                    if (excelButton) {
+                        const modalContent = modal.querySelector('.modal-content');
+                        if (modalContent) {
+                            const buttonRect = excelButton.getBoundingClientRect();
+                            
+                            // Позиционируем модальное окно так, чтобы оно было видно рядом с кнопкой
+                            // Вычисляем позицию: если кнопка в нижней половине экрана - показываем над ней, иначе - под ней
+                            const viewportHeight = window.innerHeight;
+                            const buttonBottom = buttonRect.bottom;
+                            const spaceBelow = viewportHeight - buttonBottom;
+                            const spaceAbove = buttonRect.top;
+                            
+                            // Вычисляем позицию относительно viewport (так как modal имеет position: fixed)
+                            let topPosition;
+                            if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+                                // Показываем над кнопкой
+                                topPosition = buttonRect.top - 350; // высота модального окна примерно 350px
+                            } else {
+                                // Показываем под кнопкой
+                                topPosition = buttonRect.bottom + 20; // небольшой отступ
+                            }
+                            
+                            // Убеждаемся, что окно не выходит за пределы экрана
+                            const minTop = 20;
+                            const maxTop = viewportHeight - 400;
+                            topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
+                            
+                            modalContent.style.position = 'absolute';
+                            modalContent.style.top = topPosition + 'px';
+                            modalContent.style.left = '50%';
+                            modalContent.style.transform = 'translateX(-50%)';
+                            modalContent.style.margin = '0';
+                            modalContent.style.width = 'calc(100% - 40px)';
+                            modalContent.style.maxWidth = '500px';
+                        }
+                    }
+                } else {
+                    // На десктопе сбрасываем стили (используется стандартное центрирование через CSS)
+                    const modalContent = modal.querySelector('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.position = '';
+                        modalContent.style.top = '';
+                        modalContent.style.left = '';
+                        modalContent.style.transform = '';
+                        modalContent.style.margin = '';
+                        modalContent.style.width = '';
+                        modalContent.style.maxWidth = '';
+                    }
+                }
             }
         }
 
@@ -6425,6 +6488,17 @@ async function exportPDF(scaleMode = 'day') {
             const modal = document.getElementById('excelExportModal');
             if (modal) {
                 modal.style.display = 'none';
+                // Сбрасываем стили позиционирования
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.position = '';
+                    modalContent.style.top = '';
+                    modalContent.style.left = '';
+                    modalContent.style.transform = '';
+                    modalContent.style.margin = '';
+                    modalContent.style.width = '';
+                    modalContent.style.maxWidth = '';
+                }
             }
         }
 
@@ -6437,6 +6511,69 @@ async function exportPDF(scaleMode = 'day') {
             const modal = document.getElementById('pdfExportModal');
             if (modal) {
                 modal.style.display = 'block';
+                
+                // На мобильных устройствах позиционируем модальное окно рядом с кнопкой
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    // Находим кнопку "Выгрузить в PDF"
+                    const buttons = document.querySelectorAll('.btn');
+                    let pdfButton = null;
+                    for (let btn of buttons) {
+                        if (btn.textContent && btn.textContent.includes('Выгрузить в PDF')) {
+                            pdfButton = btn;
+                            break;
+                        }
+                    }
+                    
+                    if (pdfButton) {
+                        const modalContent = modal.querySelector('.modal-content');
+                        if (modalContent) {
+                            const buttonRect = pdfButton.getBoundingClientRect();
+                            
+                            // Позиционируем модальное окно так, чтобы оно было видно рядом с кнопкой
+                            // Вычисляем позицию: если кнопка в нижней половине экрана - показываем над ней, иначе - под ней
+                            const viewportHeight = window.innerHeight;
+                            const buttonBottom = buttonRect.bottom;
+                            const spaceBelow = viewportHeight - buttonBottom;
+                            const spaceAbove = buttonRect.top;
+                            
+                            // Вычисляем позицию относительно viewport (так как modal имеет position: fixed)
+                            let topPosition;
+                            if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+                                // Показываем над кнопкой
+                                topPosition = buttonRect.top - 350; // высота модального окна примерно 350px
+                            } else {
+                                // Показываем под кнопкой
+                                topPosition = buttonRect.bottom + 20; // небольшой отступ
+                            }
+                            
+                            // Убеждаемся, что окно не выходит за пределы экрана
+                            const minTop = 20;
+                            const maxTop = viewportHeight - 400;
+                            topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
+                            
+                            modalContent.style.position = 'absolute';
+                            modalContent.style.top = topPosition + 'px';
+                            modalContent.style.left = '50%';
+                            modalContent.style.transform = 'translateX(-50%)';
+                            modalContent.style.margin = '0';
+                            modalContent.style.width = 'calc(100% - 40px)';
+                            modalContent.style.maxWidth = '500px';
+                        }
+                    }
+                } else {
+                    // На десктопе сбрасываем стили (используется стандартное центрирование через CSS)
+                    const modalContent = modal.querySelector('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.position = '';
+                        modalContent.style.top = '';
+                        modalContent.style.left = '';
+                        modalContent.style.transform = '';
+                        modalContent.style.margin = '';
+                        modalContent.style.width = '';
+                        modalContent.style.maxWidth = '';
+                    }
+                }
             }
         }
 
@@ -6444,6 +6581,17 @@ async function exportPDF(scaleMode = 'day') {
             const modal = document.getElementById('pdfExportModal');
             if (modal) {
                 modal.style.display = 'none';
+                // Сбрасываем стили позиционирования
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.position = '';
+                    modalContent.style.top = '';
+                    modalContent.style.left = '';
+                    modalContent.style.transform = '';
+                    modalContent.style.margin = '';
+                    modalContent.style.width = '';
+                    modalContent.style.maxWidth = '';
+                }
             }
         }
 

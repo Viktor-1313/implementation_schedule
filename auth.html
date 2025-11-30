@@ -582,11 +582,10 @@
             }
             wavesBufferIndex = 0;
 
-            // Обработчик движения мыши внутри контейнера
-            container.addEventListener('mousemove', function(e) {
-                const rect = container.getBoundingClientRect();
-                wavesMouse.x = e.clientX - rect.left;
-                wavesMouse.y = e.clientY - rect.top;
+            // Функция добавления волны
+            function addWave(x, y) {
+                wavesMouse.x = x;
+                wavesMouse.y = y;
                 wavesMouse.active = true;
                 
                 // Добавляем волну в буфер
@@ -597,9 +596,34 @@
                     life: 1
                 };
                 wavesBufferIndex = (wavesBufferIndex + 1) % wavesBufferSize;
+            }
+
+            // Обработчик движения мыши внутри контейнера
+            container.addEventListener('mousemove', function(e) {
+                const rect = container.getBoundingClientRect();
+                addWave(e.clientX - rect.left, e.clientY - rect.top);
             });
 
             container.addEventListener('mouseleave', () => {
+                wavesMouse.active = false;
+            });
+
+            // Обработчики touch событий для мобильных устройств
+            container.addEventListener('touchstart', function(e) {
+                e.preventDefault(); // Предотвращаем скролл при создании волн
+                const rect = container.getBoundingClientRect();
+                const touch = e.touches[0];
+                addWave(touch.clientX - rect.left, touch.clientY - rect.top);
+            });
+
+            container.addEventListener('touchmove', function(e) {
+                e.preventDefault(); // Предотвращаем скролл при движении пальца
+                const rect = container.getBoundingClientRect();
+                const touch = e.touches[0];
+                addWave(touch.clientX - rect.left, touch.clientY - rect.top);
+            });
+
+            container.addEventListener('touchend', function(e) {
                 wavesMouse.active = false;
             });
 
@@ -741,11 +765,29 @@
                 fireflies.push(fireflyData);
             }
 
+            // Функция обновления позиции курсора для светлячков
+            function updateMousePosition(clientX, clientY) {
+                const rect = container.getBoundingClientRect();
+                mouseX = clientX - rect.left;
+                mouseY = clientY - rect.top;
+            }
+
             // Обработчик движения мыши для светлячков
             container.addEventListener('mousemove', function(e) {
-                const rect = container.getBoundingClientRect();
-                mouseX = e.clientX - rect.left;
-                mouseY = e.clientY - rect.top;
+                updateMousePosition(e.clientX, e.clientY);
+            });
+
+            // Обработчики touch событий для светлячков на мобильных
+            container.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 0) {
+                    updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            });
+
+            container.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 0) {
+                    updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
+                }
             });
 
             function animateFireflies() {
