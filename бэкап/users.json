@@ -5,7 +5,8 @@
     "login": "Driga_VA",
     "password": "$2b$10$Qowocd8PI2xyU6nG2VmX7OslMrfMbcQc7Z9yocDkd9nWTx7yAWd02",
     "role": "admin",
-    "createdAt": "2025-11-29T11:56:28.634Z"
+    "createdAt": "2025-11-29T11:56:28.634Z",
+    "companies": []
   },
   {
     "id": "1764420879725",

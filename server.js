@@ -180,7 +180,7 @@ app.post('/api/gantt-state', (req, res) => {
     // Проверяем, что файл действительно создан
     if (fs.existsSync(dataFile)) {
       const stats = fs.statSync(dataFile);
-      console.log('✅ График успешно сохранен в файл:', dataFile);
+    console.log('✅ График успешно сохранен в файл:', dataFile);
       console.log('✅ Размер сохраненного файла:', stats.size, 'байт');
     } else {
       console.error('❌ Файл не был создан после записи!');

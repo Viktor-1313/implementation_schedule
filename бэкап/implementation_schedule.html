@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>График внедрения и обучения системы ICONA</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -152,15 +152,31 @@
             border-radius: 50%;
         }
 
+        /* Подсказка для кнопки профиля (черный фон, как у редактирования этапов) */
         .profile-btn::after {
-            content: '';
+            content: attr(data-tooltip);
             position: absolute;
-            width: 8px;
-            height: 8px;
-            background: white;
-            border-radius: 50%;
-            bottom: 8px;
-            right: 8px;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom center;
+            margin-bottom: 8px;
+            z-index: 1001;
+        }
+
+        .profile-btn:hover::after {
+            opacity: 1;
+            transform: translate(-50%, -6px);
+            transition-delay: 1s;
         }
 
         /* Кнопка выхода к выбору компаний */
@@ -196,15 +212,31 @@
             position: relative;
         }
 
+        /* Подсказка для кнопки компаний (черный фон, как у редактирования этапов) */
         .companies-btn::after {
-            content: '';
+            content: attr(data-tooltip);
             position: absolute;
-            width: 6px;
-            height: 6px;
-            background: white;
-            border-radius: 50%;
-            top: 4px;
-            left: 4px;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom center;
+            margin-bottom: 8px;
+            z-index: 1001;
+        }
+
+        .companies-btn:hover::after {
+            opacity: 1;
+            transform: translate(-50%, -6px);
+            transition-delay: 1s;
         }
 
         /* Кнопка выхода */
@@ -243,11 +275,11 @@
             right: 2px;
         }
 
-        /* Подсказка для кнопки выхода (как у редактирования этапов) */
+        /* Подсказка для кнопки выхода (черный фон, раскрывается ВНИЗ) */
         .logout-btn::after {
             content: attr(data-tooltip);
             position: absolute;
-            bottom: 100%;
+            top: 100%;
             left: 50%;
             transform: translate(-50%, 0);
             padding: 4px 8px;
@@ -259,13 +291,14 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, transform 0.2s ease;
-            transform-origin: bottom center;
-            margin-bottom: 8px;
+            transform-origin: top center;
+            margin-top: 8px;
+            z-index: 1001;
         }
 
         .logout-btn:hover::after {
             opacity: 1;
-            transform: translate(-50%, -6px);
+            transform: translate(-50%, 6px);
             transition-delay: 1s;
         }
 
@@ -288,6 +321,21 @@
             align-items: flex-start;
             justify-content: center;
             padding-top: 10vh; /* Поднимаем окно выше */
+        }
+
+        @media (max-width: 768px) {
+            .profile-modal.show {
+                padding-top: 5vh;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-modal.show {
+                padding-top: 2vh;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
         }
 
         @keyframes fadeIn {
@@ -508,11 +556,10 @@
             gap: 20px;
         }
 
-        .company-logo-upload {
+        .company-logo-display {
             display: flex;
             align-items: center;
             gap: 10px;
-            cursor: pointer;
             position: relative;
         }
 
@@ -557,6 +604,8 @@
             font-style: italic;
             min-height: 32px;
             outline: none;
+            cursor: default;
+            user-select: none;
         }
 
         .company-name-display.has-value {
@@ -887,11 +936,11 @@
             position: relative;
         }
         
-        /* Блокировка кнопки "Сбросить план" в режиме просмотра */
+        /* Блокировка кнопки "Сбросить план" в режиме просмотра (только визуальная, кнопка видна) */
         .reset-plan-btn.view-mode-disabled {
-            opacity: 0.5;
+            opacity: 1;
             cursor: not-allowed;
-            pointer-events: none;
+            pointer-events: auto; /* Разрешаем клики, но функция canEdit() заблокирует действие */
         }
 
         .reset-plan-btn::after {
@@ -1429,6 +1478,13 @@
             display: none;
         }
 
+        @media (max-width: 480px) {
+            .status-menu {
+                min-width: 160px;
+                padding: 6px 0;
+            }
+        }
+
         .status-menu-item {
             padding: 6px 12px;
             font-size: 12px;
@@ -1459,11 +1515,39 @@
             flex-wrap: wrap;
         }
 
+        @media (max-width: 768px) {
+            .legend {
+                gap: 15px;
+                padding: 12px;
+                margin-top: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .legend {
+                gap: 10px;
+                padding: 10px;
+                margin-top: 12px;
+            }
+        }
+
         .legend-item {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            .legend-item {
+                font-size: 0.7rem;
+                gap: 6px;
+            }
+
+            .status-color-box {
+                width: 12px;
+                height: 12px;
+            }
         }
 
         .legend-color {
@@ -1649,6 +1733,26 @@
             z-index: 2000;
         }
 
+        @media (max-width: 768px) {
+            .baseline-toast {
+                right: 15px;
+                bottom: 15px;
+                max-width: calc(100% - 30px);
+                font-size: 11px;
+                padding: 10px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .baseline-toast {
+                right: 10px;
+                bottom: 10px;
+                max-width: calc(100% - 20px);
+                font-size: 10px;
+                padding: 8px 12px;
+            }
+        }
+
         .baseline-toast.visible {
             opacity: 1;
             transform: translateY(0);
@@ -1797,6 +1901,8 @@
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: var(--shadow-sm);
+            min-width: 120px;
+            text-align: center;
         }
 
         .stage-tab-btn:hover {
@@ -1959,24 +2065,591 @@
             left: 6px;
         }
 
-        @media (max-width: 768px) {
+        /* Адаптивность для планшетов и мобильных */
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 100%;
+                padding: 15px;
+            }
+
+            header {
+                padding: 25px 15px;
+            }
+
+            header h1 {
+                font-size: 1.4rem;
+            }
+
+            .header-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .company-info {
+                flex-direction: column;
+                gap: 20px;
+                align-items: center;
+            }
+
+            .company-logo-display {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .company-name-block {
+                width: 100%;
+                text-align: center;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+
             .gantt-label {
-                min-width: 150px;
-                font-size: 10px;
+                min-width: 120px;
+                font-size: 0.75rem;
             }
 
             .gantt-header-cell {
-                min-width: 40px;
-                font-size: 11px;
+                min-width: 35px;
+                font-size: 0.7rem;
+            }
+
+            /* Кнопки управления на мобильных */
+            .profile-btn,
+            .companies-btn,
+            .logout-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            .profile-btn {
+                top: 25px;
+                right: 25px;
+            }
+
+            .companies-btn {
+                top: 25px;
+                right: 75px;
+            }
+
+            .logout-btn {
+                top: 75px;
+                right: 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px 15px;
+                margin-bottom: 20px;
+            }
+
+            header h1 {
+                font-size: 1.2rem;
+                line-height: 1.3;
+            }
+
+            .header-subtitle {
+                font-size: 0.85rem;
+                margin-top: 8px;
+            }
+
+            .company-info {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .company-logo-display {
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .company-logo-preview {
+                max-width: 200px;
+                max-height: 150px;
+            }
+
+            .company-name-display {
+                font-size: 1.2rem;
+                padding: 10px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .controls-left,
+            .controls-right {
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.9rem;
+                justify-content: center;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
+            }
+
+            .btn-icon {
+                margin-right: 8px;
+            }
+
+            /* Кнопки управления на мобильных */
+            .profile-btn,
+            .companies-btn,
+            .logout-btn {
+                width: 38px;
+                height: 38px;
+            }
+
+            .profile-btn {
+                top: 15px;
+                right: 15px;
+            }
+
+            .companies-btn {
+                top: 15px;
+                right: 60px;
+            }
+
+            .logout-btn {
+                top: 60px;
+                right: 15px;
+            }
+
+            .profile-btn::before {
+                width: 18px;
+                height: 18px;
+                border-width: 2.5px;
+            }
+
+            .companies-btn::before {
+                width: 16px;
+                height: 16px;
+                border-width: 1.5px;
+            }
+
+            .logout-btn::before {
+                border-right-width: 10px;
+                border-top-width: 7px;
+                border-bottom-width: 7px;
+            }
+
+            /* График Ганта на мобильных */
+            .gantt-chart {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+            }
+
+            .gantt-chart::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .gantt-chart::-webkit-scrollbar-thumb {
+                background: #90caf9;
+                border-radius: 4px;
+            }
+
+            .gantt-chart::-webkit-scrollbar-track {
+                background: #e3f2fd;
+            }
+
+            .gantt-label {
+                min-width: 100px;
+                font-size: 0.7rem;
+                padding: 8px 6px;
+            }
+
+            .gantt-header-cell {
+                min-width: 30px;
+                font-size: 0.65rem;
+                padding: 6px 4px;
+            }
+
+            .gantt-cell {
+                min-width: 30px;
+            }
+
+            .gantt-bar {
+                min-width: 20px;
+            }
+
+            /* Таблица задач на мобильных */
+            .tasks-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+                width: 100%;
+            }
+
+            .tasks-table-wrapper::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .tasks-table-wrapper::-webkit-scrollbar-thumb {
+                background: #90caf9;
+                border-radius: 4px;
+            }
+
+            .tasks-table-wrapper::-webkit-scrollbar-track {
+                background: #e3f2fd;
+            }
+
+            .tasks-table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                font-size: 0.85rem;
+                min-width: 800px; /* Минимальная ширина для читаемости */
+            }
+
+            .tasks-table th,
+            .tasks-table td {
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+
+            .tasks-table-input {
+                padding: 6px 8px;
+                font-size: 0.8rem;
+            }
+
+            /* Статистика */
+            .statistics {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .stat-item {
+                width: 100%;
+                padding: 12px;
+            }
+
+            /* Этапы */
+            .stage-tabs {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px;
+                flex-direction: column;
+            }
+
+            .stage-tabs-buttons {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .stage-tab-btn {
+                flex: 1;
+                min-width: calc(50% - 4px);
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
+            .stage-tab {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+
+            /* Модальные окна */
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 20px 15px;
+                margin: 10% auto;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .profile-modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 8px;
+            }
+
+            header {
+                padding: 15px 12px;
+                margin-bottom: 15px;
+            }
+
+            header h1 {
+                font-size: 1rem;
+                line-height: 1.2;
+            }
+
+            .header-subtitle {
+                font-size: 0.75rem;
+                margin-top: 6px;
+            }
+
+            .company-info {
+                padding: 12px;
+            }
+
+            .company-logo-preview {
+                max-width: 150px;
+                max-height: 120px;
+            }
+
+            .company-name-display {
+                font-size: 1rem;
+                padding: 8px;
+            }
+
+            .controls {
+                padding: 12px;
+            }
+
+            .btn {
+                padding: 10px;
+                font-size: 0.85rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
+            }
+
+            /* Кнопки управления на маленьких экранах */
+            .profile-btn,
+            .companies-btn,
+            .logout-btn {
+                width: 35px;
+                height: 35px;
+            }
+
+            .profile-btn {
+                top: 12px;
+                right: 12px;
+            }
+
+            .companies-btn {
+                top: 12px;
+                right: 55px;
+            }
+
+            .logout-btn {
+                top: 55px;
+                right: 12px;
+            }
+
+            .gantt-label {
+                min-width: 80px;
+                max-width: 80px;
+                font-size: 0.65rem;
+                padding: 6px 4px;
+                word-break: break-word;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .gantt-header-cell {
+                min-width: 25px;
+                font-size: 0.6rem;
+                padding: 4px 2px;
+            }
+
+            .gantt-cell {
+                min-width: 25px;
+            }
+
+            /* Улучшенный скролл для мобильных */
+            .gantt-chart {
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: #90caf9 #e3f2fd;
+            }
+
+            .tasks-table {
+                font-size: 0.75rem;
+            }
+
+            .tasks-table th,
+            .tasks-table td {
+                padding: 6px 4px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .tasks-table-input {
+                padding: 4px 6px;
+                font-size: 0.7rem;
+                width: 100%;
+                min-width: 60px;
+            }
+
+            /* Улучшенный скролл для таблицы на мобильных */
+            .tasks-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: #90caf9 #e3f2fd;
+            }
+
+            .statistics {
+                padding: 12px;
+            }
+
+            .stat-item {
+                padding: 10px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            .stage-tabs {
+                padding: 8px;
+                flex-direction: column;
+            }
+
+            .stage-tabs-buttons {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .stage-tab-btn {
+                flex: 1;
+                min-width: calc(50% - 3px);
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                padding: 8px 10px;
+                font-size: 0.75rem;
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
+            }
+
+            .stage-tab {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+
+            .modal-content {
+                width: 98%;
+                max-width: 98%;
+                padding: 15px 12px;
+                margin: 5% auto;
+            }
+
+            .modal-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .profile-modal-content {
+                width: 98%;
+                max-width: 98%;
+                padding: 15px 12px;
+            }
+
+            .profile-modal-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .profile-form-group input {
+                padding: 10px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+        }
+
+        /* Landscape ориентация для мобильных */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .container {
+                padding: 8px;
+            }
+
+            header {
+                padding: 15px 12px;
+                margin-bottom: 10px;
+            }
+
+            header h1 {
+                font-size: 1.1rem;
+            }
+
+            .controls {
+                padding: 10px;
+                gap: 8px;
             }
 
             .btn {
                 padding: 8px 12px;
-                font-size: 12px;
+                font-size: 0.85rem;
             }
 
-            h1 {
-                font-size: 20px;
+            .gantt-chart {
+                max-height: 50vh;
+            }
+
+            .tasks-table-wrapper {
+                max-height: 40vh;
+            }
+        }
+
+        @media (max-width: 360px) {
+            header h1 {
+                font-size: 0.9rem;
+            }
+
+            .gantt-label {
+                min-width: 70px;
+                font-size: 0.6rem;
+            }
+
+            .gantt-header-cell {
+                min-width: 20px;
+                font-size: 0.55rem;
+            }
+        }
+
+        /* Горизонтальная прокрутка для графика на мобильных */
+        @media (max-width: 768px) {
+            .gantt-chart-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+            }
+
+            .gantt-chart {
+                min-width: 800px; /* Минимальная ширина для корректного отображения */
+            }
+
+            .tasks-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tasks-table {
+                min-width: 600px; /* Минимальная ширина для таблицы */
             }
         }
 
@@ -1996,25 +2669,26 @@
     <div class="container">
         <header>
             <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" style="display: none;" onclick="logout()"></button>
-            <button class="companies-btn" id="companiesBtn" title="Выбор компании" style="display: none;" onclick="goToCompanies()"></button>
-            <button class="profile-btn" id="profileBtn" title="Редактировать профиль" style="display: none;"></button>
+            <button class="companies-btn" id="companiesBtn" data-tooltip="Выбор компании" style="display: none;" onclick="goToCompanies()">
+                <span style="position: absolute; width: 6px; height: 6px; background: white; border-radius: 50%; top: 4px; left: 4px; z-index: 1;"></span>
+            </button>
+            <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" style="display: none;">
+                <span style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; bottom: 8px; right: 8px; z-index: 1;"></span>
+            </button>
             <h1>
                 <span class="header-icon"></span>
                 <span>График внедрения и обучения системы ICONA</span>
             </h1>
             <p class="header-subtitle">Интерактивная визуализация плана цифровизации процессов</p>
             <div class="company-info">
-                <div class="company-logo-upload" id="companyLogoWrapper">
+                <div class="company-logo-display" id="companyLogoWrapper">
                     <img id="companyLogo" class="company-logo-preview" src="favicon.png" alt="Логотип компании">
-                    <input type="file" id="companyLogoInput" accept="image/png" style="display: none;">
-                    <span id="companyLogoHint" class="company-logo-hint">Выберите файл</span>
                 </div>
                 <div class="company-name-block">
                     <span class="company-name-label">Название компании</span>
                     <div
                         id="companyNameDisplay"
                         class="company-name-display"
-                        contenteditable="true"
                         data-placeholder="Введите название компании"
                     >Введите название компании</div>
                 </div>
@@ -2041,14 +2715,6 @@
         </div>
 
         <div class="controls">
-            <button class="btn btn-primary" onclick="openPDFExportModal()">
-                <span class="btn-icon btn-icon-pdf"></span>
-                <span>Выгрузить в PDF</span>
-            </button>
-            <button class="btn btn-primary" onclick="openExcelExportModal()">
-                <span class="btn-icon btn-icon-excel"></span>
-                <span>Выгрузить в Excel</span>
-            </button>
             <button class="btn btn-secondary view-toggle-btn" onclick="toggleView()">
                 <span class="btn-icon btn-icon-toggle"></span>
                 <span class="view-toggle-label">
@@ -2056,6 +2722,14 @@
                     <span class="view-toggle-separator">/</span>
                     <span class="view-toggle-part view-toggle-table">Таблица</span>
                 </span>
+            </button>
+            <button class="btn btn-primary" onclick="openPDFExportModal()">
+                <span class="btn-icon btn-icon-pdf"></span>
+                <span>Выгрузить в PDF</span>
+            </button>
+            <button class="btn btn-primary" onclick="openExcelExportModal()">
+                <span class="btn-icon btn-icon-excel"></span>
+                <span>Выгрузить в Excel</span>
             </button>
             <button class="btn btn-secondary reset-plan-btn" onclick="resetSchedule()" data-tooltip="Сбросить все даты до дефолтных значений">
                 <span class="btn-icon btn-icon-reset"></span>
@@ -2410,10 +3084,41 @@
             return urlParams.get('company') || localStorage.getItem('gantt-company') || null;
         }
 
-        const currentCompany = getCompanyFromURL();
+        let currentCompany = getCompanyFromURL();
         if (currentCompany) {
             localStorage.setItem('gantt-company', currentCompany);
+            console.log('🏢 Текущая компания:', currentCompany);
+        } else {
+            console.warn('⚠️ Компания не определена из URL или localStorage');
         }
+        
+        // Принудительное сохранение при уходе со страницы
+        window.addEventListener('beforeunload', function() {
+            if (currentCompany && !isViewMode) {
+                // Сбрасываем таймер и сохраняем сразу синхронно
+                if (saveTimeout) {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = null;
+                }
+                
+                // Используем navigator.sendBeacon для надежного сохранения при закрытии страницы
+                try {
+                    const snapshot = createFullGanttSnapshot();
+                    const companyParam = `?company=${currentCompany}`;
+                    // sendBeacon требует FormData или Blob, но наш API ожидает JSON
+                    // Поэтому используем обычный fetch с keepalive
+                    fetch(`/api/gantt-state${companyParam}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(snapshot),
+                        keepalive: true // Позволяет запросу завершиться даже после закрытия страницы
+                    }).catch(e => console.error('Ошибка сохранения при уходе:', e));
+                    console.log('💾 Запрос на сохранение отправлен при уходе');
+                } catch (e) {
+                    console.error('Ошибка сохранения при уходе:', e);
+                }
+            }
+        });
 
         // ========== РЕЖИМ ДОСТУПА ==========
         // Проверяем режим из localStorage (edit или view)
@@ -2740,7 +3445,6 @@
 
         function applyCompanyInfoToUI() {
             const logoEl = document.getElementById('companyLogo');
-            const logoHint = document.getElementById('companyLogoHint');
             const nameDisplay = document.getElementById('companyNameDisplay');
 
             if (logoEl) {
@@ -2749,10 +3453,6 @@
                 } else {
                     logoEl.src = 'favicon.png';
                 }
-            }
-
-            if (logoHint) {
-                logoHint.style.display = companyLogoData ? 'none' : 'inline';
             }
 
             if (nameDisplay) {
@@ -3189,36 +3889,102 @@
         async function saveFullGanttState() {
             try {
                 if (!currentCompany) {
-                    console.warn('Компания не указана, сохранение пропущено');
+                    console.warn('⚠️ Компания не указана, сохранение пропущено. currentCompany:', currentCompany);
+                    console.warn('⚠️ URL:', window.location.href);
+                    console.warn('⚠️ localStorage gantt-company:', localStorage.getItem('gantt-company'));
                     return;
                 }
+                
+                if (isViewMode) {
+                    console.warn('⚠️ Режим просмотра, сохранение пропущено');
+                    return;
+                }
+                
                 const snapshot = createFullGanttSnapshot();
                 const companyParam = `?company=${currentCompany}`;
-                const response = await fetch(`/api/gantt-state${companyParam}`, {
+                const url = `/api/gantt-state${companyParam}`;
+                
+                console.log('💾 Сохранение графика для компании:', currentCompany);
+                console.log('📦 Размер данных:', JSON.stringify(snapshot).length, 'байт');
+                console.log('🔗 URL запроса:', url);
+                console.log('📊 Количество задач:', snapshot.tasks ? snapshot.tasks.length : 0);
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(snapshot)
                 });
-                if (response.ok) {
-                    console.log('✅ Полное состояние графика сохранено');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Ошибка HTTP:', response.status, response.statusText);
+                    console.error('❌ Текст ошибки:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const responseData = await response.json();
+                
+                if (responseData && responseData.ok) {
+                    console.log('✅ Полное состояние графика сохранено успешно');
+                    console.log('✅ Ответ сервера:', responseData);
                 } else {
-                    console.warn('⚠️ Не удалось сохранить полное состояние графика');
+                    console.error('❌ Сервер вернул ошибку:', responseData);
+                    throw new Error(responseData.error || 'Неизвестная ошибка сохранения');
                 }
             } catch (e) {
-                console.warn('Не удалось сохранить полное состояние графика на сервере:', e);
+                console.error('❌ Ошибка при сохранении графика на сервере:', e);
+                console.error('❌ Стек ошибки:', e.stack);
+                // Не показываем alert для каждого сохранения, только логируем
+                // alert('Ошибка сохранения: ' + e.message + '\n\nПроверьте консоль браузера для деталей.');
+            }
+        }
+        
+        // Функция для показа индикатора сохранения (опционально, можно добавить позже)
+        function showSaveIndicator(success) {
+            // Можно добавить визуальный индикатор в будущем
+            if (success) {
+                console.log('💾 Данные сохранены');
             }
         }
 
         // Автоматическое сохранение с задержкой (debounce)
         function autoSaveGanttState() {
+            console.log('🔄 autoSaveGanttState вызвана');
+            console.log('   currentCompany:', currentCompany);
+            console.log('   isViewMode:', isViewMode);
+            console.log('   URL:', window.location.href);
+            
+            if (!currentCompany) {
+                console.warn('⚠️ autoSaveGanttState: компания не определена, сохранение пропущено');
+                console.warn('   Попытка получить из localStorage:', localStorage.getItem('gantt-company'));
+                // Попытка восстановить из localStorage
+                const savedCompany = localStorage.getItem('gantt-company');
+                if (savedCompany) {
+                    currentCompany = savedCompany;
+                    console.log('✅ Компания восстановлена из localStorage:', currentCompany);
+                } else {
+                return;
+                }
+            }
+            
+            if (isViewMode) {
+                console.warn('⚠️ autoSaveGanttState: режим просмотра, сохранение пропущено');
+                return;
+            }
+            
             // Очищаем предыдущий таймер
             if (saveTimeout) {
                 clearTimeout(saveTimeout);
+                console.log('   Предыдущий таймер очищен');
             }
-            // Устанавливаем новый таймер на 2 секунды
+            
+            console.log('⏱️ Запланировано автоматическое сохранение через 1 секунду');
+            
+            // Уменьшаем задержку до 1 секунды для более быстрого сохранения
             saveTimeout = setTimeout(() => {
+                console.log('⏰ Таймер сработал, начинаем сохранение...');
                 saveFullGanttState();
-            }, 2000);
+            }, 1000);
         }
 
         // Загрузить полное состояние графика с сервера
@@ -4438,7 +5204,17 @@
             // Всегда обновляем диаграмму Ганта, чтобы обновить input поля в ней
             renderGantt();
             renderTable();
-            autoSaveGanttState(); // Автоматическое сохранение после изменения задачи
+            
+            // Автоматическое сохранение после изменения задачи
+            console.log('📝 Изменение задачи:', field, 'для задачи:', task.task);
+            
+            // Для критических полей (даты, статусы) сохраняем немедленно
+            if (field === 'startDate' || field === 'endDate' || field === 'days' || field === 'status') {
+                console.log('💾 Критическое изменение даты/статуса, сохраняем немедленно');
+                saveFullGanttState(); // Сохраняем сразу
+            } else {
+                autoSaveGanttState(); // Для остальных полей - с задержкой
+            }
         }
 
         // Пересчитать все задачи после указанного индекса в строгой последовательности
@@ -5990,7 +6766,10 @@ function exportPDF(scaleMode = 'day') {
                 renderGantt();
             }
             renderTable();
-            autoSaveGanttState(); // Автоматическое сохранение после изменения статуса/комментария
+            
+            // Немедленное сохранение для критических операций (статусы и комментарии)
+            console.log('💾 Критическое изменение: статус/комментарий, сохраняем немедленно');
+            saveFullGanttState(); // Сохраняем сразу, без задержки
         }
 
         // Обработчики кликов по пунктам меню статуса
@@ -6346,28 +7125,20 @@ function exportPDF(scaleMode = 'day') {
             const companyLogoWrapper = document.getElementById('companyLogoWrapper');
 
             if (companyNameDisplay) {
-                // Блокируем редактирование названия компании в режиме просмотра
-                if (isViewMode) {
-                    companyNameDisplay.contentEditable = 'false';
-                    companyNameDisplay.style.cursor = 'default';
-                } else {
-                    companyNameDisplay.addEventListener('focus', handleCompanyNameFocus);
-                    companyNameDisplay.addEventListener('input', handleCompanyNameInput);
-                    companyNameDisplay.addEventListener('blur', handleCompanyNameInput);
-                }
+                // Убираем возможность редактирования названия компании на странице графика
+                // Редактирование доступно только через админ-панель или страницу выбора компаний
+                companyNameDisplay.contentEditable = 'false';
+                companyNameDisplay.style.cursor = 'default';
             }
 
+            // Убираем возможность загрузки логотипа на странице графика
+            // Загрузка доступна только через админ-панель или страницу выбора компаний
             if (companyLogoInput) {
-                companyLogoInput.addEventListener('change', handleCompanyLogoChange);
+                companyLogoInput.style.display = 'none';
             }
-
-            if (companyLogoWrapper && companyLogoInput) {
-                companyLogoWrapper.addEventListener('click', () => {
-                    if (!canEdit()) {
-                        return; // Блокируем клик по логотипу в режиме просмотра
-                    }
-                    companyLogoInput.click();
-                });
+            
+            if (companyLogoWrapper) {
+                companyLogoWrapper.style.cursor = 'default';
             }
 
             // Инициализируем вкладки этапов на основе текущей конфигурации

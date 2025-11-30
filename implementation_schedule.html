@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>График внедрения и обучения системы ICONA</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- html2pdf.js загружается асинхронно только при необходимости (при экспорте в PDF) -->
     <!-- Локальная копия XLSX для корпоративной сети (без зависимости от CDN).
          Файл xlsx.min.js должен лежать рядом с implementation_schedule.html или в указанной папке. -->
     <script src="xlsx.min.js"></script>
@@ -822,6 +822,43 @@
         .btn-primary {
             background: var(--color-primary);
             color: white;
+        }
+
+        /* Стили для кнопки сохранения */
+        #saveButton {
+            background: #4caf50 !important;
+            border-color: #4caf50 !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+            position: relative;
+            display: none !important; /* Скрыта, так как работает автоматическое сохранение */
+        }
+
+        #saveButton:hover {
+            background: #45a049 !important;
+            border-color: #45a049 !important;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
+            transform: translateY(-2px);
+        }
+
+        #saveButton.saving-success {
+            background: #4caf50 !important;
+            border-color: #4caf50 !important;
+        }
+
+        #saveButton.saving-error {
+            background: #f44336 !important;
+            border-color: #f44336 !important;
+        }
+
+        #saveButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Скрыть кнопку сохранения в режиме просмотра */
+        body.view-mode #saveButton {
+            display: none !important;
         }
 
         .btn-primary:hover {
@@ -2365,6 +2402,20 @@
                 font-size: 0.85rem;
             }
 
+            /* Одинаковый размер кнопок "Ответственный" и "Детальный вид" на планшетах */
+            .responsible-toggle-btn,
+            .gantt-style-toggle-btn {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+                min-height: 40px;
+            }
+
+            /* Убираем min-width для кнопки "Ответственный" на планшетах */
+            .stage-tab-btn.responsible-toggle-btn {
+                min-width: auto;
+                flex: 0 0 auto;
+            }
+
             .stage-tab {
                 padding: 8px 12px;
                 font-size: 0.85rem;
@@ -2549,6 +2600,21 @@
                 touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
+            /* Одинаковый размер кнопок "Ответственный" и "Детальный вид" на мобильных */
+            .responsible-toggle-btn,
+            .gantt-style-toggle-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation;
+            }
+
+            /* Убираем min-width для кнопки "Ответственный" на мобильных, чтобы она была такого же размера */
+            .stage-tab-btn.responsible-toggle-btn {
+                min-width: auto;
+                flex: 0 0 auto;
+            }
+
             .stage-tab {
                 padding: 6px 10px;
                 font-size: 0.75rem;
@@ -2715,6 +2781,10 @@
         </div>
 
         <div class="controls">
+            <button class="btn btn-primary" id="saveButton" onclick="manualSaveGantt()" data-tooltip="Принудительно сохранить все изменения">
+                <span class="btn-icon">💾</span>
+                <span id="saveButtonText">Сохранить</span>
+            </button>
             <button class="btn btn-secondary view-toggle-btn" onclick="toggleView()">
                 <span class="btn-icon btn-icon-toggle"></span>
                 <span class="view-toggle-label">
@@ -3016,65 +3086,7 @@
     </div>
 
     <!-- Небольшой toast для сообщений по базовому плану -->
-    <div id="baselineToast" class="baseline-toast"></div>
-
-    <!-- Модальное окно редактирования профиля -->
-    <div id="profileModal" class="profile-modal">
-        <div class="profile-modal-content">
-            <div class="profile-modal-header">
-                <h2>Редактирование профиля</h2>
-                <button class="profile-modal-close" onclick="closeProfileModal()">&times;</button>
-            </div>
-            <div id="profileMessage" class="profile-message"></div>
-            <form id="profileForm">
-                <div class="profile-form-group">
-                    <label for="profileLogin">Логин</label>
-                    <input type="text" id="profileLogin" name="login" required placeholder="Введите новый логин">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePassword">Новый пароль</label>
-                    <input type="password" id="profilePassword" name="password" placeholder="Оставьте пустым, чтобы не менять">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePasswordConfirm">Подтвердите пароль</label>
-                    <input type="password" id="profilePasswordConfirm" name="passwordConfirm" placeholder="Подтвердите новый пароль">
-                </div>
-                <div class="profile-form-actions">
-                    <button type="button" class="profile-btn-cancel" onclick="closeProfileModal()">Отмена</button>
-                    <button type="submit" class="profile-btn-save">Сохранить изменения</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно редактирования профиля -->
-    <div id="profileModal" class="profile-modal">
-        <div class="profile-modal-content">
-            <div class="profile-modal-header">
-                <h2>Редактирование профиля</h2>
-                <button class="profile-modal-close" onclick="closeProfileModal()">&times;</button>
-            </div>
-            <div id="profileMessage" class="profile-message"></div>
-            <form id="profileForm">
-                <div class="profile-form-group">
-                    <label for="profileLogin">Логин</label>
-                    <input type="text" id="profileLogin" name="login" required placeholder="Введите новый логин">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePassword">Новый пароль</label>
-                    <input type="password" id="profilePassword" name="password" placeholder="Оставьте пустым, чтобы не менять">
-                </div>
-                <div class="profile-form-group">
-                    <label for="profilePasswordConfirm">Подтвердите пароль</label>
-                    <input type="password" id="profilePasswordConfirm" name="passwordConfirm" placeholder="Подтвердите новый пароль">
-                </div>
-                <div class="profile-form-actions">
-                    <button type="button" class="profile-btn-cancel" onclick="closeProfileModal()">Отмена</button>
-                    <button type="submit" class="profile-btn-save">Сохранить изменения</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="baselineToast" class="baseline-toast">    </div>
 
     <script>
         // Данные о задачах из Excel файла
@@ -3133,8 +3145,9 @@
             return true;
         }
         
-        // Показываем индикатор режима просмотра
+        // Показываем индикатор режима просмотра и скрываем кнопку сохранения
         if (isViewMode) {
+            document.body.classList.add('view-mode');
             document.addEventListener('DOMContentLoaded', function() {
                 const style = document.createElement('style');
                 style.textContent = `
@@ -3382,6 +3395,9 @@
         let viewEndDate = null;   // если задано, используем как правую границу отображения
         let isExporting = false;  // специальный режим отрисовки для PDF
         let saveTimeout = null; // таймер для отложенного сохранения
+
+
+
 
         // Текущая ячейка, для которой открыто меню статуса
         let currentStatusTarget = null; // { taskId, dateStrs }
@@ -3784,7 +3800,7 @@
 
             projectData.forEach((item, index) => {
                 const taskDates = getTaskDates(currentDate, item.days);
-                tasks.push({
+                const taskObj = {
                     id: index,
                     ...item,
                     startDate: taskDates[0],
@@ -3792,12 +3808,22 @@
                     dates: taskDates,
                     status: 'pending',
                     dateStatuses: {} // ключ: YYYY-MM-DD, значение: 'pending' | 'in-progress' | 'completed' | 'weekend-manual' | 'holiday-manual'
-                });
+                };
+                // Синхронизируем task и name для совместимости
+                if (taskObj.task && !taskObj.name) {
+                    taskObj.name = taskObj.task;
+                } else if (taskObj.name && !taskObj.task) {
+                    taskObj.task = taskObj.name;
+                }
+                tasks.push(taskObj);
                 currentDate = new Date(taskDates[taskDates.length - 1]);
                 currentDate.setDate(currentDate.getDate() + 1);
             });
 
             updateStatistics();
+	    // лок начало: автосохранение
+	    autoSaveGanttState();
+	    // энд конец
             renderGantt();
             renderTable();
             applyCompanyInfoToUI();
@@ -3927,6 +3953,7 @@
                 if (responseData && responseData.ok) {
                     console.log('✅ Полное состояние графика сохранено успешно');
                     console.log('✅ Ответ сервера:', responseData);
+                    showSaveIndicator(true);
                 } else {
                     console.error('❌ Сервер вернул ошибку:', responseData);
                     throw new Error(responseData.error || 'Неизвестная ошибка сохранения');
@@ -3934,16 +3961,63 @@
             } catch (e) {
                 console.error('❌ Ошибка при сохранении графика на сервере:', e);
                 console.error('❌ Стек ошибки:', e.stack);
-                // Не показываем alert для каждого сохранения, только логируем
+                showSaveIndicator(false);
+                // Не показываем alert для каждого автосохранения, только логируем
                 // alert('Ошибка сохранения: ' + e.message + '\n\nПроверьте консоль браузера для деталей.');
             }
         }
-        
-        // Функция для показа индикатора сохранения (опционально, можно добавить позже)
+
+        // Функция для показа индикатора сохранения
         function showSaveIndicator(success) {
-            // Можно добавить визуальный индикатор в будущем
+            const saveButton = document.getElementById('saveButton');
+            const saveButtonText = document.getElementById('saveButtonText');
+            
+            if (!saveButton || !saveButtonText) return;
+            
             if (success) {
+                saveButton.classList.add('saving-success');
+                saveButtonText.textContent = '✓ Сохранено';
                 console.log('💾 Данные сохранены');
+                
+                // Возвращаем обратно через 2 секунды
+                setTimeout(() => {
+                    saveButton.classList.remove('saving-success');
+                    saveButtonText.textContent = 'Сохранить';
+                }, 2000);
+            } else {
+                saveButton.classList.add('saving-error');
+                saveButtonText.textContent = '✗ Ошибка';
+                
+                setTimeout(() => {
+                    saveButton.classList.remove('saving-error');
+                    saveButtonText.textContent = 'Сохранить';
+                }, 2000);
+            }
+        }
+
+        // Принудительное сохранение по кнопке
+        async function manualSaveGantt() {
+            const saveButton = document.getElementById('saveButton');
+            const saveButtonText = document.getElementById('saveButtonText');
+            
+            if (saveButton) {
+                saveButton.disabled = true;
+                if (saveButtonText) {
+                    saveButtonText.textContent = 'Сохранение...';
+                }
+            }
+            
+            try {
+                await saveFullGanttState();
+                showSaveIndicator(true);
+            } catch (error) {
+                console.error('❌ Ошибка при ручном сохранении:', error);
+                showSaveIndicator(false);
+                alert('Ошибка сохранения: ' + error.message);
+            } finally {
+                if (saveButton) {
+                    saveButton.disabled = false;
+                }
             }
         }
 
@@ -3963,7 +4037,7 @@
                     currentCompany = savedCompany;
                     console.log('✅ Компания восстановлена из localStorage:', currentCompany);
                 } else {
-                    return;
+                return;
                 }
             }
             
@@ -4018,6 +4092,7 @@
                             substage: task.substage || '',
                             controlType: task.controlType || '',
                             name: task.name || '',
+                            task: task.name || task.task || '', // Для обратной совместимости
                             days: task.days || 0,
                             status: task.status || 'pending',
                             dateStatuses: task.dateStatuses || {},
@@ -4249,8 +4324,9 @@
         function renderTaskLabelContent(labelElement, task, index) {
             labelElement.innerHTML = '';
             const span = document.createElement('span');
-            span.title = task.task;
-            const displayName = task.task.length > 40 ? task.task.substring(0, 40) + '...' : task.task;
+            const taskName = task.task || task.name || 'Без названия';
+            span.title = taskName;
+            const displayName = taskName.length > 40 ? taskName.substring(0, 40) + '...' : taskName;
             span.textContent = displayName;
 
             span.addEventListener('dblclick', () => {
@@ -4260,7 +4336,7 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'gantt-task-input';
-                input.value = task.task;
+                input.value = task.task || task.name || '';
 
                 labelElement.innerHTML = '';
                 labelElement.appendChild(input);
@@ -4272,6 +4348,7 @@
                         const newName = input.value.trim();
                         if (newName) {
                             task.task = newName;
+                            task.name = newName; // Синхронизируем оба поля
                         }
                     }
                     renderTaskLabelContent(labelElement, task, index);
@@ -4911,10 +4988,15 @@
                 // Подставляем текст названия задачи в input
                 const titleInput = row.querySelector('input[data-field="taskTitle"]');
                 if (titleInput) {
-                    if (!task.task) {
+                    if (!task.task && !task.name) {
                         task.task = 'Новая задача';
+                        task.name = 'Новая задача';
+                    } else if (task.name && !task.task) {
+                        task.task = task.name;
+                    } else if (task.task && !task.name) {
+                        task.name = task.task;
                     }
-                    titleInput.value = task.task;
+                    titleInput.value = task.task || task.name || 'Новая задача';
                 }
 
                 // Поле этапа — редактируется только хвост после "Этап N."
@@ -5025,6 +5107,7 @@
             // Обновляем базовые поля
             if (field === 'taskTitle') {
                 task.task = input.value || '';
+                task.name = task.task; // Синхронизируем оба поля
             } else if (field === 'stageSuffix') {
                 const oldStage = task.stage || '';
                 const prefix = input.getAttribute('data-prefix') || '';
@@ -5206,7 +5289,7 @@
             renderTable();
             
             // Автоматическое сохранение после изменения задачи
-            console.log('📝 Изменение задачи:', field, 'для задачи:', task.task);
+            console.log('📝 Изменение задачи:', field, 'для задачи:', task.task || task.name);
             
             // Для критических полей (даты, статусы) сохраняем немедленно
             if (field === 'startDate' || field === 'endDate' || field === 'days' || field === 'status') {
@@ -5246,7 +5329,7 @@
         // Пересчитать даты задач начиная с указанного индекса (используется после drag&drop)
         function recalculateDatesFrom(startIndex) {
             if (startIndex < 0 || startIndex >= tasks.length) return;
-
+	    autoSaveGanttState();
             let prevEnd = null;
             if (startIndex > 0) {
                 const prevTask = tasks[startIndex - 1];
@@ -5333,6 +5416,7 @@
 
             // Выделяем только что созданную строку
             selectTask(newTask.id);
+	    autoSaveGanttState();
             autoSaveGanttState(); // Автоматическое сохранение после добавления задачи
         }
 
@@ -5380,6 +5464,7 @@
             } else {
                 recalculateFollowingTasks(startIndex - 1);
             }
+		autoSaveGanttState();
 
             // Ставим курсор на задачу, которая стала на место первой удалённой (если есть)
             const newIndex = Math.min(startIndex, tasks.length - 1);
@@ -5419,9 +5504,78 @@
             cancelDeleteTask();
         }
 
+// Асинхронная загрузка html2pdf.js библиотеки
+let html2pdfLoaded = false;
+let html2pdfLoading = false;
+
+function loadHtml2Pdf() {
+    return new Promise((resolve, reject) => {
+        // Если уже загружена, сразу возвращаем
+        if (html2pdfLoaded && typeof html2pdf !== 'undefined') {
+            resolve();
+            return;
+        }
+        
+        // Если уже загружается, ждём
+        if (html2pdfLoading) {
+            const checkInterval = setInterval(() => {
+                if (html2pdfLoaded && typeof html2pdf !== 'undefined') {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+            return;
+        }
+        
+        // Начинаем загрузку
+        html2pdfLoading = true;
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.async = true;
+        script.onload = () => {
+            html2pdfLoaded = true;
+            html2pdfLoading = false;
+            if (typeof html2pdf !== 'undefined') {
+                resolve();
+            } else {
+                reject(new Error('html2pdf не загрузился'));
+            }
+        };
+        script.onerror = () => {
+            html2pdfLoading = false;
+            reject(new Error('Не удалось загрузить html2pdf.js. Проверьте подключение к интернету.'));
+        };
+        
+        // Устанавливаем таймаут 10 секунд
+        setTimeout(() => {
+            if (!html2pdfLoaded) {
+                html2pdfLoading = false;
+                script.remove();
+                reject(new Error('Таймаут загрузки html2pdf.js'));
+            }
+        }, 10000);
+        
+        document.head.appendChild(script);
+    });
+}
+
 // Экспорт в PDF: детальный Гант по выбранному масштабу + таблица задач с комментариями
-function exportPDF(scaleMode = 'day') {
+async function exportPDF(scaleMode = 'day') {
     if (!tasks || !tasks.length) return;
+    
+    // Загружаем библиотеку html2pdf.js перед использованием
+    try {
+        await loadHtml2Pdf();
+    } catch (error) {
+        console.error('Ошибка загрузки html2pdf.js:', error);
+        alert('Не удалось загрузить библиотеку для экспорта в PDF. Пожалуйста, проверьте подключение к интернету и попробуйте снова.');
+        return;
+    }
+    
+    if (typeof html2pdf === 'undefined') {
+        alert('Библиотека html2pdf не доступна. Пожалуйста, обновите страницу и попробуйте снова.');
+        return;
+    }
 
     const logoEl = document.getElementById('companyLogo');
     const nameDisplay = document.getElementById('companyNameDisplay');
@@ -7088,9 +7242,15 @@ function exportPDF(scaleMode = 'day') {
                 // Если полное состояние не загружено, инициализируем задачи по умолчанию
                 initializeTasks();
                 // Загружаем baseline для обратной совместимости
-                loadBaselineFromServer();
+                await loadBaselineFromServer();
             }
-            loadCompanyInfo();
+            // Убеждаемся, что график отрисован
+            if (tasks.length > 0) {
+                renderGantt();
+                renderTable();
+                renderStageTabs();
+            }
+            await loadCompanyInfo();
             loadCurrentUser();
             
             // Обработчики для профиля

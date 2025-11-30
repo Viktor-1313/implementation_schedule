@@ -150,16 +150,50 @@ app.get('/api/gantt-state', (req, res) => {
 app.post('/api/gantt-state', (req, res) => {
   try {
     const companyId = req.query.company || req.body.company;
+    console.log('📥 POST /api/gantt-state получен');
+    console.log('   companyId из query:', req.query.company);
+    console.log('   companyId из body:', req.body.company);
+    console.log('   Итоговый companyId:', companyId);
+    
     if (!companyId || !isValidCompanyId(companyId)) {
+      console.error('❌ Ошибка: не указан или неверный ID компании:', companyId);
       return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
     }
 
     const dataFile = getCompanyDataFile(companyId);
-    fs.writeFileSync(dataFile, JSON.stringify(req.body, null, 2), 'utf8');
+    console.log('💾 Сохранение графика для компании:', companyId);
+    console.log('📁 Путь к файлу:', dataFile);
+    console.log('📦 Размер данных:', JSON.stringify(req.body).length, 'байт');
+    console.log('📊 Количество задач в данных:', req.body.tasks ? req.body.tasks.length : 'нет');
+    
+    // Проверяем, что директория существует
+    const dir = path.dirname(dataFile);
+    if (!fs.existsSync(dir)) {
+      console.log('📁 Создание директории:', dir);
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Сохраняем данные
+    const dataToSave = req.body;
+    fs.writeFileSync(dataFile, JSON.stringify(dataToSave, null, 2), 'utf8');
+    
+    // Проверяем, что файл действительно создан
+    if (fs.existsSync(dataFile)) {
+      const stats = fs.statSync(dataFile);
+    console.log('✅ График успешно сохранен в файл:', dataFile);
+      console.log('✅ Размер сохраненного файла:', stats.size, 'байт');
+    } else {
+      console.error('❌ Файл не был создан после записи!');
+      throw new Error('Файл не был создан');
+    }
+    
     res.json({ ok: true });
   } catch (e) {
-    console.error('Ошибка сохранения gantt-state:', e);
-    res.status(500).json({ ok: false, error: 'save_failed' });
+    console.error('❌ Ошибка сохранения gantt-state:', e);
+    console.error('   Тип ошибки:', e.constructor.name);
+    console.error('   Сообщение:', e.message);
+    console.error('   Стек ошибки:', e.stack);
+    res.status(500).json({ ok: false, error: 'save_failed', message: e.message });
   }
 });
 
@@ -242,6 +276,12 @@ app.post('/api/users', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Не все поля заполнены' });
     }
 
+    // Проверяем, что пароль не пустой после trim
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) {
+      return res.status(400).json({ ok: false, error: 'Пароль не может быть пустым' });
+    }
+
     // Загружаем существующих пользователей
     let users = [];
     if (fs.existsSync(USERS_FILE)) {
@@ -254,8 +294,16 @@ app.post('/api/users', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Пользователь с таким логином уже существует' });
     }
 
-    // Хешируем пароль
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Хешируем пароль (используем trimmed версию)
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+    
+    // Проверяем, что хеш создан правильно
+    if (!hashedPassword || !hashedPassword.startsWith('$2')) {
+      console.error('❌ Ошибка создания хеша пароля!');
+      return res.status(500).json({ ok: false, error: 'Ошибка создания пароля' });
+    }
+    
+    console.log(`🔐 Создание пользователя "${login.trim()}": пароль хеширован успешно`);
 
     // Добавляем нового пользователя
     const newUser = {
@@ -272,6 +320,7 @@ app.post('/api/users', async (req, res) => {
 
     // Сохраняем
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    console.log(`✅ Пользователь "${login.trim()}" успешно создан с хешированным паролем`);
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка добавления пользователя:', e);
@@ -438,8 +487,17 @@ app.put('/api/users/:login', async (req, res) => {
 
     // Обновляем пароль, если указан
     if (password && password.trim()) {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const trimmedPassword = password.trim();
+      const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+      
+      // Проверяем, что хеш создан правильно
+      if (!hashedPassword || !hashedPassword.startsWith('$2')) {
+        console.error(`❌ Ошибка создания хеша пароля для пользователя "${login}"!`);
+        return res.status(500).json({ ok: false, error: 'Ошибка создания пароля' });
+      }
+      
       users[userIndex].password = hashedPassword;
+      console.log(`🔐 Пароль пользователя "${login}" обновлен`);
     }
 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
@@ -459,6 +517,10 @@ app.post('/api/auth', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Логин и пароль обязательны' });
     }
 
+    // Убираем пробелы в начале и конце
+    const trimmedLogin = login.trim();
+    const trimmedPassword = password.trim();
+
     if (!fs.existsSync(USERS_FILE)) {
       return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
     }
@@ -466,16 +528,32 @@ app.post('/api/auth', async (req, res) => {
     const raw = fs.readFileSync(USERS_FILE, 'utf8');
     const users = JSON.parse(raw);
 
-    const user = users.find(u => u.login === login);
+    const user = users.find(u => u.login === trimmedLogin);
     if (!user) {
+      console.log(`❌ Пользователь с логином "${trimmedLogin}" не найден`);
       return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
     }
 
-    // Проверяем пароль
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    // Проверяем формат хеша пароля
+    const passwordHash = user.password || '';
+    const isBcryptHash = passwordHash.startsWith('$2a$') || passwordHash.startsWith('$2b$') || passwordHash.startsWith('$2y$');
+    
+    if (!isBcryptHash) {
+      console.error(`❌ ОШИБКА: Пароль пользователя "${trimmedLogin}" не является bcrypt хешем!`);
+      console.error(`   Формат пароля: ${passwordHash.substring(0, 20)}...`);
+      console.error(`   Это означает, что пароль был сохранен неправильно при создании пользователя.`);
+      console.error(`   Нужно обновить пароль пользователя через админ-панель.`);
+      return res.status(500).json({ ok: false, error: 'Ошибка формата пароля. Обратитесь к администратору для сброса пароля.' });
+    }
+
+    // Проверяем пароль (используем trimmed версию)
+    const passwordMatch = await bcrypt.compare(trimmedPassword, user.password);
     if (!passwordMatch) {
+      console.log(`❌ Неверный пароль для пользователя "${trimmedLogin}"`);
       return res.status(401).json({ ok: false, error: 'Неверный логин или пароль' });
     }
+
+    console.log(`✅ Успешная авторизация пользователя "${trimmedLogin}"`);
 
     // Если указана компания, проверяем доступ пользователя к ней
     if (company) {
@@ -503,8 +581,16 @@ app.get('/', (req, res) => {
   res.redirect('/auth.html');
 });
 
-// отдаём статику из папки 1 (твой index (1) (1).html)
+// отдаём статику из текущей директории (где находится server.js)
 app.use(express.static(__dirname));
+
+// Логирование для отладки (только в development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`📄 Запрос: ${req.method} ${req.path}`);
+    next();
+  });
+}
 
 // Инициализация главного администратора
 async function initializeMainAdmin() {
@@ -571,10 +657,21 @@ async function initializeMainAdmin() {
 
 // Инициализируем главного админа перед запуском сервера
 initializeMainAdmin().then(() => {
+  // Проверяем наличие основных файлов
+  const requiredFiles = ['auth.html', 'companies.html', 'admin.html', 'implementation_schedule.html'];
+  const missingFiles = requiredFiles.filter(file => !fs.existsSync(path.join(__dirname, file)));
+  
+  if (missingFiles.length > 0) {
+    console.warn(`⚠️  Предупреждение: не найдены файлы: ${missingFiles.join(', ')}`);
+    console.log(`📁 Текущая директория: ${__dirname}`);
+    console.log(`📁 Содержимое директории:`, fs.readdirSync(__dirname).join(', '));
+  }
+  
   // Обработка ошибок при запуске
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Сервер диаграммы Ганта запущен на порту ${PORT}`);
     console.log(`📁 Данные сохраняются в: ${__dirname}`);
+    console.log(`📁 Содержимое директории:`, fs.readdirSync(__dirname).filter(f => !f.startsWith('.') && f !== 'node_modules').join(', '));
     console.log(`\n📋 Доступные страницы:`);
     console.log(`   • Авторизация: http://localhost:${PORT}/auth.html`);
     console.log(`   • Админ-панель: http://localhost:${PORT}/admin.html`);

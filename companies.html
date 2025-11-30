@@ -1117,33 +1117,38 @@
                 // Для админов показываем все кнопки, для пользователей только "Открыть график" и "Копировать ссылку"
                 let actionsHtml = '';
                 if (isAdmin) {
+                    // Используем data-атрибуты вместо inline onclick для безопасности
+                    const safeCompanyId = company.id.replace(/"/g, '&quot;');
+                    const safeCompanyName = company.name.replace(/"/g, '&quot;');
                     actionsHtml = `
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); editCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary btn-edit-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
                             Редактировать
                         </button>
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
+                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
                             Открыть график
                         </button>
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
+                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
                             <span style="margin-right: 5px;">📋</span>Копировать ссылку
                         </button>
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); deleteCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary btn-delete-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
                             Удалить
                         </button>
                     `;
                 } else {
+                    const safeCompanyId = company.id.replace(/"/g, '&quot;');
                     actionsHtml = `
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
+                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
                             Открыть график
                         </button>
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); copyCompanyLink('${company.id}')" title="Копировать ссылку для просмотра">
+                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
                             <span style="margin-right: 5px;">📋</span>Копировать ссылку
                         </button>
                     `;
                 }
                 
+                const safeCompanyIdForCard = company.id.replace(/'/g, "\\'");
                 return `
-                <div class="company-card" onclick="${isAdmin ? '' : `openCompany('${company.id}')`}">
+                <div class="company-card" ${isAdmin ? '' : `data-company-id="${company.id.replace(/"/g, '&quot;')}"`}>
                     ${logoHtml}
                     <h3>${company.name}</h3>
                     <div class="company-id">ID: ${company.id}</div>
@@ -1165,6 +1170,83 @@
             }
 
             grid.innerHTML = html;
+            
+            // Добавляем обработчики событий для кнопок через делегирование событий
+            setupCompanyButtons();
+        }
+        
+        // Настройка обработчиков событий для кнопок компаний
+        // Используем делегирование событий - один обработчик на весь контейнер
+        let companyButtonsHandler = null;
+        
+        function setupCompanyButtons() {
+            const grid = document.getElementById('companiesGrid');
+            if (!grid) return;
+            
+            // Удаляем старый обработчик, если он есть
+            if (companyButtonsHandler) {
+                grid.removeEventListener('click', companyButtonsHandler);
+            }
+            
+            // Создаем новый обработчик
+            companyButtonsHandler = function(e) {
+                const editBtn = e.target.closest('.btn-edit-company');
+                if (editBtn) {
+                    e.stopPropagation();
+                    const companyId = editBtn.getAttribute('data-company-id');
+                    const companyName = editBtn.getAttribute('data-company-name');
+                    if (companyId && companyName) {
+                        editCompany(companyId, companyName);
+                    }
+                    return;
+                }
+                
+                // Обработчик для кнопки открытия компании
+                const openBtn = e.target.closest('.btn-open-company');
+                if (openBtn) {
+                    e.stopPropagation();
+                    const companyId = openBtn.getAttribute('data-company-id');
+                    if (companyId) {
+                        openCompany(companyId);
+                    }
+                    return;
+                }
+                
+                // Обработчик для кнопки копирования ссылки
+                const copyBtn = e.target.closest('.btn-copy-link');
+                if (copyBtn) {
+                    e.stopPropagation();
+                    const companyId = copyBtn.getAttribute('data-company-id');
+                    if (companyId) {
+                        copyCompanyLink(companyId);
+                    }
+                    return;
+                }
+                
+                // Обработчик для кнопки удаления
+                const deleteBtn = e.target.closest('.btn-delete-company');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const companyId = deleteBtn.getAttribute('data-company-id');
+                    const companyName = deleteBtn.getAttribute('data-company-name');
+                    if (companyId && companyName) {
+                        deleteCompany(companyId, companyName);
+                    }
+                    return;
+                }
+                
+                // Обработчик клика по карточке компании (для не-админов)
+                const card = e.target.closest('.company-card');
+                if (card && !isAdmin) {
+                    const companyId = card.getAttribute('data-company-id');
+                    if (companyId) {
+                        openCompany(companyId);
+                    }
+                }
+            };
+            
+            // Добавляем обработчик
+            grid.addEventListener('click', companyButtonsHandler);
         }
 
         // Открыть график компании
@@ -1659,6 +1741,8 @@
             if (currentUser) {
                 loadCompanies();
             }
+            // Настраиваем обработчики кнопок при загрузке страницы
+            setupCompanyButtons();
         });
     </script>
 </body>

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Выбор компании — Управление графиками</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
@@ -361,6 +361,17 @@
             box-shadow: 0 6px 20px rgba(255, 167, 38, 0.4);
         }
 
+        .btn-link {
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
         .add-company-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -642,17 +653,221 @@
             font-weight: 500;
         }
 
+        /* Адаптивность для планшетов и мобильных */
+        @media (max-width: 1024px) {
+            .companies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .header {
+                padding: 35px 30px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .company-card {
+                padding: 25px;
+            }
+        }
+
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
             .companies-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
             }
 
             .header {
                 padding: 30px 25px;
+                border-radius: 15px;
             }
 
             .header h1 {
                 font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .company-card {
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            .company-card h3 {
+                font-size: 1.3rem;
+            }
+
+            .company-id {
+                font-size: 0.85rem;
+            }
+
+            .company-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.9rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
+            }
+
+            .add-company-card {
+                padding: 25px;
+                min-height: 180px;
+            }
+
+            .add-company-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .admin-panel-link {
+                top: 10px;
+                right: 10px;
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 25px 20px;
+                border-radius: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 6px;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .company-card {
+                padding: 20px;
+                border-radius: 12px;
+            }
+
+            .company-card h3 {
+                font-size: 1.2rem;
+                margin-bottom: 8px;
+            }
+
+            .company-id {
+                font-size: 0.8rem;
+                margin-bottom: 15px;
+            }
+
+            .company-logo {
+                max-width: 120px;
+                max-height: 90px;
+                margin-bottom: 15px;
+            }
+
+            .company-logo-placeholder {
+                width: 120px;
+                height: 90px;
+                font-size: 0.75rem;
+            }
+
+            .btn {
+                padding: 10px;
+                font-size: 0.85rem;
+                min-height: 44px; /* Минимальный размер для touch на iOS */
+                touch-action: manipulation; /* Улучшает отзывчивость на touch */
+            }
+
+            .add-company-card {
+                padding: 20px;
+                min-height: 160px;
+            }
+
+            .add-company-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
+                margin-bottom: 12px;
+            }
+
+            .add-company-card h3 {
+                font-size: 1rem;
+            }
+
+            .admin-panel-link {
+                top: 8px;
+                right: 8px;
+                padding: 5px 8px;
+                font-size: 0.65rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 25px 20px;
+                margin: 10% auto;
+            }
+
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 12px 14px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+
+            .delete-modal-content {
+                padding: 25px 20px;
+                width: 90%;
+            }
+
+            .delete-modal-header h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .company-card {
+                padding: 15px;
+            }
+
+            .company-card h3 {
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -899,30 +1114,41 @@
                     ? `<img src="${company.logoData}" alt="${company.name}" class="company-logo">`
                     : `<div class="company-logo-placeholder">Нет логотипа</div>`;
                 
-                // Для админов показываем все кнопки, для пользователей только "Открыть график"
+                // Для админов показываем все кнопки, для пользователей только "Открыть график" и "Копировать ссылку"
                 let actionsHtml = '';
                 if (isAdmin) {
+                    // Используем data-атрибуты вместо inline onclick для безопасности
+                    const safeCompanyId = company.id.replace(/"/g, '&quot;');
+                    const safeCompanyName = company.name.replace(/"/g, '&quot;');
                     actionsHtml = `
-                        <button class="btn btn-warning" onclick="event.stopPropagation(); editCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary btn-edit-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
                             Редактировать
                         </button>
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
+                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
                             Открыть график
                         </button>
-                        <button class="btn btn-danger" onclick="event.stopPropagation(); deleteCompany('${company.id}', '${company.name.replace(/'/g, "\\'")}')">
+                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
+                            <span style="margin-right: 5px;">📋</span>Копировать ссылку
+                        </button>
+                        <button class="btn btn-primary btn-delete-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
                             Удалить
                         </button>
                     `;
                 } else {
+                    const safeCompanyId = company.id.replace(/"/g, '&quot;');
                     actionsHtml = `
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); openCompany('${company.id}')">
+                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
                             Открыть график
+                        </button>
+                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
+                            <span style="margin-right: 5px;">📋</span>Копировать ссылку
                         </button>
                     `;
                 }
                 
+                const safeCompanyIdForCard = company.id.replace(/'/g, "\\'");
                 return `
-                <div class="company-card" onclick="${isAdmin ? '' : `openCompany('${company.id}')`}">
+                <div class="company-card" ${isAdmin ? '' : `data-company-id="${company.id.replace(/"/g, '&quot;')}"`}>
                     ${logoHtml}
                     <h3>${company.name}</h3>
                     <div class="company-id">ID: ${company.id}</div>
@@ -944,6 +1170,83 @@
             }
 
             grid.innerHTML = html;
+            
+            // Добавляем обработчики событий для кнопок через делегирование событий
+            setupCompanyButtons();
+        }
+        
+        // Настройка обработчиков событий для кнопок компаний
+        // Используем делегирование событий - один обработчик на весь контейнер
+        let companyButtonsHandler = null;
+        
+        function setupCompanyButtons() {
+            const grid = document.getElementById('companiesGrid');
+            if (!grid) return;
+            
+            // Удаляем старый обработчик, если он есть
+            if (companyButtonsHandler) {
+                grid.removeEventListener('click', companyButtonsHandler);
+            }
+            
+            // Создаем новый обработчик
+            companyButtonsHandler = function(e) {
+                const editBtn = e.target.closest('.btn-edit-company');
+                if (editBtn) {
+                    e.stopPropagation();
+                    const companyId = editBtn.getAttribute('data-company-id');
+                    const companyName = editBtn.getAttribute('data-company-name');
+                    if (companyId && companyName) {
+                        editCompany(companyId, companyName);
+                    }
+                    return;
+                }
+                
+                // Обработчик для кнопки открытия компании
+                const openBtn = e.target.closest('.btn-open-company');
+                if (openBtn) {
+                    e.stopPropagation();
+                    const companyId = openBtn.getAttribute('data-company-id');
+                    if (companyId) {
+                        openCompany(companyId);
+                    }
+                    return;
+                }
+                
+                // Обработчик для кнопки копирования ссылки
+                const copyBtn = e.target.closest('.btn-copy-link');
+                if (copyBtn) {
+                    e.stopPropagation();
+                    const companyId = copyBtn.getAttribute('data-company-id');
+                    if (companyId) {
+                        copyCompanyLink(companyId);
+                    }
+                    return;
+                }
+                
+                // Обработчик для кнопки удаления
+                const deleteBtn = e.target.closest('.btn-delete-company');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const companyId = deleteBtn.getAttribute('data-company-id');
+                    const companyName = deleteBtn.getAttribute('data-company-name');
+                    if (companyId && companyName) {
+                        deleteCompany(companyId, companyName);
+                    }
+                    return;
+                }
+                
+                // Обработчик клика по карточке компании (для не-админов)
+                const card = e.target.closest('.company-card');
+                if (card && !isAdmin) {
+                    const companyId = card.getAttribute('data-company-id');
+                    if (companyId) {
+                        openCompany(companyId);
+                    }
+                }
+            };
+            
+            // Добавляем обработчик
+            grid.addEventListener('click', companyButtonsHandler);
         }
 
         // Открыть график компании
@@ -964,6 +1267,48 @@
             } else {
                 // Если контейнер не найден, переходим сразу
                 window.location.href = `implementation_schedule.html?company=${companyId}`;
+            }
+        }
+
+        // Копировать ссылку на компанию в буфер обмена
+        async function copyCompanyLink(companyId) {
+            try {
+                // Автоматически определяем текущий домен
+                const baseUrl = window.location.origin;
+                // Создаем ссылку для просмотра (режим просмотра для неавторизованных пользователей)
+                const link = `${baseUrl}/auth.html?company=${companyId}`;
+                
+                // Копируем в буфер обмена
+                await navigator.clipboard.writeText(link);
+                
+                // Показываем сообщение об успехе
+                showMessage(`Ссылка скопирована: ${link}`, 'success');
+            } catch (error) {
+                console.error('Ошибка копирования ссылки:', error);
+                
+                // Fallback для старых браузеров
+                try {
+                    const baseUrl = window.location.origin;
+                    const link = `${baseUrl}/auth.html?company=${companyId}`;
+                    
+                    // Создаем временный textarea для копирования
+                    const textarea = document.createElement('textarea');
+                    textarea.value = link;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    showMessage(`Ссылка скопирована: ${link}`, 'success');
+                } catch (fallbackError) {
+                    console.error('Ошибка fallback копирования:', fallbackError);
+                    // Показываем ссылку в модальном окне или alert
+                    const baseUrl = window.location.origin;
+                    const link = `${baseUrl}/auth.html?company=${companyId}`;
+                    alert(`Скопируйте ссылку вручную:\n\n${link}`);
+                }
             }
         }
 
@@ -1396,6 +1741,8 @@
             if (currentUser) {
                 loadCompanies();
             }
+            // Настраиваем обработчики кнопок при загрузке страницы
+            setupCompanyButtons();
         });
     </script>
 </body>
