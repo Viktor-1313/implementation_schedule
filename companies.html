@@ -1169,11 +1169,11 @@
                     const safeCompanyId = company.id.replace(/"/g, '&quot;');
                     const safeCompanyName = company.name.replace(/"/g, '&quot;');
                     actionsHtml = `
-                        <button class="btn btn-primary btn-edit-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
-                            Редактировать
-                        </button>
                         <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
                             Открыть график
+                        </button>
+                        <button class="btn btn-primary btn-edit-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
+                            Редактировать
                         </button>
                         <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
                             Копировать ссылку
