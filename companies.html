@@ -838,6 +838,27 @@
             .company-card {
                 padding: 25px;
             }
+
+            /* Кнопки управления на планшетах - вертикальное выравнивание: админ сверху, потом кнопки */
+            .profile-btn,
+            .logout-btn {
+                width: 40px;
+                height: 40px;
+                right: 25px !important;
+            }
+
+            .admin-panel-link {
+                top: 25px;
+                right: 25px !important;
+            }
+
+            .profile-btn {
+                top: 75px; /* 25px + высота админа (~30px) + 20px (отступ) */
+            }
+
+            .logout-btn {
+                top: 125px; /* 75px + 40px (высота) + 10px (отступ) */
+            }
         }
 
         @media (max-width: 768px) {
@@ -905,11 +926,27 @@
                 font-size: 1.5rem;
             }
 
+            /* Кнопки управления на мобильных - вертикальное выравнивание: админ сверху, потом кнопки */
+            .profile-btn,
+            .logout-btn {
+                width: 38px;
+                height: 38px;
+                right: 15px !important;
+            }
+
             .admin-panel-link {
-                top: 10px;
-                right: 10px;
+                top: 15px;
+                right: 15px !important;
                 padding: 6px 10px;
                 font-size: 0.7rem;
+            }
+
+            .profile-btn {
+                top: 63px; /* 15px + высота админа (~28px) + 20px (отступ) */
+            }
+
+            .logout-btn {
+                top: 111px; /* 63px + 38px (высота) + 10px (отступ) */
             }
         }
 
@@ -982,11 +1019,27 @@
                 font-size: 1rem;
             }
 
+            /* Кнопки управления на маленьких экранах - вертикальное выравнивание с одинаковыми отступами */
+            .profile-btn,
+            .logout-btn {
+                width: 35px;
+                height: 35px;
+                right: 12px !important;
+            }
+
+            .profile-btn {
+                top: 12px;
+            }
+
             .admin-panel-link {
-                top: 8px;
-                right: 8px;
+                top: 57px; /* 12px + 35px (высота) + 10px (отступ) */
+                right: 12px !important;
                 padding: 5px 8px;
                 font-size: 0.65rem;
+            }
+
+            .logout-btn {
+                top: 102px; /* 57px + 35px (высота) + 10px (отступ) */
             }
 
             .modal-content {

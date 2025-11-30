@@ -2453,27 +2453,26 @@
                 font-size: 0.7rem;
             }
 
-            /* Кнопки управления на мобильных */
+            /* Кнопки управления на мобильных - вертикальное выравнивание с одинаковыми отступами */
             .profile-btn,
             .companies-btn,
+            .companies-bottom-btn,
             .logout-btn {
                 width: 40px;
                 height: 40px;
+                right: 25px !important;
             }
 
             .profile-btn {
                 top: 25px;
-                right: 25px;
             }
 
-            .companies-btn {
-                top: 25px;
-                right: 75px;
+            .companies-bottom-btn {
+                top: 75px; /* 25px + 40px (высота) + 10px (отступ) */
             }
 
             .logout-btn {
-                top: 75px;
-                right: 25px;
+                top: 125px; /* 75px + 40px (высота) + 10px (отступ) */
             }
         }
 
@@ -2549,27 +2548,26 @@
                 margin-right: 8px;
             }
 
-            /* Кнопки управления на мобильных */
+            /* Кнопки управления на мобильных - вертикальное выравнивание с одинаковыми отступами */
             .profile-btn,
             .companies-btn,
+            .companies-bottom-btn,
             .logout-btn {
                 width: 38px;
                 height: 38px;
+                right: 15px !important;
             }
 
             .profile-btn {
                 top: 15px;
-                right: 15px;
             }
 
-            .companies-btn {
-                top: 15px;
-                right: 60px;
+            .companies-bottom-btn {
+                top: 63px; /* 15px + 38px (высота) + 10px (отступ) */
             }
 
             .logout-btn {
-                top: 60px;
-                right: 15px;
+                top: 111px; /* 63px + 38px (высота) + 10px (отступ) */
             }
 
             .profile-btn::before {
@@ -2881,27 +2879,26 @@
                 touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
-            /* Кнопки управления на маленьких экранах */
+            /* Кнопки управления на маленьких экранах - вертикальное выравнивание с одинаковыми отступами */
             .profile-btn,
             .companies-btn,
+            .companies-bottom-btn,
             .logout-btn {
                 width: 35px;
                 height: 35px;
+                right: 12px !important;
             }
 
             .profile-btn {
                 top: 12px;
-                right: 12px;
             }
 
-            .companies-btn {
-                top: 12px;
-                right: 55px;
+            .companies-bottom-btn {
+                top: 57px; /* 12px + 35px (высота) + 10px (отступ) */
             }
 
             .logout-btn {
-                top: 55px;
-                right: 12px;
+                top: 102px; /* 57px + 35px (высота) + 10px (отступ) */
             }
 
             .gantt-label {
