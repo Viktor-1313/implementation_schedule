@@ -200,7 +200,7 @@
         .admin-panel-link {
             position: absolute;
             top: 15px;
-            right: 15px;
+            right: 110px; /* Сдвинуто влево, чтобы не перекрывать кнопки профиля и выхода */
             background: rgba(100, 181, 246, 0.1);
             border: 1px solid rgba(100, 181, 246, 0.2);
             border-radius: 8px;
@@ -225,6 +225,105 @@
             content: '⚙';
             margin-right: 4px;
             font-size: 0.7rem;
+        }
+
+        /* Кнопки управления (профиль и выход) */
+        .profile-btn,
+        .logout-btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+
+        .profile-btn {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            top: 15px;
+            right: 60px;
+        }
+
+        .profile-btn::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            top: 8px;
+        }
+
+        .profile-btn::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 12px;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            bottom: 6px;
+        }
+
+        .profile-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            top: 15px;
+            right: 15px;
+        }
+
+        .logout-btn::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-left: 3px solid white;
+            border-top: 3px solid white;
+            transform: rotate(-45deg) translateX(2px);
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        /* Подсказки для кнопок */
+        .profile-btn[data-tooltip]::after,
+        .logout-btn[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: normal;
+            min-width: max-content;
+            max-width: 200px;
+            word-wrap: break-word;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+        }
+
+        .profile-btn:hover[data-tooltip]::after,
+        .logout-btn:hover[data-tooltip]::after {
+            opacity: 1;
+            transition-delay: 1s;
         }
 
         .header h1 {
@@ -881,6 +980,182 @@
                 font-size: 1.1rem;
             }
         }
+
+        /* Модальное окно редактирования профиля */
+        .profile-modal {
+            display: none;
+            position: fixed;
+            z-index: 10002;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .profile-modal.show {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 10vh;
+        }
+
+        @media (max-width: 768px) {
+            .profile-modal.show {
+                padding-top: 5vh;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-modal.show {
+                padding-top: 2vh;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+        }
+
+        .profile-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            position: relative;
+            margin-top: 10vh;
+            cursor: default;
+        }
+
+        .profile-modal-header {
+            cursor: move;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .profile-modal-header h2 {
+            color: #1565c0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .profile-modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .profile-modal-close:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .profile-form-group {
+            margin-bottom: 25px;
+        }
+
+        .profile-form-group label {
+            display: block;
+            color: #1565c0;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .profile-form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid rgba(100, 181, 246, 0.3);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: #333;
+            transition: all 0.3s ease;
+            background: rgba(100, 181, 246, 0.05);
+            box-sizing: border-box;
+        }
+
+        .profile-form-group input:focus {
+            outline: none;
+            border-color: #42a5f5;
+            box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.15);
+            background: white;
+        }
+
+        .profile-form-group input::placeholder {
+            color: #90caf9;
+        }
+
+        .profile-form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .profile-form-actions .btn {
+            flex: 1;
+            padding: 14px 20px;
+            font-size: 1rem;
+        }
+
+        .profile-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .profile-message.success {
+            background: rgba(129, 199, 132, 0.2);
+            color: #2e7d32;
+            border: 1px solid rgba(129, 199, 132, 0.5);
+        }
+
+        .profile-message.error {
+            background: rgba(239, 83, 80, 0.2);
+            color: #c62828;
+            border: 1px solid rgba(239, 83, 80, 0.5);
+        }
+
+        .profile-message.show {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .profile-modal-content {
+                width: 98%;
+                max-width: 98%;
+                padding: 15px 12px;
+            }
+
+            .profile-modal-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .profile-form-group input {
+                padding: 10px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -899,6 +1174,12 @@
     
     <div class="container">
         <div class="header">
+            <!-- Кнопки управления в правом верхнем углу -->
+            <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" onclick="logout()"></button>
+            <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" onclick="openProfileModal()">
+                <span style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; bottom: 8px; right: 8px; z-index: 1;"></span>
+            </button>
+            
             <a href="admin.html" class="admin-panel-link" id="adminPanelLink" title="Админ-панель">Админ</a>
             <h1>Выбор компании</h1>
             <p id="headerSubtitle">Выберите компанию для работы</p>
@@ -1010,6 +1291,35 @@
         </div>
     </div>
 
+    <!-- Модальное окно редактирования профиля -->
+    <div id="profileModal" class="profile-modal">
+        <div class="profile-modal-content">
+            <div class="profile-modal-header">
+                <h2>Редактирование профиля</h2>
+                <button class="profile-modal-close" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <form id="profileForm">
+                <div class="profile-form-group">
+                    <label for="profileLogin">Логин:</label>
+                    <input type="text" id="profileLogin" required>
+                </div>
+                <div class="profile-form-group">
+                    <label for="profilePassword">Новый пароль (минимум 6 символов):</label>
+                    <input type="password" id="profilePassword" minlength="6" placeholder="Оставьте пустым, чтобы не менять">
+                </div>
+                <div class="profile-form-group">
+                    <label for="profilePasswordConfirm">Подтвердите пароль:</label>
+                    <input type="password" id="profilePasswordConfirm" minlength="6" placeholder="Оставьте пустым, чтобы не менять">
+                </div>
+                <div id="profileMessage" class="profile-message"></div>
+                <div class="profile-form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let currentUser = null;
         let isAdmin = false;
@@ -1083,15 +1393,15 @@
             }
         }
 
-        // Загрузить информацию о компании (для получения картинки)
+        // Загрузить информацию о компании (для получения картинки и названия)
         async function loadCompanyInfo(companyId) {
             try {
                 const response = await fetch(`/api/company-info?company=${companyId}`);
                 if (response.ok) {
                     const data = await response.json();
-                    // Проверяем, что данные есть и содержат logoData
-                    if (data && data.logoData) {
-                        return data.logoData;
+                    // Возвращаем весь объект с name и logoData
+                    if (data) {
+                        return data;
                     }
                 }
             } catch (e) {
@@ -1125,11 +1435,14 @@
                 return;
             }
 
-            // Загружаем картинки для всех компаний параллельно
+            // Загружаем информацию о компаниях (логотипы и названия) параллельно
             const companiesWithLogos = await Promise.all(
                 companies.map(async (company) => {
-                    const logoData = await loadCompanyInfo(company.id);
-                    return { ...company, logoData };
+                    const companyInfo = await loadCompanyInfo(company.id);
+                    // Используем название из company-info, если оно есть, иначе из companies.json
+                    const companyName = companyInfo && companyInfo.name ? companyInfo.name : company.name;
+                    const logoData = companyInfo && companyInfo.logoData ? companyInfo.logoData : null;
+                    return { ...company, name: companyName, logoData };
                 })
             );
 
@@ -1360,15 +1673,21 @@
 
             // Заполняем форму данными компании
             idInput.value = companyId;
-            nameInput.value = companyName;
-
-            // Загружаем текущий логотип
+            
+            // Загружаем текущий логотип и название
             try {
-                const logoData = await loadCompanyInfo(companyId);
-                if (logoData) {
+                const companyInfo = await loadCompanyInfo(companyId);
+                // Используем название из company-info, если оно есть, иначе используем переданное название
+                if (companyInfo && companyInfo.name) {
+                    nameInput.value = companyInfo.name;
+                } else {
+                    nameInput.value = companyName;
+                }
+                
+                if (companyInfo && companyInfo.logoData) {
                     currentLogoDiv.innerHTML = `
                         <p style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">Текущий логотип:</p>
-                        <img src="${logoData}" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid rgba(100, 181, 246, 0.3);">
+                        <img src="${companyInfo.logoData}" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid rgba(100, 181, 246, 0.3);">
                     `;
                 } else {
                     currentLogoDiv.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Логотип не загружен</p>';
@@ -1423,9 +1742,9 @@
                     logoData = await compressImage(logoFile);
                 } else {
                     // Используем текущий логотип
-                    const currentLogo = await loadCompanyInfo(companyId);
-                    if (currentLogo) {
-                        logoData = currentLogo;
+                    const currentCompanyInfo = await loadCompanyInfo(companyId);
+                    if (currentCompanyInfo && currentCompanyInfo.logoData) {
+                        logoData = currentCompanyInfo.logoData;
                     }
                 }
 
@@ -1746,16 +2065,10 @@
             }
         });
 
-        // Закрытие модальных окон по Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const editModal = document.getElementById('editCompanyModal');
-                const deleteModal = document.getElementById('deleteCompanyModal');
-                if (editModal && editModal.classList.contains('show')) {
-                    closeEditModal();
-                } else if (deleteModal && deleteModal.classList.contains('show')) {
-                    cancelDeleteCompany();
-                }
+        // Закрытие модального окна профиля при клике вне его
+        document.getElementById('profileModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeProfileModal();
             }
         });
 
@@ -1790,7 +2103,7 @@
                 fireflyData.vy = (Math.random() - 0.5) * 2;
                 
                 // Устанавливаем начальную позицию через transform
-                firefly.element.style.transform = `translate(${fireflyData.x}px, ${fireflyData.y}px)`;
+                fireflyData.element.style.transform = `translate(${fireflyData.x}px, ${fireflyData.y}px)`;
 
                 fireflies.push(fireflyData);
             }
@@ -1893,7 +2206,9 @@
                     }
 
                     // Применение позиции через transform для лучшей производительности
-                    firefly.element.style.transform = `translate(${firefly.x}px, ${firefly.y}px)`;
+                    if (firefly.element) {
+                        firefly.element.style.transform = `translate(${firefly.x}px, ${firefly.y}px)`;
+                    }
                 });
 
                 const animationId = requestAnimationFrame(animateFireflies);
@@ -1914,6 +2229,122 @@
             setupCompanyButtons();
             // Инициализируем эффекты
             initFireflies();
+        });
+
+        // ========== ФУНКЦИИ ДЛЯ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ==========
+
+        // Открыть модальное окно профиля
+        function openProfileModal() {
+            const modal = document.getElementById('profileModal');
+            const loginInput = document.getElementById('profileLogin');
+            if (modal && currentUser && loginInput) {
+                loginInput.value = currentUser.login || '';
+                document.getElementById('profilePassword').value = '';
+                document.getElementById('profilePasswordConfirm').value = '';
+                document.getElementById('profileMessage').classList.remove('show');
+                modal.classList.add('show');
+            }
+        }
+
+        // Закрыть модальное окно профиля
+        function closeProfileModal() {
+            const modal = document.getElementById('profileModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        // Сохранить изменения профиля
+        async function saveProfile(event) {
+            event.preventDefault();
+
+            const newLogin = document.getElementById('profileLogin').value.trim();
+            const newPassword = document.getElementById('profilePassword').value;
+            const confirmPassword = document.getElementById('profilePasswordConfirm').value;
+            const messageEl = document.getElementById('profileMessage');
+
+            // Проверка пароля (если вводится)
+            if (newPassword || confirmPassword) {
+                if (newPassword !== confirmPassword) {
+                    messageEl.textContent = 'Пароли не совпадают';
+                    messageEl.className = 'profile-message error show';
+                    return;
+                }
+                if (newPassword.length < 6) {
+                    messageEl.textContent = 'Пароль должен содержать минимум 6 символов';
+                    messageEl.className = 'profile-message error show';
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch('/api/users/update', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        oldLogin: currentUser.login,
+                        newLogin: newLogin,
+                        password: newPassword || undefined
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    messageEl.textContent = 'Профиль успешно обновлён';
+                    messageEl.className = 'profile-message success show';
+                    
+                    // Обновляем данные пользователя в localStorage
+                    currentUser.login = newLogin;
+                    localStorage.setItem('gantt-user', JSON.stringify(currentUser));
+                    
+                    setTimeout(() => {
+                        closeProfileModal();
+                    }, 1500);
+                } else {
+                    messageEl.textContent = result.error || 'Ошибка обновления профиля';
+                    messageEl.className = 'profile-message error show';
+                }
+            } catch (error) {
+                console.error('Ошибка обновления профиля:', error);
+                messageEl.textContent = 'Ошибка подключения к серверу';
+                messageEl.className = 'profile-message error show';
+            }
+        }
+
+        // Выход из системы
+        function logout() {
+            // Очищаем данные авторизации
+            localStorage.removeItem('gantt-user');
+            localStorage.removeItem('gantt-mode');
+            localStorage.removeItem('gantt-company');
+            
+            // Перенаправляем на страницу авторизации
+            window.location.href = 'auth.html';
+        }
+
+        // Обработчик формы профиля
+        const profileForm = document.getElementById('profileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', saveProfile);
+        }
+
+        // Закрытие модальных окон по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const profileModal = document.getElementById('profileModal');
+                const editModal = document.getElementById('editCompanyModal');
+                const deleteModal = document.getElementById('deleteCompanyModal');
+                if (profileModal && profileModal.classList.contains('show')) {
+                    closeProfileModal();
+                } else if (editModal && editModal.classList.contains('show')) {
+                    closeEditModal();
+                } else if (deleteModal && deleteModal.classList.contains('show')) {
+                    cancelDeleteCompany();
+                }
+            }
         });
     </script>
 </body>

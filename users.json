@@ -27,5 +27,77 @@
     "role": "admin",
     "companies": [],
     "createdAt": "2025-11-29T13:15:44.239Z"
+  },
+  {
+    "id": "1764503263370",
+    "name": "Миша",
+    "login": "Malykhin_MA",
+    "password": "$2b$10$tZG6M6TUg9SWSfw5Tks/iOU/gstvg/ZjvcdnNMe0DXJW1WjqYsOgG",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:47:43.370Z"
+  },
+  {
+    "id": "1764503301823",
+    "name": "Никита",
+    "login": "Nikitin_NA",
+    "password": "$2b$10$qGeHzPKqHH9ctDQJ2T88xukb0PPDhOpgUph/RUYUmiJKNSgLD8Bha",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:48:21.823Z"
+  },
+  {
+    "id": "1764503337534",
+    "name": "Костя",
+    "login": "Prokofev_KB",
+    "password": "$2b$10$zFDMZ6uRMT4EflT7N6wnj.fe5ZJ7iPNktRiwiyIiYbdl.gK4qM7F.",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:48:57.534Z"
+  },
+  {
+    "id": "1764503387038",
+    "name": "Саня",
+    "login": "Kolbasov_AV",
+    "password": "$2b$10$hX4S//iMAsotuTS4p6GeO.omRiT80v4cJPMHInl6uVrJwk71KIc0q",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:49:47.038Z"
+  },
+  {
+    "id": "1764503433855",
+    "name": "Саня",
+    "login": "Samsonov_AV",
+    "password": "$2b$10$6nGSUIsDVecqHnZgUy0uh.Wr3hNoQqg5aBrMl/xqYuNX3N.2Cl6MO",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:50:33.855Z"
+  },
+  {
+    "id": "1764503625564",
+    "name": "Алиса",
+    "login": "Vasileva_AA",
+    "password": "$2b$10$th1OiRcKKPN8xGqtB.te7OXbvzDm7tk7rTDEVxF3pa5xzNQdnwo06",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:53:45.564Z"
+  },
+  {
+    "id": "1764503669633",
+    "name": "Анна",
+    "login": "Abramova_AE",
+    "password": "$2b$10$5YVMxfagXZ2Md1nElaXJqOG9CC0DKjRERxliYyx4XJBUA35U3kbde",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:54:29.633Z"
+  },
+  {
+    "id": "1764503747694",
+    "name": "Карина",
+    "login": "Elesina_KM",
+    "password": "$2b$10$xAdac7p0CppS.vM091qq1.kSIbQUkDmYI4gifMz2R8.Ak/w9fKGWe",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-11-30T11:55:47.694Z"
   }
 ]
