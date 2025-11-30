@@ -1103,6 +1103,13 @@
             contain: layout style paint;
         }
 
+        /* Для планшетов и мобильных убираем contain, чтобы не блокировать прокрутку */
+        @media (max-width: 1024px) {
+            .gantt-chart {
+                contain: none; /* Убираем contain для корректной прокрутки */
+            }
+        }
+
         .gantt-header {
             display: flex;
             margin-bottom: 2px;
@@ -2158,6 +2165,22 @@
                 font-size: 0.9rem;
             }
 
+            /* Для планшетов включаем прокрутку графика */
+            .chart-container {
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-x pan-y;
+            }
+
+            .gantt-chart {
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-x pan-y;
+                min-width: 100%;
+            }
+
             .gantt-label {
                 min-width: 120px;
                 font-size: 0.75rem;
@@ -2312,13 +2335,13 @@
 
             .gantt-chart {
                 overflow-x: auto;
+                overflow-y: visible;
                 -webkit-overflow-scrolling: touch;
                 position: relative;
-                isolation: isolate;
-                contain: layout style;
                 max-width: 100%;
                 box-sizing: border-box;
                 z-index: 1;
+                touch-action: pan-x pan-y; /* Разрешаем прокрутку на планшетах и мобильных */
             }
 
             /* На мобильных отключаем sticky для колонки названий, чтобы она не перекрывала график */
@@ -2778,21 +2801,34 @@
             }
         }
 
-        /* Горизонтальная прокрутка для графика на мобильных */
-        @media (max-width: 768px) {
+        /* Горизонтальная прокрутка для графика на планшетах и мобильных */
+        @media (max-width: 1024px) {
+            .chart-container {
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-x pan-y;
+            }
+
             .gantt-chart-wrapper {
                 overflow-x: auto;
+                overflow-y: visible;
                 -webkit-overflow-scrolling: touch;
                 position: relative;
+                touch-action: pan-x pan-y;
             }
 
             .gantt-chart {
                 min-width: 800px; /* Минимальная ширина для корректного отображения */
+                touch-action: pan-x pan-y;
             }
+        }
 
+        @media (max-width: 768px) {
             .tasks-table-wrapper {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                touch-action: pan-x pan-y;
             }
 
             .tasks-table {
@@ -3482,6 +3518,8 @@
 
         // Текущая ячейка, для которой открыто меню статуса
         let currentStatusTarget = null; // { taskId, dateStrs }
+        // Координаты последнего клика для позиционирования модальных окон на мобильных
+        let lastClickCoordinates = { x: 0, y: 0 };
 
         // Выделение задач (можно выделять несколько строк)
         let selectedTaskIds = new Set(); // множество id выделенных задач
@@ -4889,7 +4927,9 @@
                         bar.title = '';
 
                         bar.style.cursor = 'pointer';
-                        bar.addEventListener('click', (event) => {
+                        
+                        // Функция для обработки клика/тапа
+                        function handleBarClick(event, clientX, clientY) {
                             event.stopPropagation();
                             handleTaskRowClick(task.id, event);
 
@@ -4900,11 +4940,25 @@
                             if (ganttBarStyle === 'segments') {
                                 // Режим полос — меняем статус по всей задаче
                                 const allDates = task.dates.map(d => formatDateKey(d));
-                                openStatusMenu(event.clientX, event.clientY, task.id, allDates);
+                                openStatusMenu(clientX, clientY, task.id, allDates);
                             } else {
                                 // Режим по дням — как раньше, только по текущему интервалу
                                 const allDatesInUnit = unitDatesForTask.map(d => formatDateKey(d));
-                                openStatusMenu(event.clientX, event.clientY, task.id, allDatesInUnit);
+                                openStatusMenu(clientX, clientY, task.id, allDatesInUnit);
+                            }
+                        }
+                        
+                        // Обработчик клика (для десктопа)
+                        bar.addEventListener('click', (event) => {
+                            handleBarClick(event, event.clientX, event.clientY);
+                        });
+                        
+                        // Обработчик touch (для мобильных)
+                        bar.addEventListener('touchend', (event) => {
+                            event.preventDefault();
+                            const touch = event.changedTouches[0];
+                            if (touch) {
+                                handleBarClick(event, touch.clientX, touch.clientY);
                             }
                         });
 
@@ -6795,6 +6849,68 @@ async function exportPDF(scaleMode = 'day') {
             } : null;
             input.value = '';
             modal.style.display = 'block';
+            
+            // На мобильных устройствах позиционируем модальное окно рядом с точкой клика
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    const x = lastClickCoordinates.x;
+                    const y = lastClickCoordinates.y;
+                    
+                    // Вычисляем позицию: если точка в нижней половине экрана - показываем над ней, иначе - под ней
+                    const viewportHeight = window.innerHeight;
+                    const viewportWidth = window.innerWidth;
+                    const modalRect = modalContent.getBoundingClientRect();
+                    const spaceBelow = viewportHeight - y;
+                    const spaceAbove = y;
+                    
+                    let topPosition;
+                    if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+                        // Показываем над точкой клика
+                        topPosition = y - modalRect.height - 20;
+                    } else {
+                        // Показываем под точкой клика
+                        topPosition = y + 20;
+                    }
+                    
+                    // Убеждаемся, что окно не выходит за пределы экрана
+                    const minTop = 20;
+                    const maxTop = viewportHeight - modalRect.height - 20;
+                    topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
+                    
+                    // Центрируем по горизонтали или позиционируем относительно точки клика
+                    let leftPosition = (viewportWidth - modalRect.width) / 2;
+                    if (x + modalRect.width / 2 > viewportWidth) {
+                        leftPosition = viewportWidth - modalRect.width - 20;
+                    } else if (x - modalRect.width / 2 < 0) {
+                        leftPosition = 20;
+                    } else {
+                        leftPosition = x - modalRect.width / 2;
+                    }
+                    
+                    modalContent.style.position = 'absolute';
+                    modalContent.style.top = topPosition + 'px';
+                    modalContent.style.left = leftPosition + 'px';
+                    modalContent.style.transform = 'none';
+                    modalContent.style.margin = '0';
+                    modalContent.style.width = 'calc(100% - 40px)';
+                    modalContent.style.maxWidth = '500px';
+                }
+            } else {
+                // На десктопе сбрасываем стили (используется стандартное центрирование через CSS)
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.position = '';
+                    modalContent.style.top = '';
+                    modalContent.style.left = '';
+                    modalContent.style.transform = '';
+                    modalContent.style.margin = '';
+                    modalContent.style.width = '';
+                    modalContent.style.maxWidth = '';
+                }
+            }
+            
             setTimeout(() => input.focus(), 0);
         }
 
@@ -6814,6 +6930,17 @@ async function exportPDF(scaleMode = 'day') {
             const modal = document.getElementById('statusCommentModal');
             if (modal) {
                 modal.style.display = 'none';
+                // Сбрасываем стили позиционирования
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.position = '';
+                    modalContent.style.top = '';
+                    modalContent.style.left = '';
+                    modalContent.style.transform = '';
+                    modalContent.style.margin = '';
+                    modalContent.style.width = '';
+                    modalContent.style.maxWidth = '';
+                }
             }
             pendingStatusForComment = null;
         }
@@ -7032,23 +7159,56 @@ async function exportPDF(scaleMode = 'day') {
             // dateStrs может быть массивом дат (для недель/месяцев) или одной датой (для дней)
             const dateArray = Array.isArray(dateStrs) ? dateStrs : [dateStrs];
             currentStatusTarget = { taskId, dateStrs: dateArray };
+            
+            // Сохраняем координаты для позиционирования модального окна комментария на мобильных
+            lastClickCoordinates.x = x;
+            lastClickCoordinates.y = y;
+            
             const menu = document.getElementById('statusMenu');
             if (!menu) return;
-            menu.style.display = 'block';
+            
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // На мобильных позиционируем меню рядом с точкой клика
+                const menuRect = menu.getBoundingClientRect();
+                let left = x;
+                let top = y;
+                
+                // Проверяем, влезает ли меню на экран
+                if (left + menuRect.width > window.innerWidth) {
+                    left = window.innerWidth - menuRect.width - 10;
+                }
+                if (top + menuRect.height > window.innerHeight) {
+                    // Если не влезает снизу, показываем над точкой клика
+                    top = y - menuRect.height - 10;
+                    if (top < 10) {
+                        top = 10;
+                    }
+                }
+                
+                menu.style.position = 'fixed';
+                menu.style.left = `${left}px`;
+                menu.style.top = `${top}px`;
+                menu.style.display = 'block';
+            } else {
+                // На десктопе используем стандартное позиционирование
+                menu.style.display = 'block';
+                
+                const menuRect = menu.getBoundingClientRect();
+                let left = x;
+                let top = y;
 
-            const menuRect = menu.getBoundingClientRect();
-            let left = x;
-            let top = y;
+                if (left + menuRect.width > window.innerWidth) {
+                    left = window.innerWidth - menuRect.width - 10;
+                }
+                if (top + menuRect.height > window.innerHeight) {
+                    top = window.innerHeight - menuRect.height - 10;
+                }
 
-            if (left + menuRect.width > window.innerWidth) {
-                left = window.innerWidth - menuRect.width - 10;
+                menu.style.left = `${left}px`;
+                menu.style.top = `${top}px`;
             }
-            if (top + menuRect.height > window.innerHeight) {
-                top = window.innerHeight - menuRect.height - 10;
-            }
-
-            menu.style.left = `${left}px`;
-            menu.style.top = `${top}px`;
         }
 
         function closeStatusMenu() {

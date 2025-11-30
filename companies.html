@@ -26,18 +26,6 @@
             animation: fadeInFromFog 1.5s ease-out forwards;
         }
 
-        /* Canvas для волн */
-        #companies-waves-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            will-change: contents;
-            transform: translateZ(0); /* Аппаратное ускорение */
-        }
 
         /* Светлячки */
         .firefly {
@@ -907,7 +895,6 @@
     </style>
 </head>
 <body>
-    <canvas id="companies-waves-canvas"></canvas>
     <div class="firefly" id="companies-firefly-1"></div>
     <div class="firefly" id="companies-firefly-2"></div>
     <div class="firefly" id="companies-firefly-3"></div>
@@ -1783,214 +1770,6 @@
             }
         });
 
-        // ========== ВОЛНЫ ==========
-        let wavesAnimationId = null;
-        let wavesCanvas = null;
-        let wavesCtx = null;
-        let wavesWidth = 0;
-        let wavesHeight = 0;
-        const wavesBuffer = [];
-        const wavesBufferSize = 150;
-        let wavesBufferIndex = 0;
-        const wavesMouse = { x: 0, y: 0, active: false };
-
-        function initWaves() {
-            wavesCanvas = document.getElementById('companies-waves-canvas');
-            if (!wavesCanvas) return;
-
-            wavesCtx = wavesCanvas.getContext('2d');
-            
-            // Инициализация размеров
-            wavesWidth = window.innerWidth;
-            wavesHeight = window.innerHeight;
-            wavesCanvas.width = wavesWidth;
-            wavesCanvas.height = wavesHeight;
-
-            // Заполняем буфер нулями
-            for (let i = 0; i < wavesBufferSize; i++) {
-                wavesBuffer[i] = { x: 0, y: 0, radius: 0, life: 0 };
-            }
-            wavesBufferIndex = 0;
-
-            // Throttle для создания волн (оптимизация производительности)
-            let lastWaveTime = 0;
-            const waveThrottle = 50; // Минимум 50ms между волнами
-
-            // Функция добавления волны
-            function addWave(x, y) {
-                const now = Date.now();
-                if (now - lastWaveTime < waveThrottle) {
-                    // Обновляем только позицию курсора, но не создаём новую волну
-                    wavesMouse.x = x;
-                    wavesMouse.y = y;
-                    wavesMouse.active = true;
-                    return;
-                }
-                
-                lastWaveTime = now;
-                wavesMouse.x = x;
-                wavesMouse.y = y;
-                wavesMouse.active = true;
-                
-                // Добавляем волну в буфер
-                wavesBuffer[wavesBufferIndex] = {
-                    x: wavesMouse.x,
-                    y: wavesMouse.y,
-                    radius: 0,
-                    life: 1
-                };
-                wavesBufferIndex = (wavesBufferIndex + 1) % wavesBufferSize;
-            }
-
-            // Throttle для обновления позиции мыши (не создавая волну каждый раз)
-            let lastMouseUpdate = 0;
-            const mouseUpdateThrottle = 16; // ~60fps
-
-            function updateMousePosition(x, y) {
-                const now = Date.now();
-                if (now - lastMouseUpdate >= mouseUpdateThrottle) {
-                    wavesMouse.x = x;
-                    wavesMouse.y = y;
-                    wavesMouse.active = true;
-                    lastMouseUpdate = now;
-                }
-            }
-
-            // Обработчик движения мыши
-            document.addEventListener('mousemove', function(e) {
-                addWave(e.clientX, e.clientY);
-            });
-
-            document.addEventListener('mouseleave', () => {
-                wavesMouse.active = false;
-            });
-
-            // Обработчики touch событий для мобильных устройств
-            document.addEventListener('touchstart', function(e) {
-                const touch = e.touches[0];
-                addWave(touch.clientX, touch.clientY);
-            }, { passive: false });
-
-            let touchMoveThrottle = 0;
-            document.addEventListener('touchmove', function(e) {
-                e.preventDefault(); // Предотвращаем скролл при движении пальца
-                const now = Date.now();
-                if (now - touchMoveThrottle >= 50) { // Throttle для touchmove
-                    const touch = e.touches[0];
-                    addWave(touch.clientX, touch.clientY);
-                    touchMoveThrottle = now;
-                } else {
-                    const touch = e.touches[0];
-                    updateMousePosition(touch.clientX, touch.clientY);
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchend', function(e) {
-                wavesMouse.active = false;
-            });
-
-            // Функция рисования волны в стиле liquid glass
-            function drawWave(wave) {
-                const gradient = wavesCtx.createRadialGradient(
-                    wave.x, wave.y, Math.max(0, wave.radius - 20),
-                    wave.x, wave.y, wave.radius
-                );
-                
-                // Голубые оттенки для волн
-                const alpha = 0.4 * wave.life;
-                gradient.addColorStop(0, `rgba(100, 180, 255, ${alpha * 0.9})`);
-                gradient.addColorStop(0.3, `rgba(135, 206, 250, ${alpha * 0.7})`);
-                gradient.addColorStop(0.6, `rgba(173, 216, 230, ${alpha * 0.5})`);
-                gradient.addColorStop(0.8, `rgba(176, 224, 230, ${alpha * 0.3})`);
-                gradient.addColorStop(1, `rgba(200, 230, 255, 0)`);
-                
-                wavesCtx.beginPath();
-                wavesCtx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-                wavesCtx.fillStyle = gradient;
-                wavesCtx.fill();
-                
-                // Легкая обводка в голубых тонах
-                wavesCtx.strokeStyle = `rgba(100, 180, 255, ${0.3 * wave.life})`;
-                wavesCtx.lineWidth = 1.5;
-                wavesCtx.stroke();
-            }
-
-            // Анимация волн (оптимизированная)
-            let lastAnimationTime = 0;
-            const targetFPS = 60;
-            const frameTime = 1000 / targetFPS;
-
-            function animateWaves(currentTime) {
-                if (!wavesCanvas) {
-                    if (wavesAnimationId) {
-                        cancelAnimationFrame(wavesAnimationId);
-                        wavesAnimationId = null;
-                    }
-                    return;
-                }
-
-                // Ограничение FPS для производительности
-                const elapsed = currentTime - lastAnimationTime;
-                if (elapsed < frameTime) {
-                    wavesAnimationId = requestAnimationFrame(animateWaves);
-                    return;
-                }
-                lastAnimationTime = currentTime - (elapsed % frameTime);
-
-                // Обновляем размеры если окно изменилось
-                if (window.innerWidth !== wavesWidth || window.innerHeight !== wavesHeight) {
-                    wavesWidth = window.innerWidth;
-                    wavesHeight = window.innerHeight;
-                    wavesCanvas.width = wavesWidth;
-                    wavesCanvas.height = wavesHeight;
-                }
-
-                // Очищаем canvas с легкой прозрачностью для следов (голубой оттенок)
-                wavesCtx.fillStyle = 'rgba(200, 230, 255, 0.03)';
-                wavesCtx.fillRect(0, 0, wavesWidth, wavesHeight);
-                
-                // Обновляем и рисуем только активные волны (оптимизация)
-                let activeWavesCount = 0;
-                for (let i = 0; i < wavesBufferSize; i++) {
-                    const wave = wavesBuffer[i];
-                    
-                    if (wave.life > 0) {
-                        // Обновляем волну
-                        wave.radius += 2.5;
-                        wave.life -= 0.01;
-                        
-                        // Рисуем только если волна видна
-                        if (wave.life > 0 && wave.radius > 1) {
-                            drawWave(wave);
-                            activeWavesCount++;
-                        }
-                    }
-                }
-                
-                // Легкое свечение под курсором (только если активно и не слишком много волн)
-                if (wavesMouse.active && activeWavesCount < 20) {
-                    wavesCtx.fillStyle = 'rgba(100, 180, 255, 0.2)';
-                    wavesCtx.beginPath();
-                    wavesCtx.arc(wavesMouse.x, wavesMouse.y, 50, 0, Math.PI * 2);
-                    wavesCtx.fill();
-                }
-                
-                wavesAnimationId = requestAnimationFrame(animateWaves);
-            }
-
-            // Запуск анимации
-            wavesAnimationId = requestAnimationFrame(animateWaves);
-
-            // Обработка изменения размера окна
-            window.addEventListener('resize', () => {
-                if (wavesCanvas) {
-                    wavesWidth = window.innerWidth;
-                    wavesHeight = window.innerHeight;
-                    wavesCanvas.width = wavesWidth;
-                    wavesCanvas.height = wavesHeight;
-                }
-            });
-        }
 
         // ========== СВЕТЛЯЧКИ ==========
         let fireflyAnimationIds = [];
@@ -2136,7 +1915,6 @@
             // Настраиваем обработчики кнопок при загрузке страницы
             setupCompanyButtons();
             // Инициализируем эффекты
-            initWaves();
             initFireflies();
         });
     </script>
