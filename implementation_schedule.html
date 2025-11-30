@@ -111,6 +111,7 @@
         }
 
         header {
+            position: relative; /* Для правильного позиционирования кнопок */
             background: var(--color-surface);
             padding: 30px 20px;
             border-bottom: 2px solid var(--color-primary);
@@ -122,14 +123,15 @@
 
         /* Кнопка профиля в правом верхнем углу */
         .profile-btn {
-            position: absolute;
-            top: 30px;
-            right: 30px;
+            position: absolute !important;
+            top: 30px !important;
+            right: 30px !important;
+            left: auto !important;
             width: 40px;
             height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
-            border: 3px solid #2c2c2c;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -137,21 +139,10 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
             z-index: 1000;
-            position: relative;
             overflow: visible;
         }
 
-        /* Анимация грифельной полосы по бордеру */
-        @keyframes rotateBorder {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Золотая точка, вращающаяся по кругу */
+        /* Анимация вращения золотой точки по кругу по часовой стрелке */
         @keyframes rotateDot {
             0% {
                 transform: translateX(-50%) rotate(0deg) translateY(20px) rotate(0deg);
@@ -161,42 +152,27 @@
             }
         }
 
-        /* Элемент для анимации бордера */
-        .profile-btn .border-animation {
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .profile-btn::after {
+            content: '';
             position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                #2c2c2c 0deg,
-                #2c2c2c 340deg,
-                #ffd700 340deg,
-                #ffd700 360deg
-            );
-            z-index: -1;
-            animation: rotateBorder 3s linear infinite;
-        }
-
-        /* Золотая точка, вращающаяся по кругу */
-        .profile-btn .golden-dot {
-            position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
-            top: -6px;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            animation: rotateDot 3s linear infinite;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
             z-index: 1001;
+            transition: opacity 0.3s ease;
         }
 
-        .profile-btn:hover .golden-dot {
-            opacity: 0;
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .profile-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .profile-btn:hover {
@@ -241,8 +217,8 @@
             bottom: -40px;
             left: 50%;
             transform: translateX(-50%);
-            background: #000000;
-            color: white;
+            background: #000000 !important;
+            color: white !important;
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.75rem;
@@ -259,63 +235,32 @@
             height: auto;
         }
 
-        /* Кнопка выхода к выбору компаний */
+        /* Кнопка выхода к выбору компаний (скрыта, используется новая кнопка ниже) */
         .companies-btn {
-            position: absolute;
-            top: 30px;
-            right: 80px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
-            border: 3px solid #2c2c2c;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-            z-index: 1000;
-            position: relative;
-            overflow: visible;
+            display: none !important;
         }
 
-        /* Элемент для анимации бордера кнопки компаний */
-        .companies-btn .border-animation {
+        /* Золотая точка, вращающаяся по кругу для кнопки компаний при наведении */
+        .companies-btn::after {
+            content: '';
             position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                #2c2c2c 0deg,
-                #2c2c2c 340deg,
-                #ffd700 340deg,
-                #ffd700 360deg
-            );
-            z-index: -1;
-            animation: rotateBorder 3s linear infinite;
-        }
-
-        /* Золотая точка, вращающаяся по кругу для кнопки компаний */
-        .companies-btn .golden-dot {
-            position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
-            top: -6px;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            animation: rotateDot 3s linear infinite;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
             z-index: 1001;
+            transition: opacity 0.3s ease;
         }
 
-        .companies-btn:hover .golden-dot {
-            opacity: 0;
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .companies-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .companies-btn:hover {
@@ -346,33 +291,31 @@
         }
 
         /* Подсказка для кнопки компаний */
-        .companies-btn[data-tooltip]:hover::before {
-            opacity: 0;
+        .companies-btn {
+            position: relative;
         }
-
-        .companies-btn[data-tooltip]:hover .companies-tooltip {
-            opacity: 1;
-            transform: translate(-50%, -6px);
+        
+        .companies-btn:hover .companies-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
             transition-delay: 1s;
         }
 
         .companies-tooltip {
-            content: attr(data-tooltip);
             position: absolute;
-            bottom: 100%;
+            bottom: calc(100% + 8px);
             left: 50%;
-            transform: translate(-50%, 0);
+            transform: translateX(-50%);
             padding: 8px 12px;
             border-radius: 8px;
             background: #000000;
-            color: #fff;
+            color: #ffffff;
             font-size: 0.75rem;
             white-space: nowrap;
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            transform-origin: bottom center;
-            margin-bottom: 8px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 10001;
         }
 
@@ -398,7 +341,7 @@
             height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            border: 3px solid #2c2c2c;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -406,44 +349,30 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
             z-index: 1000;
-            position: relative;
             overflow: visible;
         }
 
-        /* Анимация грифельной полосы по бордеру для кнопки выхода */
-        .logout-btn::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                #2c2c2c 0deg,
-                #2c2c2c 340deg,
-                #ffd700 340deg,
-                #ffd700 360deg
-            );
-            z-index: -1;
-            animation: rotateBorder 3s linear infinite;
-        }
-
-        /* Золотая точка, вращающаяся по кругу для кнопки выхода */
+        /* Золотая точка, вращающаяся по кругу для кнопки выхода при наведении */
         .logout-btn::after {
             content: '';
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
-            top: -6px;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            animation: rotateDot 3s linear infinite;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
             z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .logout-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .logout-btn:hover {
@@ -463,10 +392,6 @@
         }
 
         /* Подсказка для кнопки выхода */
-        .logout-btn[data-tooltip]:hover::before {
-            opacity: 0;
-        }
-
         .logout-btn[data-tooltip]:hover .logout-tooltip {
             opacity: 1;
             transform: translate(-50%, 6px);
@@ -481,8 +406,8 @@
             transform: translate(-50%, 0);
             padding: 8px 12px;
             border-radius: 8px;
-            background: #000000;
-            color: #fff;
+            background: #000000 !important;
+            color: #fff !important;
             font-size: 0.75rem;
             white-space: nowrap;
             opacity: 0;
@@ -490,6 +415,98 @@
             transition: opacity 0.2s ease, transform 0.2s ease;
             transform-origin: top center;
             margin-top: 8px;
+            z-index: 10001;
+        }
+
+        /* Новая кнопка компаний под кнопкой выхода */
+        .companies-bottom-btn {
+            position: absolute;
+            top: 130px;
+            right: 30px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+            border: 2px solid #2c2c2c;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: visible;
+        }
+
+        /* Золотая точка, вращающаяся по кругу для нижней кнопки компаний */
+        .companies-bottom-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            opacity: 0;
+            z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        .companies-bottom-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .companies-bottom-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
+        }
+
+        /* Иконка квадрата с точкой для новой кнопки компаний */
+        .companies-bottom-icon {
+            width: 18px;
+            height: 18px;
+            border: 2px solid white;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .companies-bottom-icon::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+        }
+
+        /* Подсказка для новой кнопки компаний */
+        .companies-bottom-btn:hover .companies-bottom-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition-delay: 1s;
+        }
+
+        .companies-bottom-tooltip {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #000000;
+            color: #ffffff;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 10001;
         }
 
@@ -2745,25 +2762,40 @@
             .stage-tabs-buttons {
                 width: 100%;
                 display: flex;
-                flex-wrap: wrap;
+                flex-direction: column; /* Вертикальное расположение на планшетах */
                 gap: 8px;
             }
 
             .stage-tab-btn {
-                flex: 1;
-                min-width: calc(50% - 4px);
+                width: 100%; /* Все кнопки одинаковой ширины */
                 padding: 10px 12px;
                 font-size: 0.85rem;
+                min-height: 44px;
             }
 
-            /* Одинаковый размер кнопок "Ответственный" и "Детальный вид" на планшетах */
+            /* Контейнер с дополнительными кнопками тоже вертикально на планшетах */
+            .stage-controls-buttons {
+                flex-direction: column !important;
+                width: 100%;
+                gap: 8px !important;
+            }
+
+            /* Одинаковый размер всех кнопок на планшетах - одинаковой ширины */
             .responsible-toggle-btn,
             .gantt-style-toggle-btn,
             .baseline-set-btn,
+            .baseline-toggle-btn,
+            .stage-settings-btn {
+                width: 100%; /* Все кнопки одинаковой ширины */
+                padding: 10px 12px;
+                font-size: 0.8rem;
+                min-height: 44px;
+                justify-content: center;
+            }
+
+            /* Уменьшаем размер текста кнопки "Директивный план" на планшетах */
             .baseline-toggle-btn {
-                padding: 8px 14px;
-                font-size: 0.85rem;
-                min-height: 40px;
+                font-size: 0.75rem;
             }
 
             /* Убираем min-width для кнопки "Ответственный" на планшетах */
@@ -2951,28 +2983,50 @@
             .stage-tabs-buttons {
                 width: 100%;
                 display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
+                flex-direction: column; /* Вертикальное расположение на мобильных */
+                gap: 8px;
             }
 
             .stage-tab-btn {
-                flex: 1;
-                min-width: calc(50% - 3px);
+                width: 100%; /* Все кнопки одинаковой ширины */
                 min-height: 44px; /* Минимальный размер для touch на iOS */
-                padding: 8px 10px;
-                font-size: 0.75rem;
+                padding: 10px 12px;
+                font-size: 0.875rem;
                 touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
-            /* Одинаковый размер кнопок "Ответственный" и "Детальный вид" на мобильных */
+            /* Контейнер с дополнительными кнопками тоже вертикально на мобильных */
+            .stage-controls-buttons {
+                flex-direction: column !important;
+                width: 100%;
+                gap: 8px !important;
+            }
+
+            /* Одинаковый размер всех кнопок на мобильных - одинаковой ширины */
             .responsible-toggle-btn,
             .gantt-style-toggle-btn,
             .baseline-set-btn,
-            .baseline-toggle-btn {
-                padding: 8px 12px;
+            .baseline-toggle-btn,
+            .stage-settings-btn {
+                width: 100% !important; /* Все кнопки одинаковой ширины */
+                padding: 10px 12px;
                 font-size: 0.75rem;
                 min-height: 44px; /* Минимальный размер для touch на iOS */
                 touch-action: manipulation;
+                justify-content: center;
+                display: flex !important;
+                align-items: center;
+            }
+
+            /* Уменьшаем размер текста кнопки "Директивный план" на мобильных */
+            .baseline-toggle-btn {
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            /* Кнопка "Редакция этапов" на мобильных - полная ширина с текстом */
+            .stage-settings-btn {
+                height: auto !important;
             }
 
             /* Убираем min-width для кнопки "Ответственный" на мобильных, чтобы она была такого же размера */
@@ -3117,14 +3171,14 @@
                 <span class="logout-icon"></span>
                 <span class="logout-tooltip">Выход</span>
             </button>
-            <button class="companies-btn" id="companiesBtn" data-tooltip="Выбор компании" style="display: none;" onclick="goToCompanies()">
-                <span class="companies-icon"></span>
-                <span class="companies-tooltip">Выбор компании</span>
-            </button>
             <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" style="display: none;">
                 <span class="profile-icon-head"></span>
                 <span class="profile-icon-shoulders"></span>
                 <span class="profile-tooltip">Редактировать профиль</span>
+            </button>
+            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="goToCompanies()">
+                <span class="companies-bottom-icon"></span>
+                <span class="companies-bottom-tooltip">Компании</span>
             </button>
             <h1>
                 <span class="header-icon"></span>
@@ -3208,7 +3262,7 @@
                 <button class="stage-tab-btn">Этап 3</button>
                 <button class="stage-tab-btn">Этап 4</button>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="stage-controls-buttons" style="display: flex; align-items: center; gap: 8px;">
                 <button
                     class="baseline-toggle-btn"
                     id="baselineToggleBtn"
@@ -3548,6 +3602,70 @@
         } else {
             console.warn('⚠️ Компания не определена из URL или localStorage');
         }
+
+        // Показать кнопки авторизации (определяем раньше, чтобы использовать ниже)
+        function showAuthButtons() {
+            const profileBtn = document.getElementById('profileBtn');
+            const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            console.log('🔧 showAuthButtons called', { 
+                profileBtn: !!profileBtn, 
+                companiesBottomBtn: !!companiesBottomBtn,
+                logoutBtn: !!logoutBtn 
+            });
+            
+            if (profileBtn) {
+                profileBtn.style.display = 'flex';
+            }
+            if (companiesBottomBtn) {
+                companiesBottomBtn.style.display = 'flex';
+                console.log('✅ Нижняя кнопка компаний показана через showAuthButtons');
+            }
+            if (logoutBtn) {
+                logoutBtn.style.display = 'flex';
+            }
+        }
+
+        // Показываем кнопки авторизации сразу, если пользователь авторизован
+        (function checkAuthButtons() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (userStr) {
+                // Функция для показа кнопок
+                const tryShowButtons = () => {
+                    const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                    const profileBtn = document.getElementById('profileBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    
+                    if (companiesBottomBtn) {
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = '1';
+                    }
+                    if (profileBtn) {
+                        profileBtn.style.display = 'flex';
+                        profileBtn.style.visibility = 'visible';
+                    }
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'flex';
+                        logoutBtn.style.visibility = 'visible';
+                    }
+                };
+                
+                // Ждем загрузки DOM
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        tryShowButtons();
+                        setTimeout(tryShowButtons, 100);
+                        setTimeout(tryShowButtons, 500);
+                    });
+                } else {
+                    tryShowButtons();
+                    setTimeout(tryShowButtons, 100);
+                    setTimeout(tryShowButtons, 500);
+                }
+            }
+        })();
         
         // Принудительное сохранение при уходе со страницы
         window.addEventListener('beforeunload', function() {
@@ -5371,14 +5489,21 @@
                                 return; // Блокируем изменение статуса в режиме просмотра
                             }
 
+                            const barElement = event.currentTarget || event.target;
+                            const rect = barElement ? barElement.getBoundingClientRect() : null;
+                            const fallbackX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+                            const fallbackY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+                            const clickX = typeof clientX === 'number' ? clientX : fallbackX;
+                            const clickY = typeof clientY === 'number' ? clientY : fallbackY;
+
                             if (ganttBarStyle === 'segments') {
                                 // Режим полос — меняем статус по всей задаче
                                 const allDates = task.dates.map(d => formatDateKey(d));
-                                openStatusMenu(clientX, clientY, task.id, allDates);
+                                openStatusMenu(clickX, clickY, task.id, allDates);
                             } else {
                                 // Режим по дням — как раньше, только по текущему интервалу
                                 const allDatesInUnit = unitDatesForTask.map(d => formatDateKey(d));
-                                openStatusMenu(clientX, clientY, task.id, allDatesInUnit);
+                                openStatusMenu(clickX, clickY, task.id, allDatesInUnit);
                             }
                         }
                         
@@ -7793,59 +7918,56 @@ async function exportPDF(scaleMode = 'day') {
             
             // Сначала показываем меню, чтобы получить правильные размеры
             menu.style.display = 'block';
-            menu.style.position = 'fixed'; // всегда fixed для правильного позиционирования
+            menu.style.position = 'fixed';
             
-            // Небольшая задержка, чтобы браузер успел отрендерить меню и получить размеры
+            // Получаем размеры меню и позиционируем его
             requestAnimationFrame(() => {
                 const menuRect = menu.getBoundingClientRect();
                 let left = x;
                 let top = y;
                 
+                console.log('📍 Клик на позиции:', { 
+                    clickX: x, 
+                    clickY: y, 
+                    isMobile, 
+                    menuWidth: menuRect.width, 
+                    menuHeight: menuRect.height,
+                    viewport: { width: window.innerWidth, height: window.innerHeight }
+                });
+                
                 if (isMobile) {
-                    // На мобильных позиционируем меню рядом с точкой клика (тапа)
-                    // Добавляем небольшое смещение, чтобы меню не закрывало палец
-                    const offset = 10;
+                    // На мобильных ОБЯЗАТЕЛЬНО показываем меню рядом с точкой тапа
+                    const offset = 15; // чуть больше отступ, чтобы палец не закрывал
                     
                     // Проверяем, влезает ли меню справа от точки клика
-                    if (left + menuRect.width + offset > window.innerWidth) {
-                        // Если не влезает справа, показываем слева от точки клика
-                        left = x - menuRect.width - offset;
-                        // Если и слева не влезает, прижимаем к правому краю
-                        if (left < 10) {
-                            left = window.innerWidth - menuRect.width - 10;
-                        }
+                    if (x + menuRect.width + offset > window.innerWidth) {
+                        // Показываем слева от точки клика
+                        left = Math.max(10, x - menuRect.width - offset);
                     } else {
                         left = x + offset;
                     }
                     
                     // Проверяем, влезает ли меню снизу от точки клика
-                    if (top + menuRect.height + offset > window.innerHeight) {
-                        // Если не влезает снизу, показываем над точкой клика
-                        top = y - menuRect.height - offset;
-                        // Если и сверху не влезает, прижимаем к верхнему краю с небольшим отступом
-                        if (top < 10) {
-                            top = 10;
-                        }
+                    if (y + menuRect.height + offset > window.innerHeight) {
+                        // Показываем над точкой клика
+                        top = Math.max(10, y - menuRect.height - offset);
                     } else {
                         top = y + offset;
                     }
                     
-                    // Убеждаемся, что меню не выходит за границы экрана
-                    left = Math.max(10, Math.min(left, window.innerWidth - menuRect.width - 10));
-                    top = Math.max(10, Math.min(top, window.innerHeight - menuRect.height - 10));
+                    console.log('📱 Мобильная позиция меню:', { left, top });
                 } else {
-                    // На десктопе тоже позиционируем рядом с курсором
+                    // На десктопе
                     const offset = 5;
                     
-                    // Проверяем, влезает ли меню на экран
-                    if (left + menuRect.width + offset > window.innerWidth) {
-                        left = window.innerWidth - menuRect.width - 10;
+                    if (x + menuRect.width + offset > window.innerWidth) {
+                        left = Math.max(10, x - menuRect.width - offset);
                     } else {
                         left = x + offset;
                     }
                     
-                    if (top + menuRect.height + offset > window.innerHeight) {
-                        top = window.innerHeight - menuRect.height - 10;
+                    if (y + menuRect.height + offset > window.innerHeight) {
+                        top = Math.max(10, y - menuRect.height - offset);
                     } else {
                         top = y + offset;
                     }
@@ -7853,6 +7975,8 @@ async function exportPDF(scaleMode = 'day') {
 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
+                
+                console.log('✅ Финальная позиция меню:', { left, top });
             });
         }
 
@@ -8051,24 +8175,31 @@ async function exportPDF(scaleMode = 'day') {
             if (userStr) {
                 try {
                     currentUser = JSON.parse(userStr);
-                    // Показываем кнопки профиля и выбора компаний только для авторизованных пользователей
-                    const profileBtn = document.getElementById('profileBtn');
-                    const companiesBtn = document.getElementById('companiesBtn');
-                    if (profileBtn) {
-                        profileBtn.style.display = 'flex';
-                    }
-                    if (companiesBtn) {
-                        companiesBtn.style.display = 'flex';
-                    }
-                    const logoutBtn = document.getElementById('logoutBtn');
-                    if (logoutBtn) {
-                        logoutBtn.style.display = 'flex';
-                    }
+                    // Показываем кнопки профиля, выбора компаний и выхода только для авторизованных пользователей
+                    showAuthButtons();
+                    
+                    // Дополнительная проверка через небольшую задержку
+                    setTimeout(() => {
+                        const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                        if (companiesBottomBtn) {
+                            companiesBottomBtn.style.display = 'flex';
+                            companiesBottomBtn.style.visibility = 'visible';
+                            companiesBottomBtn.style.opacity = '1';
+                            console.log('Нижняя кнопка компаний принудительно показана через loadCurrentUser', {
+                                display: companiesBottomBtn.style.display,
+                                visibility: companiesBottomBtn.style.visibility,
+                                computedDisplay: window.getComputedStyle(companiesBottomBtn).display
+                            });
+                        } else {
+                            console.error('Нижняя кнопка компаний НЕ НАЙДЕНА в loadCurrentUser!');
+                        }
+                    }, 200);
                 } catch (e) {
                     console.error('Ошибка загрузки данных пользователя:', e);
                 }
             }
         }
+
 
         // Переход на страницу выбора компаний
         function goToCompanies() {
@@ -8317,6 +8448,58 @@ async function exportPDF(scaleMode = 'day') {
             updateBaselineToggleButton();
             await loadCompanyInfo();
             loadCurrentUser();
+            
+            // ПРИНУДИТЕЛЬНО показываем кнопки авторизации после загрузки страницы
+            const forceShowAuthButtons = () => {
+                const userStr = localStorage.getItem('gantt-user');
+                if (userStr) {
+                    const profileBtn = document.getElementById('profileBtn');
+                    const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    
+                    console.log('🔍 forceShowAuthButtons:', { 
+                        profileBtn: !!profileBtn, 
+                        companiesBottomBtn: !!companiesBottomBtn, 
+                        logoutBtn: !!logoutBtn 
+                    });
+                    
+                    if (profileBtn) {
+                        profileBtn.style.display = 'flex';
+                        profileBtn.style.visibility = 'visible';
+                        profileBtn.style.opacity = '1';
+                    }
+                    if (companiesBottomBtn) {
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = '1';
+                        console.log('✅ Нижняя кнопка компаний ПРИНУДИТЕЛЬНО показана!', {
+                            display: companiesBottomBtn.style.display,
+                            visibility: companiesBottomBtn.style.visibility,
+                            opacity: companiesBottomBtn.style.opacity,
+                            computedDisplay: window.getComputedStyle(companiesBottomBtn).display,
+                            computedVisibility: window.getComputedStyle(companiesBottomBtn).visibility,
+                            position: companiesBottomBtn.getBoundingClientRect()
+                        });
+                    } else {
+                        console.error('❌ Нижняя кнопка компаний НЕ НАЙДЕНА в DOM!');
+                    }
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'flex';
+                        logoutBtn.style.visibility = 'visible';
+                        logoutBtn.style.opacity = '1';
+                    }
+                } else {
+                    console.warn('⚠️ Пользователь не авторизован (нет gantt-user в localStorage)');
+                }
+            };
+            
+            // Множественные попытки показать кнопки с разными задержками
+            forceShowAuthButtons();
+            setTimeout(forceShowAuthButtons, 100);
+            setTimeout(forceShowAuthButtons, 300);
+            setTimeout(forceShowAuthButtons, 500);
+            setTimeout(forceShowAuthButtons, 1000);
+            setTimeout(forceShowAuthButtons, 2000);
             
             // Обработчики для профиля
             const profileBtn = document.getElementById('profileBtn');

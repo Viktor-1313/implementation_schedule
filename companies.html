@@ -237,7 +237,17 @@
             }
         }
 
-        /* Анимация вращения золотой точки */
+        /* Анимация вращения золотой точки по кругу по часовой стрелке */
+        @keyframes rotateDot {
+            0% {
+                transform: translateX(-50%) rotate(0deg) translateY(20px) rotate(0deg);
+            }
+            100% {
+                transform: translateX(-50%) rotate(360deg) translateY(20px) rotate(-360deg);
+            }
+        }
+
+        /* Анимация вращения золотой точки по кругу по часовой стрелке */
         @keyframes rotateDot {
             0% {
                 transform: translateX(-50%) rotate(0deg) translateY(20px) rotate(0deg);
@@ -254,7 +264,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 3px solid #2c2c2c;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -262,52 +272,38 @@
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             z-index: 1000;
-            position: relative;
             overflow: visible;
         }
 
-        /* Анимация грифельной полосы по бордеру */
-        .profile-btn::before,
-        .logout-btn::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                #2c2c2c 0deg,
-                #2c2c2c 340deg,
-                #ffd700 340deg,
-                #ffd700 360deg
-            );
-            z-index: -1;
-            animation: rotateBorder 3s linear infinite;
-        }
-
-        /* Золотая точка, вращающаяся по кругу */
+        /* Золотая точка, вращающаяся по кругу при наведении */
         .profile-btn::after,
         .logout-btn::after {
             content: '';
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
-            top: -6px;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            animation: rotateDot 3s linear infinite;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
             z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .profile-btn:hover::after,
+        .logout-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .profile-btn {
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
-            top: 15px;
-            right: 60px;
+            top: 30px;
+            right: 80px;
         }
 
         .profile-btn .profile-icon-head {
@@ -337,8 +333,8 @@
 
         .logout-btn {
             background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            top: 15px;
-            right: 15px;
+            top: 30px;
+            right: 30px;
         }
 
         .logout-btn .logout-icon {
@@ -357,11 +353,6 @@
         }
 
         /* Подсказки для кнопок */
-        .profile-btn[data-tooltip]:hover::after,
-        .logout-btn[data-tooltip]:hover::after {
-            opacity: 0;
-        }
-
         .profile-btn[data-tooltip]:hover .profile-tooltip,
         .logout-btn[data-tooltip]:hover .logout-tooltip {
             opacity: 1;

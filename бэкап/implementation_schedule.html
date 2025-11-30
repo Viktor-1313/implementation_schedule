@@ -111,6 +111,7 @@
         }
 
         header {
+            position: relative; /* Для правильного позиционирования кнопок */
             background: var(--color-surface);
             padding: 30px 20px;
             border-bottom: 2px solid var(--color-primary);
@@ -122,14 +123,15 @@
 
         /* Кнопка профиля в правом верхнем углу */
         .profile-btn {
-            position: absolute;
-            top: 30px;
-            right: 30px;
+            position: absolute !important;
+            top: 30px !important;
+            right: 30px !important;
+            left: auto !important;
             width: 40px;
             height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
-            border: none;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -137,6 +139,40 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
             z-index: 1000;
+            overflow: visible;
+        }
+
+        /* Анимация вращения золотой точки по кругу по часовой стрелке */
+        @keyframes rotateDot {
+            0% {
+                transform: translateX(-50%) rotate(0deg) translateY(20px) rotate(0deg);
+            }
+            100% {
+                transform: translateX(-50%) rotate(360deg) translateY(20px) rotate(-360deg);
+            }
+        }
+
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .profile-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .profile-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .profile-btn:hover {
@@ -144,35 +180,45 @@
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
 
-        .profile-btn::before {
-            content: '';
+        /* Иконка профиля (голова) */
+        .profile-btn .profile-icon-head {
             position: absolute;
             width: 18px;
             height: 18px;
             background: white;
             border-radius: 50%;
             top: 8px;
+            z-index: 1002;
         }
 
-        .profile-btn::after {
-            content: '';
+        /* Иконка профиля (плечи) */
+        .profile-btn .profile-icon-shoulders {
             position: absolute;
             width: 22px;
             height: 12px;
             background: white;
             border-radius: 12px 12px 0 0;
             bottom: 6px;
+            z-index: 1002;
         }
 
-        /* Подсказка для кнопки профиля - перезаписывает ::after при hover (как в companies.html) */
-        .profile-btn[data-tooltip]::after {
-            content: attr(data-tooltip);
+        /* Подсказка для кнопки профиля */
+        .profile-btn[data-tooltip] {
+            position: relative;
+        }
+
+        .profile-btn[data-tooltip]:hover .profile-tooltip {
+            opacity: 1;
+            transition-delay: 1s;
+        }
+
+        .profile-tooltip {
             position: absolute;
             bottom: -40px;
             left: 50%;
             transform: translateX(-50%);
-            background: #000000;
-            color: white;
+            background: #000000 !important;
+            color: white !important;
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.75rem;
@@ -189,28 +235,32 @@
             height: auto;
         }
 
-        .profile-btn:hover[data-tooltip]::after {
-            opacity: 1;
-            transition-delay: 1s;
+        /* Кнопка выхода к выбору компаний (скрыта, используется новая кнопка ниже) */
+        .companies-btn {
+            display: none !important;
         }
 
-        /* Кнопка выхода к выбору компаний */
-        .companies-btn {
+        /* Золотая точка, вращающаяся по кругу для кнопки компаний при наведении */
+        .companies-btn::after {
+            content: '';
             position: absolute;
-            top: 30px;
-            right: 80px;
-            width: 40px;
-            height: 40px;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
             border-radius: 50%;
-            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-            z-index: 1000;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .companies-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .companies-btn:hover {
@@ -218,40 +268,55 @@
             box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
         }
 
-        .companies-btn::before {
-            content: '';
+        /* Иконка квадрата с точкой для кнопки компаний */
+        .companies-btn .companies-icon {
             width: 18px;
             height: 18px;
             border: 2px solid white;
             border-radius: 4px;
             position: absolute;
-            z-index: 1;
+            z-index: 1002;
         }
 
-        .companies-btn::after {
-            content: attr(data-tooltip);
+        /* Точка внутри квадрата для кнопки компаний */
+        .companies-btn .companies-icon::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
             position: absolute;
-            bottom: 100%;
+            top: 4px;
+            left: 4px;
+        }
+
+        /* Подсказка для кнопки компаний */
+        .companies-btn {
+            position: relative;
+        }
+        
+        .companies-btn:hover .companies-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition-delay: 1s;
+        }
+
+        .companies-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
             left: 50%;
-            transform: translate(-50%, 0);
+            transform: translateX(-50%);
             padding: 8px 12px;
             border-radius: 8px;
             background: #000000;
-            color: #fff;
+            color: #ffffff;
             font-size: 0.75rem;
             white-space: nowrap;
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            transform-origin: bottom center;
-            margin-bottom: 8px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 10001;
-        }
-
-        .companies-btn:hover::after {
-            opacity: 1;
-            transform: translate(-50%, -6px);
-            transition-delay: 1s;
         }
 
         /* Точка внутри квадрата */
@@ -276,7 +341,7 @@
             height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            border: none;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -284,6 +349,30 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
             z-index: 1000;
+            overflow: visible;
+        }
+
+        /* Золотая точка, вращающаяся по кругу для кнопки выхода при наведении */
+        .logout-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .logout-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .logout-btn:hover {
@@ -292,18 +381,24 @@
         }
 
         /* Иконка выхода (стрелка влево) */
-        .logout-btn::before {
-            content: '';
+        .logout-btn .logout-icon {
             width: 12px;
             height: 12px;
             border-left: 3px solid white;
             border-top: 3px solid white;
             transform: rotate(-45deg) translateX(2px);
-            z-index: 1;
+            z-index: 1002;
+            position: absolute;
         }
 
         /* Подсказка для кнопки выхода */
-        .logout-btn::after {
+        .logout-btn[data-tooltip]:hover .logout-tooltip {
+            opacity: 1;
+            transform: translate(-50%, 6px);
+            transition-delay: 1s;
+        }
+
+        .logout-tooltip {
             content: attr(data-tooltip);
             position: absolute;
             top: 100%;
@@ -311,8 +406,8 @@
             transform: translate(-50%, 0);
             padding: 8px 12px;
             border-radius: 8px;
-            background: #000000;
-            color: #fff;
+            background: #000000 !important;
+            color: #fff !important;
             font-size: 0.75rem;
             white-space: nowrap;
             opacity: 0;
@@ -323,10 +418,74 @@
             z-index: 10001;
         }
 
-        .logout-btn:hover::after {
-            opacity: 1;
-            transform: translate(-50%, 6px);
+        /* Новая кнопка компаний под кнопкой выхода */
+        .companies-bottom-btn {
+            position: absolute;
+            top: 130px;
+            right: 30px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+            border: 2px solid #2c2c2c;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: visible;
+        }
+
+        .companies-bottom-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Иконка квадрата с точкой для новой кнопки компаний */
+        .companies-bottom-icon {
+            width: 18px;
+            height: 18px;
+            border: 2px solid white;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .companies-bottom-icon::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+        }
+
+        /* Подсказка для новой кнопки компаний */
+        .companies-bottom-btn:hover .companies-bottom-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
             transition-delay: 1s;
+        }
+
+        .companies-bottom-tooltip {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #000000;
+            color: #ffffff;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 10001;
         }
 
         /* Модальное окно редактирования профиля */
@@ -2012,6 +2171,48 @@
             gap: 6px;
         }
 
+        /* Кнопка "Задать базовый план" — такой же стиль как "Ответственный" и "Детальный вид" */
+        .baseline-set-btn {
+            padding: 6px 14px !important;
+            border-radius: 999px !important;
+            font-size: 12px !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Кнопка "Директивный план" — такой же стиль как остальные кнопки */
+        .baseline-toggle-btn {
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--color-primary);
+            background: #e3f2fd;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: var(--color-primary);
+            box-shadow: var(--shadow-sm);
+            transition:
+                background 0.25s ease,
+                color 0.25s ease,
+                box-shadow 0.25s ease,
+                transform 0.25s ease;
+        }
+
+        .baseline-toggle-btn.active {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .baseline-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
         /* Кнопка переключения стиля баров в Ганте (детальный / общий вид).
            В неактивном состоянии соответствует «Детальному виду» и выглядит как таб этапов
            (голубой фон, синий бордер). В активном состоянии показывает «Общий вид» и
@@ -2073,7 +2274,9 @@
         }
 
         .stage-settings-btn::after,
-        .gantt-style-toggle-btn::after {
+        .gantt-style-toggle-btn::after,
+        .baseline-toggle-btn::after,
+        .baseline-set-btn::after {
             content: attr(data-tooltip);
             position: absolute;
             bottom: 100%;
@@ -2092,7 +2295,9 @@
         }
 
         .stage-settings-btn:hover::after,
-        .gantt-style-toggle-btn:hover::after {
+        .gantt-style-toggle-btn:hover::after,
+        .baseline-toggle-btn:hover::after,
+        .baseline-set-btn:hover::after {
             opacity: 1;
             transform: translate(-50%, -6px);
             transition-delay: 1s;
@@ -2535,23 +2740,40 @@
             .stage-tabs-buttons {
                 width: 100%;
                 display: flex;
-                flex-wrap: wrap;
+                flex-direction: column; /* Вертикальное расположение на планшетах */
                 gap: 8px;
             }
 
             .stage-tab-btn {
-                flex: 1;
-                min-width: calc(50% - 4px);
+                width: 100%; /* Все кнопки одинаковой ширины */
                 padding: 10px 12px;
                 font-size: 0.85rem;
+                min-height: 44px;
             }
 
-            /* Одинаковый размер кнопок "Ответственный" и "Детальный вид" на планшетах */
+            /* Контейнер с дополнительными кнопками тоже вертикально на планшетах */
+            .stage-controls-buttons {
+                flex-direction: column !important;
+                width: 100%;
+                gap: 8px !important;
+            }
+
+            /* Одинаковый размер всех кнопок на планшетах - одинаковой ширины */
             .responsible-toggle-btn,
-            .gantt-style-toggle-btn {
-                padding: 8px 14px;
-                font-size: 0.85rem;
-                min-height: 40px;
+            .gantt-style-toggle-btn,
+            .baseline-set-btn,
+            .baseline-toggle-btn,
+            .stage-settings-btn {
+                width: 100%; /* Все кнопки одинаковой ширины */
+                padding: 10px 12px;
+                font-size: 0.8rem;
+                min-height: 44px;
+                justify-content: center;
+            }
+
+            /* Уменьшаем размер текста кнопки "Директивный план" на планшетах */
+            .baseline-toggle-btn {
+                font-size: 0.75rem;
             }
 
             /* Убираем min-width для кнопки "Ответственный" на планшетах */
@@ -2739,26 +2961,50 @@
             .stage-tabs-buttons {
                 width: 100%;
                 display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
+                flex-direction: column; /* Вертикальное расположение на мобильных */
+                gap: 8px;
             }
 
             .stage-tab-btn {
-                flex: 1;
-                min-width: calc(50% - 3px);
+                width: 100%; /* Все кнопки одинаковой ширины */
                 min-height: 44px; /* Минимальный размер для touch на iOS */
-                padding: 8px 10px;
-                font-size: 0.75rem;
+                padding: 10px 12px;
+                font-size: 0.875rem;
                 touch-action: manipulation; /* Улучшает отзывчивость на touch */
             }
 
-            /* Одинаковый размер кнопок "Ответственный" и "Детальный вид" на мобильных */
+            /* Контейнер с дополнительными кнопками тоже вертикально на мобильных */
+            .stage-controls-buttons {
+                flex-direction: column !important;
+                width: 100%;
+                gap: 8px !important;
+            }
+
+            /* Одинаковый размер всех кнопок на мобильных - одинаковой ширины */
             .responsible-toggle-btn,
-            .gantt-style-toggle-btn {
-                padding: 8px 12px;
+            .gantt-style-toggle-btn,
+            .baseline-set-btn,
+            .baseline-toggle-btn,
+            .stage-settings-btn {
+                width: 100% !important; /* Все кнопки одинаковой ширины */
+                padding: 10px 12px;
                 font-size: 0.75rem;
                 min-height: 44px; /* Минимальный размер для touch на iOS */
                 touch-action: manipulation;
+                justify-content: center;
+                display: flex !important;
+                align-items: center;
+            }
+
+            /* Уменьшаем размер текста кнопки "Директивный план" на мобильных */
+            .baseline-toggle-btn {
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            /* Кнопка "Редакция этапов" на мобильных - полная ширина с текстом */
+            .stage-settings-btn {
+                height: auto !important;
             }
 
             /* Убираем min-width для кнопки "Ответственный" на мобильных, чтобы она была такого же размера */
@@ -2899,13 +3145,18 @@
 <body>
     <div class="container">
         <header>
-            <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" style="display: none;" onclick="logout()"></button>
-            <button class="companies-btn" id="companiesBtn" data-tooltip="Выбор компании" style="display: none;" onclick="goToCompanies()">
-                <span></span>
+            <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" style="display: none;" onclick="logout()">
+                <span class="logout-icon"></span>
+                <span class="logout-tooltip">Выход</span>
             </button>
             <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" style="display: none;">
-                <span style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; bottom: 8px; right: 8px; z-index: 1;"></span>
-                <span></span>
+                <span class="profile-icon-head"></span>
+                <span class="profile-icon-shoulders"></span>
+                <span class="profile-tooltip">Редактировать профиль</span>
+            </button>
+            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="goToCompanies()">
+                <span class="companies-bottom-icon"></span>
+                <span class="companies-bottom-tooltip">Компании</span>
             </button>
             <h1>
                 <span class="header-icon"></span>
@@ -2989,7 +3240,15 @@
                 <button class="stage-tab-btn">Этап 3</button>
                 <button class="stage-tab-btn">Этап 4</button>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="stage-controls-buttons" style="display: flex; align-items: center; gap: 8px;">
+                <button
+                    class="baseline-toggle-btn"
+                    id="baselineToggleBtn"
+                    onclick="toggleBaselineDisplay()"
+                    data-tooltip="Показать/скрыть директивный план (F3)"
+                >
+                    Директивный план
+                </button>
                 <button
                     class="stage-tab-btn baseline-set-btn"
                     id="baselineSetBtn"
@@ -3321,6 +3580,70 @@
         } else {
             console.warn('⚠️ Компания не определена из URL или localStorage');
         }
+
+        // Показать кнопки авторизации (определяем раньше, чтобы использовать ниже)
+        function showAuthButtons() {
+            const profileBtn = document.getElementById('profileBtn');
+            const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            
+            console.log('🔧 showAuthButtons called', { 
+                profileBtn: !!profileBtn, 
+                companiesBottomBtn: !!companiesBottomBtn,
+                logoutBtn: !!logoutBtn 
+            });
+            
+            if (profileBtn) {
+                profileBtn.style.display = 'flex';
+            }
+            if (companiesBottomBtn) {
+                companiesBottomBtn.style.display = 'flex';
+                console.log('✅ Нижняя кнопка компаний показана через showAuthButtons');
+            }
+            if (logoutBtn) {
+                logoutBtn.style.display = 'flex';
+            }
+        }
+
+        // Показываем кнопки авторизации сразу, если пользователь авторизован
+        (function checkAuthButtons() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (userStr) {
+                // Функция для показа кнопок
+                const tryShowButtons = () => {
+                    const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                    const profileBtn = document.getElementById('profileBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    
+                    if (companiesBottomBtn) {
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = '1';
+                    }
+                    if (profileBtn) {
+                        profileBtn.style.display = 'flex';
+                        profileBtn.style.visibility = 'visible';
+                    }
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'flex';
+                        logoutBtn.style.visibility = 'visible';
+                    }
+                };
+                
+                // Ждем загрузки DOM
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        tryShowButtons();
+                        setTimeout(tryShowButtons, 100);
+                        setTimeout(tryShowButtons, 500);
+                    });
+                } else {
+                    tryShowButtons();
+                    setTimeout(tryShowButtons, 100);
+                    setTimeout(tryShowButtons, 500);
+                }
+            }
+        })();
         
         // Принудительное сохранение при уходе со страницы
         window.addEventListener('beforeunload', function() {
@@ -3693,11 +4016,12 @@
 
             if (nameDisplay) {
                 if (companyName && companyName.trim().length > 0) {
-                    nameDisplay.textContent = companyName;
+                    // Используем innerText для правильного отображения текста в любой кодировке
+                    nameDisplay.innerText = companyName;
                     nameDisplay.classList.add('has-value');
                 } else {
                     const placeholder = nameDisplay.getAttribute('data-placeholder') || 'Введите название компании';
-                    nameDisplay.textContent = placeholder;
+                    nameDisplay.innerText = placeholder;
                     nameDisplay.classList.remove('has-value');
                 }
             }
@@ -3738,7 +4062,7 @@
                 event.preventDefault();
                 return; // Блокируем редактирование названия компании в режиме просмотра
             }
-            const raw = event.target.textContent || '';
+            const raw = (event.target.innerText || event.target.textContent) || '';
             const placeholder = event.target.getAttribute('data-placeholder') || 'Введите название компании';
 
             // Если пользователь стёр всё — считаем, что названия нет и показываем плейсхолдер
@@ -3794,7 +4118,8 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data && (data.name || data.logoData)) {
-                        companyName = data.name || '';
+                        // Убеждаемся, что название компании правильно декодируется
+                        companyName = data.name ? String(data.name) : '';
                         companyLogoData = data.logoData || null;
                         applyCompanyInfoToUI();
                         return;
@@ -3809,7 +4134,8 @@
                 const raw = localStorage.getItem('iconaCompanyInfo');
                 if (raw) {
                     const stored = JSON.parse(raw);
-                    companyName = stored.name || '';
+                    // Убеждаемся, что название компании правильно декодируется
+                    companyName = stored.name ? String(stored.name) : '';
                     companyLogoData = stored.logoData || null;
                 }
             } catch (e) {
@@ -4426,6 +4752,8 @@
                 if (!data || !Array.isArray(data.tasks)) return;
                 baselineSnapshot = data;
                 applyBaselineToTasks();
+                // Обновляем состояние кнопки после загрузки
+                updateBaselineToggleButton();
             } catch (e) {
                 // тихо игнорируем, если сервер недоступен
                 console.warn('Не удалось загрузить директивный план с сервера:', e);
@@ -4433,35 +4761,68 @@
         }
 
         function showBaselineToast(message) {
-            const el = document.getElementById('baselineToast');
+            // Создаем элемент если его нет
+            let el = document.getElementById('baselineToast');
             if (!el) {
-                console.error('baselineToast element not found!');
-                // Попробуем найти элемент еще раз через небольшую задержку
-                setTimeout(() => {
-                    const elRetry = document.getElementById('baselineToast');
-                    if (elRetry) {
-                        elRetry.textContent = message;
-                        elRetry.classList.add('visible');
-                        if (baselineToastTimer) {
-                            clearTimeout(baselineToastTimer);
-                        }
-                        baselineToastTimer = setTimeout(() => {
-                            elRetry.classList.remove('visible');
-                        }, 3000);
-                        console.log('Baseline toast shown (retry):', message);
-                    }
-                }, 50);
-                return;
+                el = document.createElement('div');
+                el.id = 'baselineToast';
+                el.className = 'baseline-toast';
+                document.body.appendChild(el);
+                console.log('Baseline toast element created');
             }
+            
+            // Убеждаемся что элемент видим
             el.textContent = message;
+            el.style.display = 'block';
             el.classList.add('visible');
+            
+            // Очищаем предыдущий таймер
             if (baselineToastTimer) {
                 clearTimeout(baselineToastTimer);
             }
+            
+            // Скрываем через 3 секунды
             baselineToastTimer = setTimeout(() => {
-                el.classList.remove('visible');
+                if (el) {
+                    el.classList.remove('visible');
+                    setTimeout(() => {
+                        if (el && !el.classList.contains('visible')) {
+                            el.style.display = 'none';
+                        }
+                    }, 300);
+                }
             }, 3000);
+            
             console.log('Baseline toast shown:', message);
+        }
+
+        // Функция для переключения отображения директивного плана (дублирует F3)
+        function toggleBaselineDisplay() {
+            const hasBaseline =
+                baselineSnapshot &&
+                Array.isArray(baselineSnapshot.tasks) &&
+                baselineSnapshot.tasks.some(t => Array.isArray(t.baselineDates) && t.baselineDates.length > 0);
+
+            if (!hasBaseline) {
+                showBaselineToast('Базовый план не задан. Нажмите "Задать базовый план" или F2, чтобы сохранить текущий график как директивный.');
+                return;
+            }
+
+            showBaseline = !showBaseline;
+            updateBaselineToggleButton();
+            renderGantt();
+        }
+
+        // Обновление состояния кнопки "Директивный план"
+        function updateBaselineToggleButton() {
+            const btn = document.getElementById('baselineToggleBtn');
+            if (!btn) return;
+            
+            if (showBaseline) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
         }
 
         // Функция для установки базового плана (дублирует F2)
@@ -4489,16 +4850,15 @@
                     applyBaselineToTasks();
                     saveBaselineToServer(baselineSnapshot);
                     console.log('Calling showBaselineToast for first time from button');
-                    // Используем setTimeout, чтобы убедиться, что DOM обновлен
-                    setTimeout(() => {
-                        showBaselineToast('Вы задали базовый план. Для отображения директивного графика нажмите F3');
-                    }, 150);
+                    // Показываем сообщение сразу
+                    showBaselineToast('Вы задали базовый план. Нажмите "Директивный план" или F3 для отображения.');
+                    // Обновляем состояние кнопки
+                    updateBaselineToggleButton();
                 } catch (error) {
                     console.error('Ошибка при сохранении базового плана:', error);
                     // Показываем сообщение даже при ошибке
-                    setTimeout(() => {
-                        showBaselineToast('Вы задали базовый план. Для отображения директивного графика нажмите F3');
-                    }, 150);
+                    showBaselineToast('Вы задали базовый план. Нажмите "Директивный план" или F3 для отображения.');
+                    updateBaselineToggleButton();
                 }
             }
         }
@@ -4538,16 +4898,15 @@
                     baselineSnapshot = pendingBaselineSnapshot;
                     applyBaselineToTasks();
                     saveBaselineToServer(baselineSnapshot);
-                    // Используем setTimeout, чтобы убедиться, что DOM обновлен
-                    setTimeout(() => {
-                        showBaselineToast('Базовый план перезаписан. Для отображения директивного графика нажмите F3');
-                    }, 100);
+                    // Показываем сообщение сразу
+                    showBaselineToast('Базовый план перезаписан. Нажмите "Директивный план" или F3 для отображения.');
+                    // Обновляем состояние кнопки
+                    updateBaselineToggleButton();
                 } catch (error) {
                     console.error('Ошибка при перезаписи базового плана:', error);
                     // Показываем сообщение даже при ошибке
-                    setTimeout(() => {
-                        showBaselineToast('Базовый план перезаписан. Для отображения директивного графика нажмите F3');
-                    }, 100);
+                    showBaselineToast('Базовый план перезаписан. Нажмите "Директивный план" или F3 для отображения.');
+                    updateBaselineToggleButton();
                 }
             }
             pendingBaselineSnapshot = null;
@@ -5941,9 +6300,9 @@ async function exportPDF(scaleMode = 'day') {
         const company = document.createElement('div');
         const currentNameText =
             nameDisplay && nameDisplay.classList.contains('has-value')
-                ? nameDisplay.textContent
+                ? (nameDisplay.innerText || nameDisplay.textContent)
                 : '';
-        company.textContent = currentNameText || 'Название компании';
+        company.innerText = currentNameText || 'Название компании';
         company.style.marginTop = '2px';
         company.style.fontSize = '12px';
         company.style.fontWeight = '600';
@@ -7530,59 +7889,56 @@ async function exportPDF(scaleMode = 'day') {
             
             // Сначала показываем меню, чтобы получить правильные размеры
             menu.style.display = 'block';
-            menu.style.position = 'fixed'; // всегда fixed для правильного позиционирования
+            menu.style.position = 'fixed';
             
-            // Небольшая задержка, чтобы браузер успел отрендерить меню и получить размеры
+            // Получаем размеры меню и позиционируем его
             requestAnimationFrame(() => {
                 const menuRect = menu.getBoundingClientRect();
                 let left = x;
                 let top = y;
                 
+                console.log('📍 Клик на позиции:', { 
+                    clickX: x, 
+                    clickY: y, 
+                    isMobile, 
+                    menuWidth: menuRect.width, 
+                    menuHeight: menuRect.height,
+                    viewport: { width: window.innerWidth, height: window.innerHeight }
+                });
+                
                 if (isMobile) {
-                    // На мобильных позиционируем меню рядом с точкой клика (тапа)
-                    // Добавляем небольшое смещение, чтобы меню не закрывало палец
-                    const offset = 10;
+                    // На мобильных ОБЯЗАТЕЛЬНО показываем меню рядом с точкой тапа
+                    const offset = 15; // чуть больше отступ, чтобы палец не закрывал
                     
                     // Проверяем, влезает ли меню справа от точки клика
-                    if (left + menuRect.width + offset > window.innerWidth) {
-                        // Если не влезает справа, показываем слева от точки клика
-                        left = x - menuRect.width - offset;
-                        // Если и слева не влезает, прижимаем к правому краю
-                        if (left < 10) {
-                            left = window.innerWidth - menuRect.width - 10;
-                        }
+                    if (x + menuRect.width + offset > window.innerWidth) {
+                        // Показываем слева от точки клика
+                        left = Math.max(10, x - menuRect.width - offset);
                     } else {
                         left = x + offset;
                     }
                     
                     // Проверяем, влезает ли меню снизу от точки клика
-                    if (top + menuRect.height + offset > window.innerHeight) {
-                        // Если не влезает снизу, показываем над точкой клика
-                        top = y - menuRect.height - offset;
-                        // Если и сверху не влезает, прижимаем к верхнему краю с небольшим отступом
-                        if (top < 10) {
-                            top = 10;
-                        }
+                    if (y + menuRect.height + offset > window.innerHeight) {
+                        // Показываем над точкой клика
+                        top = Math.max(10, y - menuRect.height - offset);
                     } else {
                         top = y + offset;
                     }
                     
-                    // Убеждаемся, что меню не выходит за границы экрана
-                    left = Math.max(10, Math.min(left, window.innerWidth - menuRect.width - 10));
-                    top = Math.max(10, Math.min(top, window.innerHeight - menuRect.height - 10));
+                    console.log('📱 Мобильная позиция меню:', { left, top });
                 } else {
-                    // На десктопе тоже позиционируем рядом с курсором
+                    // На десктопе
                     const offset = 5;
                     
-                    // Проверяем, влезает ли меню на экран
-                    if (left + menuRect.width + offset > window.innerWidth) {
-                        left = window.innerWidth - menuRect.width - 10;
+                    if (x + menuRect.width + offset > window.innerWidth) {
+                        left = Math.max(10, x - menuRect.width - offset);
                     } else {
                         left = x + offset;
                     }
                     
-                    if (top + menuRect.height + offset > window.innerHeight) {
-                        top = window.innerHeight - menuRect.height - 10;
+                    if (y + menuRect.height + offset > window.innerHeight) {
+                        top = Math.max(10, y - menuRect.height - offset);
                     } else {
                         top = y + offset;
                     }
@@ -7590,6 +7946,8 @@ async function exportPDF(scaleMode = 'day') {
 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
+                
+                console.log('✅ Финальная позиция меню:', { left, top });
             });
         }
 
@@ -7788,24 +8146,31 @@ async function exportPDF(scaleMode = 'day') {
             if (userStr) {
                 try {
                     currentUser = JSON.parse(userStr);
-                    // Показываем кнопки профиля и выбора компаний только для авторизованных пользователей
-                    const profileBtn = document.getElementById('profileBtn');
-                    const companiesBtn = document.getElementById('companiesBtn');
-                    if (profileBtn) {
-                        profileBtn.style.display = 'flex';
-                    }
-                    if (companiesBtn) {
-                        companiesBtn.style.display = 'flex';
-                    }
-                    const logoutBtn = document.getElementById('logoutBtn');
-                    if (logoutBtn) {
-                        logoutBtn.style.display = 'flex';
-                    }
+                    // Показываем кнопки профиля, выбора компаний и выхода только для авторизованных пользователей
+                    showAuthButtons();
+                    
+                    // Дополнительная проверка через небольшую задержку
+                    setTimeout(() => {
+                        const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                        if (companiesBottomBtn) {
+                            companiesBottomBtn.style.display = 'flex';
+                            companiesBottomBtn.style.visibility = 'visible';
+                            companiesBottomBtn.style.opacity = '1';
+                            console.log('Нижняя кнопка компаний принудительно показана через loadCurrentUser', {
+                                display: companiesBottomBtn.style.display,
+                                visibility: companiesBottomBtn.style.visibility,
+                                computedDisplay: window.getComputedStyle(companiesBottomBtn).display
+                            });
+                        } else {
+                            console.error('Нижняя кнопка компаний НЕ НАЙДЕНА в loadCurrentUser!');
+                        }
+                    }, 200);
                 } catch (e) {
                     console.error('Ошибка загрузки данных пользователя:', e);
                 }
             }
         }
+
 
         // Переход на страницу выбора компаний
         function goToCompanies() {
@@ -8050,8 +8415,62 @@ async function exportPDF(scaleMode = 'day') {
                 renderTable();
                 renderStageTabs();
             }
+            // Обновляем состояние кнопки "Директивный план"
+            updateBaselineToggleButton();
             await loadCompanyInfo();
             loadCurrentUser();
+            
+            // ПРИНУДИТЕЛЬНО показываем кнопки авторизации после загрузки страницы
+            const forceShowAuthButtons = () => {
+                const userStr = localStorage.getItem('gantt-user');
+                if (userStr) {
+                    const profileBtn = document.getElementById('profileBtn');
+                    const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    
+                    console.log('🔍 forceShowAuthButtons:', { 
+                        profileBtn: !!profileBtn, 
+                        companiesBottomBtn: !!companiesBottomBtn, 
+                        logoutBtn: !!logoutBtn 
+                    });
+                    
+                    if (profileBtn) {
+                        profileBtn.style.display = 'flex';
+                        profileBtn.style.visibility = 'visible';
+                        profileBtn.style.opacity = '1';
+                    }
+                    if (companiesBottomBtn) {
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = '1';
+                        console.log('✅ Нижняя кнопка компаний ПРИНУДИТЕЛЬНО показана!', {
+                            display: companiesBottomBtn.style.display,
+                            visibility: companiesBottomBtn.style.visibility,
+                            opacity: companiesBottomBtn.style.opacity,
+                            computedDisplay: window.getComputedStyle(companiesBottomBtn).display,
+                            computedVisibility: window.getComputedStyle(companiesBottomBtn).visibility,
+                            position: companiesBottomBtn.getBoundingClientRect()
+                        });
+                    } else {
+                        console.error('❌ Нижняя кнопка компаний НЕ НАЙДЕНА в DOM!');
+                    }
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'flex';
+                        logoutBtn.style.visibility = 'visible';
+                        logoutBtn.style.opacity = '1';
+                    }
+                } else {
+                    console.warn('⚠️ Пользователь не авторизован (нет gantt-user в localStorage)');
+                }
+            };
+            
+            // Множественные попытки показать кнопки с разными задержками
+            forceShowAuthButtons();
+            setTimeout(forceShowAuthButtons, 100);
+            setTimeout(forceShowAuthButtons, 300);
+            setTimeout(forceShowAuthButtons, 500);
+            setTimeout(forceShowAuthButtons, 1000);
+            setTimeout(forceShowAuthButtons, 2000);
             
             // Обработчики для профиля
             const profileBtn = document.getElementById('profileBtn');
@@ -8191,16 +8610,15 @@ async function exportPDF(scaleMode = 'day') {
                             applyBaselineToTasks();
                             saveBaselineToServer(baselineSnapshot);
                             console.log('Calling showBaselineToast for first time');
-                            // Используем setTimeout, чтобы убедиться, что DOM обновлен
-                            setTimeout(() => {
-                                showBaselineToast('Вы задали базовый план. Для отображения директивного графика нажмите F3');
-                            }, 150);
+                            // Показываем сообщение сразу
+                            showBaselineToast('Вы задали базовый план. Нажмите "Директивный план" или F3 для отображения.');
+                            // Обновляем состояние кнопки
+                            updateBaselineToggleButton();
                         } catch (error) {
                             console.error('Ошибка при сохранении базового плана:', error);
                             // Показываем сообщение даже при ошибке
-                            setTimeout(() => {
-                                showBaselineToast('Вы задали базовый план. Для отображения директивного графика нажмите F3');
-                            }, 150);
+                            showBaselineToast('Вы задали базовый план. Нажмите "Директивный план" или F3 для отображения.');
+                            updateBaselineToggleButton();
                         }
                     }
                     return;
@@ -8225,11 +8643,12 @@ async function exportPDF(scaleMode = 'day') {
                         baselineSnapshot.tasks.some(t => Array.isArray(t.baselineDates) && t.baselineDates.length > 0);
 
                     if (!hasBaseline) {
-                        showBaselineToast('Базовый план не задан. Нажмите F2, чтобы сохранить текущий график как директивный.');
+                        showBaselineToast('Базовый план не задан. Нажмите "Задать базовый план" или F2, чтобы сохранить текущий график как директивный.');
                         return;
                     }
 
                     showBaseline = !showBaseline;
+                    updateBaselineToggleButton();
                     renderGantt();
                     return;
                 }
