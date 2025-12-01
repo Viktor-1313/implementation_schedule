@@ -2456,14 +2456,14 @@
                 overflow-x: auto;
                 overflow-y: visible;
                 -webkit-overflow-scrolling: touch;
-                touch-action: pan-x pan-y;
+                touch-action: pan-x pan-y pinch-zoom; /* Разрешаем pinch-to-zoom */
             }
 
             .gantt-chart {
                 overflow-x: auto;
                 overflow-y: visible;
                 -webkit-overflow-scrolling: touch;
-                touch-action: pan-x pan-y;
+                touch-action: pan-x pan-y pinch-zoom; /* Разрешаем pinch-to-zoom */
                 min-width: 100%;
             }
 
@@ -2630,7 +2630,7 @@
                 max-width: 100%;
                 box-sizing: border-box;
                 z-index: 1;
-                touch-action: pan-x pan-y; /* Разрешаем прокрутку на планшетах и мобильных */
+                touch-action: pan-x pan-y pinch-zoom; /* Разрешаем прокрутку и pinch-to-zoom на планшетах и мобильных */
             }
 
             /* На мобильных отключаем sticky для колонки названий, чтобы она не перекрывала график */
@@ -2728,7 +2728,7 @@
                 width: 100%;
                 max-width: 100%;
                 box-sizing: border-box;
-                touch-action: pan-x pan-y; /* Разрешаем прокрутку на мобильных */
+                touch-action: pan-x pan-y pinch-zoom; /* Разрешаем прокрутку и pinch-to-zoom на мобильных */
             }
 
             .tasks-table-wrapper::-webkit-scrollbar {
@@ -9179,6 +9179,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 let initialDistance = 0;
                 let initialZoom = zoomLevel;
                 let isPinching = false;
+                let lastTouchTime = 0;
+                const touchThrottle = 16; // ~60fps для плавности
 
                 // Функция для вычисления расстояния между двумя точками касания
                 function getDistance(touch1, touch2) {
@@ -9190,25 +9192,35 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 // Проверка, является ли устройство мобильным или планшетом
                 function isMobileOrTablet() {
                     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                           (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches);
+                           (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
+                           ('ontouchstart' in window);
                 }
 
                 chartContainer.addEventListener('touchstart', (event) => {
-                    if (!isMobileOrTablet()) return;
-                    
+                    // Всегда разрешаем обработку на touch устройствах
                     if (event.touches.length === 2) {
                         event.preventDefault();
                         isPinching = true;
                         initialDistance = getDistance(event.touches[0], event.touches[1]);
                         initialZoom = zoomLevel;
+                        lastTouchTime = performance.now();
+                    } else if (event.touches.length === 1) {
+                        // Сбрасываем состояние, если остался один палец
+                        isPinching = false;
+                        initialDistance = 0;
                     }
                 }, { passive: false });
 
                 chartContainer.addEventListener('touchmove', (event) => {
-                    if (!isMobileOrTablet()) return;
-                    
                     if (event.touches.length === 2) {
                         event.preventDefault();
+                        
+                        const now = performance.now();
+                        // Throttling для производительности
+                        if (now - lastTouchTime < touchThrottle && isPinching && initialDistance > 0) {
+                            return;
+                        }
+                        lastTouchTime = now;
                         
                         // Если это начало жеста, инициализируем
                         if (!isPinching || initialDistance === 0) {
@@ -9219,19 +9231,26 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         }
                         
                         const currentDistance = getDistance(event.touches[0], event.touches[1]);
-                        if (initialDistance > 0) {
+                        if (initialDistance > 0 && currentDistance > 0) {
                             const scale = currentDistance / initialDistance;
                             
-                            // Применяем масштабирование с плавностью
-                            const newZoom = initialZoom * scale;
+                            // Ограничиваем масштаб для предотвращения слишком резких изменений
+                            const minScale = 0.5;
+                            const maxScale = 2.0;
+                            const clampedScale = Math.max(minScale, Math.min(maxScale, scale));
+                            
+                            // Применяем масштабирование
+                            const newZoom = initialZoom * clampedScale;
                             setZoom(newZoom);
                         }
+                    } else if (event.touches.length === 1 && isPinching) {
+                        // Если остался один палец во время жеста, сбрасываем
+                        isPinching = false;
+                        initialDistance = 0;
                     }
                 }, { passive: false });
 
                 chartContainer.addEventListener('touchend', (event) => {
-                    if (!isMobileOrTablet()) return;
-                    
                     if (event.touches.length < 2) {
                         isPinching = false;
                         initialDistance = 0;
@@ -9239,7 +9258,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 }, { passive: false });
 
                 chartContainer.addEventListener('touchcancel', (event) => {
-                    if (!isMobileOrTablet()) return;
                     isPinching = false;
                     initialDistance = 0;
                 }, { passive: false });
