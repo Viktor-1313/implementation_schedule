@@ -634,6 +634,16 @@ app.post('/api/auth', async (req, res) => {
   }
 });
 
+// Эндпоинт для проверки работоспособности (для cron-запросов)
+// Помогает поддерживать сервис активным на Render.com
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // ========== СТАТИЧЕСКИЕ ФАЙЛЫ (после всех API маршрутов) ==========
 // Редирект с корня на страницу авторизации
 app.get('/', (req, res) => {
