@@ -2,6 +2,8 @@ name: Keep Render Service Alive
 
 # Запускается каждые 10 минут для поддержания активности сервиса на Render
 on:
+  push:
+    branches: [ main ]
   schedule:
     # Cron формат: минута час день месяц день_недели
     # Каждые 10 минут: */10 * * * *
