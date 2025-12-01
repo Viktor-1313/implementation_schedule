@@ -13,10 +13,8 @@
     "name": "Даня",
     "login": "Luchka_DS",
     "password": "$2b$10$scEDPhBQig.YwIfN0p7une3zZPKKVuYlr8Ih/KTS6wrWVvWF2ioBm",
-    "role": "user",
-    "companies": [
-      "lsr"
-    ],
+    "role": "admin",
+    "companies": [],
     "createdAt": "2025-11-29T12:54:39.725Z"
   },
   {

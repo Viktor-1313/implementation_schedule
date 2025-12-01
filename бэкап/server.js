@@ -91,6 +91,65 @@ app.post('/api/companies', (req, res) => {
   }
 });
 
+// Обновить компанию (изменить ID и/или название)
+app.put('/api/companies/:id', (req, res) => {
+  try {
+    const oldCompanyId = req.params.id;
+    const { id: newCompanyId, name } = req.body;
+    console.log('📝 PUT /api/companies/:id', { oldCompanyId, newCompanyId, name });
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    const companyIndex = companies.findIndex(c => c.id === oldCompanyId);
+    if (companyIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    // Если ID меняется, проверяем уникальность нового ID
+    if (newCompanyId && newCompanyId !== oldCompanyId) {
+      if (!isValidCompanyId(newCompanyId)) {
+        return res.status(400).json({ ok: false, error: 'ID компании может содержать только латинские буквы, цифры, дефисы и подчеркивания' });
+      }
+      
+      if (companies.some(c => c.id === newCompanyId && c.id !== oldCompanyId)) {
+        return res.status(400).json({ ok: false, error: 'Компания с таким ID уже существует' });
+      }
+
+      // Переименовываем файлы данных компании
+      const oldDataFile = getCompanyDataFile(oldCompanyId);
+      const oldInfoFile = getCompanyInfoFile(oldCompanyId);
+      const newDataFile = getCompanyDataFile(newCompanyId);
+      const newInfoFile = getCompanyInfoFile(newCompanyId);
+
+      if (fs.existsSync(oldDataFile)) {
+        fs.renameSync(oldDataFile, newDataFile);
+      }
+      if (fs.existsSync(oldInfoFile)) {
+        fs.renameSync(oldInfoFile, newInfoFile);
+      }
+    }
+
+    // Обновляем данные компании
+    if (newCompanyId) {
+      companies[companyIndex].id = newCompanyId.trim();
+    }
+    if (name) {
+      companies[companyIndex].name = name.trim();
+    }
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true, company: companies[companyIndex] });
+  } catch (e) {
+    console.error('Ошибка обновления компании:', e);
+    res.status(500).json({ ok: false, error: 'update_failed' });
+  }
+});
+
 // Удалить компанию
 app.delete('/api/companies/:id', (req, res) => {
   try {
@@ -573,6 +632,16 @@ app.post('/api/auth', async (req, res) => {
     console.error('Ошибка авторизации:', e);
     res.status(500).json({ ok: false, error: 'auth_failed' });
   }
+});
+
+// Эндпоинт для проверки работоспособности (для cron-запросов)
+// Помогает поддерживать сервис активным на Render.com
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // ========== СТАТИЧЕСКИЕ ФАЙЛЫ (после всех API маршрутов) ==========

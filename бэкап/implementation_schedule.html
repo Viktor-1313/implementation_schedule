@@ -214,7 +214,7 @@
 
         .profile-tooltip {
             position: absolute;
-            bottom: -40px;
+            bottom: calc(100% + 10px);
             left: 50%;
             transform: translateX(-50%);
             background: #000000 !important;
@@ -394,16 +394,16 @@
         /* Подсказка для кнопки выхода */
         .logout-btn[data-tooltip]:hover .logout-tooltip {
             opacity: 1;
-            transform: translate(-50%, 6px);
+            transform: translate(-6px, -50%);
             transition-delay: 1s;
         }
 
         .logout-tooltip {
             content: attr(data-tooltip);
             position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translate(-50%, 0);
+            right: 100%;
+            top: 50%;
+            transform: translate(0, -50%);
             padding: 8px 12px;
             border-radius: 8px;
             background: #000000 !important;
@@ -413,8 +413,8 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease, transform 0.2s ease;
-            transform-origin: top center;
-            margin-top: 8px;
+            transform-origin: right center;
+            margin-right: 8px;
             z-index: 10001;
         }
 
@@ -1288,6 +1288,30 @@
             border: 1px solid var(--color-border);
             border-radius: 4px;
             font-size: 14px;
+        }
+
+        .pdf-content-toggle {
+            gap: 10px;
+        }
+
+        .pdf-toggle-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .pdf-toggle-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .pdf-toggle-option input[type="radio"] {
+            width: auto;
+            accent-color: var(--color-primary);
         }
 
         .chart-container {
@@ -3337,6 +3361,7 @@
                 <thead>
                     <tr>
                         <th>№ п/п</th>
+                        <th>Выбор этапа</th>
                         <th>Этап</th>
                         <th>Вид контроля</th>
                         <th>Мероприятие</th>
@@ -3427,6 +3452,19 @@
                     <option value="week">Недели</option>
                     <option value="month">Месяцы</option>
                 </select>
+            </div>
+            <div class="form-group pdf-content-toggle" style="margin-bottom: 16px;">
+                <label>Содержимое PDF:</label>
+                <div class="pdf-toggle-options">
+                    <label class="pdf-toggle-option">
+                        <input type="radio" name="pdfContentMode" value="full" checked>
+                        <span>С диаграммой</span>
+                    </label>
+                    <label class="pdf-toggle-option">
+                        <input type="radio" name="pdfContentMode" value="table">
+                        <span>Только таблица</span>
+                    </label>
+                </div>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn btn-primary" onclick="confirmPDFExport()">Выгрузить</button>
@@ -3995,6 +4033,37 @@
 
         initializeStageConfig();
 
+        // Функция для получения списка уникальных этапов из задач
+        function getAvailableStages() {
+            const stagesSet = new Set();
+            tasks.forEach(task => {
+                if (!task.stage) return;
+                const match = task.stage.match(/^(Этап\s+\d+)/);
+                if (match) {
+                    stagesSet.add(match[1]);
+                } else {
+                    // Если этап не соответствует формату "Этап N", добавляем его как есть
+                    stagesSet.add(task.stage);
+                }
+            });
+            // Добавляем этапы из stageConfig, если их еще нет
+            stageConfig.forEach(stage => {
+                stagesSet.add(stage);
+            });
+            // Сортируем этапы: сначала "Этап N" по номеру, затем остальные
+            const stagesArray = Array.from(stagesSet);
+            return stagesArray.sort((a, b) => {
+                const matchA = a.match(/^Этап\s+(\d+)/);
+                const matchB = b.match(/^Этап\s+(\d+)/);
+                if (matchA && matchB) {
+                    return parseInt(matchA[1], 10) - parseInt(matchB[1], 10);
+                }
+                if (matchA) return -1;
+                if (matchB) return 1;
+                return a.localeCompare(b);
+            });
+        }
+
         // Данные о компании (название и логотип)
         let companyName = '';
         let companyLogoData = null; // data URL (base64) или null
@@ -4009,6 +4078,24 @@
         };
 
         function formatDateForInput(date) {
+            // Если date уже строка, возвращаем её как есть
+            if (typeof date === 'string') {
+                return date;
+            }
+            // Если date не является объектом Date, пытаемся преобразовать
+            if (!(date instanceof Date)) {
+                // Если это строка в формате YYYY-MM-DD, возвращаем её
+                if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                    return date;
+                }
+                // Пытаемся создать Date из строки
+                const parsedDate = new Date(date);
+                if (isNaN(parsedDate.getTime())) {
+                    console.error('Невозможно преобразовать дату:', date);
+                    return '';
+                }
+                date = parsedDate;
+            }
             const y = date.getFullYear();
             const m = String(date.getMonth() + 1).padStart(2, '0');
             const d = String(date.getDate()).padStart(2, '0');
@@ -4129,6 +4216,8 @@
             reader.readAsDataURL(file);
         }
 
+        let companyChartType = 'icona'; // Тип графика компании
+
         async function loadCompanyInfo() {
             // 1. Пытаемся загрузить с сервера, если он есть
             try {
@@ -4136,10 +4225,18 @@
                 const res = await fetch(`/api/company-info${companyParam}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && (data.name || data.logoData)) {
+                    if (data && (data.name || data.logoData || data.chartType)) {
                         // Убеждаемся, что название компании правильно декодируется
                         companyName = data.name ? String(data.name) : '';
                         companyLogoData = data.logoData || null;
+                        companyChartType = data.chartType || 'icona';
+                        
+                        // Если тип графика Praktis ID, показываем сообщение "в разработке"
+                        if (companyChartType === 'praktis') {
+                            showDevelopmentMessage();
+                            return;
+                        }
+                        
                         applyCompanyInfoToUI();
                         return;
                     }
@@ -4156,12 +4253,35 @@
                     // Убеждаемся, что название компании правильно декодируется
                     companyName = stored.name ? String(stored.name) : '';
                     companyLogoData = stored.logoData || null;
+                    companyChartType = stored.chartType || 'icona';
+                    
+                    // Если тип графика Praktis ID, показываем сообщение "в разработке"
+                    if (companyChartType === 'praktis') {
+                        showDevelopmentMessage();
+                        return;
+                    }
                 }
             } catch (e) {
                 console.warn('Не удалось загрузить информацию о компании из localStorage:', e);
             }
 
             applyCompanyInfoToUI();
+        }
+
+        // Показать сообщение "в разработке" для Praktis ID
+        function showDevelopmentMessage() {
+            const container = document.querySelector('.container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 100px 20px; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2); margin-top: 50px;">
+                        <h1 style="color: #666; font-size: 2rem; margin-bottom: 20px; font-weight: 300;">В разработке</h1>
+                        <p style="color: #999; font-size: 1.2rem; line-height: 1.6;">
+                            График "Внедрение Praktis ID" находится в разработке.<br>
+                            Скоро здесь появится функционал для работы с этим типом графика.
+                        </p>
+                    </div>
+                `;
+            }
         }
 
         // Перерисовать вкладки этапов на основе текущей конфигурации
@@ -4358,32 +4478,56 @@
 
         // Инициализация задач
         function initializeTasks() {
+            console.log('🔄 Инициализация задач по умолчанию...');
+            console.log('   projectData.length:', projectData ? projectData.length : 'undefined');
+            console.log('   startDate:', startDate);
+            
             tasks = [];
             // Сбрасываем счётчик id (исходные задачи идут с 0..N-1)
-            nextTaskId = projectData.length;
+            nextTaskId = projectData ? projectData.length : 0;
             let currentDate = new Date(startDate);
 
+            if (!projectData || !Array.isArray(projectData) || projectData.length === 0) {
+                console.error('❌ projectData пустой или не определен!');
+                return;
+            }
+
             projectData.forEach((item, index) => {
-                const taskDates = getTaskDates(currentDate, item.days);
-                const taskObj = {
-                    id: index,
-                    ...item,
-                    startDate: taskDates[0],
-                    endDate: taskDates[taskDates.length - 1],
-                    dates: taskDates,
-                    status: 'pending',
-                    dateStatuses: {} // ключ: YYYY-MM-DD, значение: 'pending' | 'in-progress' | 'completed' | 'weekend-manual' | 'holiday-manual'
-                };
-                // Синхронизируем task и name для совместимости
-                if (taskObj.task && !taskObj.name) {
-                    taskObj.name = taskObj.task;
-                } else if (taskObj.name && !taskObj.task) {
-                    taskObj.task = taskObj.name;
+                try {
+                    const taskDates = getTaskDates(currentDate, item.days);
+                    if (!taskDates || taskDates.length === 0) {
+                        console.warn(`⚠️ Не удалось получить даты для задачи ${index}:`, item);
+                        return;
+                    }
+                    const taskObj = {
+                        id: index,
+                        ...item,
+                        startDate: taskDates[0],
+                        endDate: taskDates[taskDates.length - 1],
+                        dates: taskDates,
+                        status: 'pending',
+                        dateStatuses: {} // ключ: YYYY-MM-DD, значение: 'pending' | 'in-progress' | 'completed' | 'weekend-manual' | 'holiday-manual'
+                    };
+                    // Синхронизируем task и name для совместимости
+                    if (taskObj.task && !taskObj.name) {
+                        taskObj.name = taskObj.task;
+                    } else if (taskObj.name && !taskObj.task) {
+                        taskObj.task = taskObj.name;
+                    }
+                    tasks.push(taskObj);
+                    currentDate = new Date(taskDates[taskDates.length - 1]);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                } catch (e) {
+                    console.error(`❌ Ошибка при создании задачи ${index}:`, e, item);
                 }
-                tasks.push(taskObj);
-                currentDate = new Date(taskDates[taskDates.length - 1]);
-                currentDate.setDate(currentDate.getDate() + 1);
             });
+
+            console.log('✅ Инициализировано задач:', tasks.length);
+            
+            if (tasks.length === 0) {
+                console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Не удалось создать ни одной задачи!');
+                return;
+            }
 
             updateStatistics();
 	    // лок начало: автосохранение
@@ -4636,23 +4780,54 @@
         async function loadFullGanttState() {
             try {
                 if (!currentCompany) {
-                    console.warn('Компания не указана, загрузка пропущена');
+                    console.warn('⚠️ Компания не указана, загрузка пропущена');
                     return false;
                 }
                 const companyParam = `?company=${currentCompany}`;
+                console.log('📥 Загрузка данных графика для компании:', currentCompany);
                 const res = await fetch(`/api/gantt-state${companyParam}`);
-                if (!res.ok) return false;
+                if (!res.ok) {
+                    console.warn('⚠️ Ошибка загрузки данных графика:', res.status, res.statusText);
+                    return false;
+                }
                 const data = await res.json();
-                if (!data || !data.tasks || !Array.isArray(data.tasks)) return false;
+                console.log('📦 Получены данные с сервера:', data ? 'данные получены' : 'null');
+                
+                // Если данных нет или формат неправильный, возвращаем false
+                if (!data) {
+                    console.log('ℹ️ Файл данных не существует, будет использована инициализация по умолчанию');
+                    return false;
+                }
+                
+                // Проверяем наличие задач
+                if (!data.tasks || !Array.isArray(data.tasks)) {
+                    console.warn('⚠️ Данные не содержат массив задач, будет использована инициализация по умолчанию');
+                    return false;
+                }
+                
+                // Если массив задач пустой, тоже используем инициализацию по умолчанию
+                if (data.tasks.length === 0) {
+                    console.warn('⚠️ Массив задач пустой, будет использована инициализация по умолчанию');
+                    return false;
+                }
+
+                console.log('✅ Найдено задач в данных:', data.tasks.length);
 
                 // Проверяем версию данных (старый формат baseline или новый полный формат)
                 const isFullFormat = data.version && data.version === '1.0';
 
                 if (isFullFormat) {
+                    console.log('✅ Формат данных: полный (version 1.0)');
                     // Восстанавливаем startDate проекта
                     if (data.startDate) {
-                        const parts = data.startDate.split('-');
-                        startDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                        if (data.startDate instanceof Date) {
+                            startDate = new Date(data.startDate);
+                        } else if (typeof data.startDate === 'string') {
+                            const parts = data.startDate.split('-');
+                            if (parts.length === 3) {
+                                startDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                            }
+                        }
                     }
 
                     // Восстанавливаем задачи
@@ -4691,8 +4866,20 @@
                         // Восстанавливаем даты
                         if (task.dates && Array.isArray(task.dates)) {
                             taskObj.dates = task.dates.map(dateStr => {
-                                const parts = dateStr.split('-');
-                                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                                // Если уже объект Date, возвращаем его
+                                if (dateStr instanceof Date) {
+                                    return dateStr;
+                                }
+                                // Если строка, парсим её
+                                if (typeof dateStr === 'string') {
+                                    const parts = dateStr.split('-');
+                                    if (parts.length === 3) {
+                                        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                                    }
+                                }
+                                // Если не удалось распарсить, возвращаем текущую дату
+                                console.warn('Не удалось распарсить дату:', dateStr);
+                                return new Date();
                             });
                             if (taskObj.dates.length > 0) {
                                 taskObj.startDate = taskObj.dates[0];
@@ -4735,14 +4922,15 @@
                     renderStageTabs();
                     autoSaveGanttState(); // Автоматическое сохранение после загрузки
 
-                    console.log('✅ Полное состояние графика загружено');
+                    console.log('✅ Полное состояние графика загружено, задач:', tasks.length);
                     return true;
                 } else {
                     // Старый формат baseline - используем существующую логику
+                    console.warn('⚠️ Данные в старом формате (без version), будет использована инициализация по умолчанию');
                     return false;
                 }
             } catch (e) {
-                console.warn('Не удалось загрузить полное состояние графика с сервера:', e);
+                console.error('❌ Ошибка загрузки полного состояния графика с сервера:', e);
                 return false;
             }
         }
@@ -4939,8 +5127,19 @@
 
         // Обновление статистики
         function updateStatistics() {
-            const stages = new Set(tasks.map(t => t.stage));
-            document.getElementById('totalStages').textContent = stages.size;
+            // Подсчитываем уникальные этапы по префиксу "Этап N", а не по полным названиям
+            const stageNumbers = new Set();
+            tasks.forEach(task => {
+                if (!task.stage) return;
+                const match = task.stage.match(/^Этап\s+(\d+)/);
+                if (match) {
+                    stageNumbers.add(parseInt(match[1], 10));
+                } else if (task.stage.trim()) {
+                    // Если этап не соответствует формату "Этап N", считаем его как отдельный этап
+                    stageNumbers.add(task.stage);
+                }
+            });
+            document.getElementById('totalStages').textContent = stageNumbers.size;
             document.getElementById('totalTasks').textContent = tasks.length;
             
             const totalDays = tasks.reduce((sum, t) => sum + t.days, 0);
@@ -5060,9 +5259,16 @@
         // Отрисовка диаграммы Ганта
         function renderGantt() {
             const chartContainer = document.getElementById('ganttChart');
+            if (!chartContainer) {
+                console.error('❌ Элемент ganttChart не найден в DOM!');
+                return;
+            }
             chartContainer.innerHTML = '';
 
-            if (!tasks.length) return;
+            if (!tasks.length) {
+                console.warn('⚠️ Массив задач пустой, график не будет отрисован');
+                return;
+            }
 
             // Определение полного диапазона дат проекта
             const projectFirstDate = new Date(tasks[0].startDate);
@@ -5570,6 +5776,18 @@
                     const targetId = task.id;
                     if (fromIndex === -1) return;
 
+                    console.log('🔄 DRAG&DROP: Начало перетаскивания задачи');
+                    console.log('   Перетаскиваемая задача ID:', draggingTaskId);
+                    console.log('   Старый индекс:', fromIndex);
+                    
+                    // Сохраняем данные ДО перемещения для отладки
+                    const movedTaskBefore = tasks[fromIndex];
+                    console.log('   📋 ДО перемещения - задача:', movedTaskBefore.task || movedTaskBefore.name);
+                    console.log('   📋 ДО перемещения - даты:', movedTaskBefore.dates?.map(d => formatDateKey(d)));
+                    console.log('   📋 ДО перемещения - статусы дат:', movedTaskBefore.dateStatuses);
+                    console.log('   📋 ДО перемещения - комментарии:', movedTaskBefore.dateComments);
+                    console.log('   📋 ДО перемещения - общий статус:', movedTaskBefore.status);
+
                     const [moved] = tasks.splice(fromIndex, 1);
                     const targetIndex = tasks.findIndex(t => t.id === targetId);
                     let newIndex;
@@ -5582,11 +5800,20 @@
                         newIndex = targetIndex;
                     }
 
+                    console.log('   Новый индекс:', newIndex);
+                    console.log('   📋 ПОСЛЕ перемещения (до пересчета) - статусы дат:', moved.dateStatuses);
+                    console.log('   📋 ПОСЛЕ перемещения (до пересчета) - комментарии:', moved.dateComments);
+
                     // Определяем, с какого места нужно пересчитать даты:
                     // берём минимальный индекс между старой и новой позицией
                     // и пересчитываем цепочку, начиная с этой задачи включительно
                     const startIndex = Math.min(fromIndex, newIndex);
+                    console.log('   🔢 Начинаем пересчет с индекса:', startIndex);
                     recalculateDatesFrom(startIndex);
+
+                    console.log('   📋 ПОСЛЕ пересчета - статусы дат:', moved.dateStatuses);
+                    console.log('   📋 ПОСЛЕ пересчета - комментарии:', moved.dateComments);
+                    console.log('   📋 ПОСЛЕ пересчета - новые даты:', moved.dates?.map(d => formatDateKey(d)));
 
                     draggingTaskId = null;
                     updateStatistics();
@@ -5629,14 +5856,54 @@
                 // Разбираем этап на префикс "Этап N" и редактируемый хвост
                 let stagePrefix = '';
                 let stageSuffix = task.stage || '';
+                let currentStageShort = '';
                 const stageMatch = (task.stage || '').match(/^(Этап\s+\d+\.?\s*)(.*)$/);
                 if (stageMatch) {
                     stagePrefix = stageMatch[1];
                     stageSuffix = stageMatch[2] || '';
+                    // Извлекаем короткое название этапа (без точки и пробелов в конце)
+                    currentStageShort = stageMatch[1].trim().replace(/\.$/, '');
+                } else if (task.stage) {
+                    // Если этап не соответствует формату "Этап N", используем его целиком
+                    currentStageShort = task.stage;
                 }
+
+                // Получаем список доступных этапов
+                const availableStages = getAvailableStages();
+                
+                // Определяем, какой этап должен быть выбран
+                let selectedStage = '';
+                if (currentStageShort) {
+                    // Ищем точное совпадение или этап, который начинается с текущего короткого названия
+                    const matchedStage = availableStages.find(s => s === currentStageShort || s.startsWith(currentStageShort));
+                    selectedStage = matchedStage || currentStageShort;
+                } else if (task.stage) {
+                    // Если этап не соответствует формату "Этап N", ищем его в списке
+                    const matchedStage = availableStages.find(s => s === task.stage);
+                    selectedStage = matchedStage || (availableStages.length > 0 ? availableStages[0] : '');
+                } else {
+                    // Если этапа нет, выбираем первый доступный
+                    selectedStage = availableStages.length > 0 ? availableStages[0] : '';
+                }
+                
+                // Формируем опции для select
+                let stageSelectOptions = '';
+                availableStages.forEach(stage => {
+                    const isSelected = stage === selectedStage;
+                    stageSelectOptions += `<option value="${stage.replace(/"/g, '&quot;')}" ${isSelected ? 'selected' : ''}>${stage}</option>`;
+                });
+
+                // Проверяем, можно ли редактировать (для блокировки в режиме просмотра)
+                const isEditable = canEdit();
+                const disabledAttr = isEditable ? '' : 'disabled';
 
                 row.innerHTML = `
                     <td>${index + 1}</td>
+                    <td>
+                        <select class="tasks-table-input-select" data-index="${index}" data-field="stageSelect" ${disabledAttr}>
+                            ${stageSelectOptions}
+                        </select>
+                    </td>
                     <td>
                         <span class="stage-prefix">${stagePrefix}</span>
                         <input type="text"
@@ -5763,6 +6030,18 @@
                     const targetId = task.id;
                     if (fromIndex === -1) return;
 
+                    console.log('🔄 DRAG&DROP (таблица): Начало перетаскивания задачи');
+                    console.log('   Перетаскиваемая задача ID:', draggingTaskId);
+                    console.log('   Старый индекс:', fromIndex);
+                    
+                    // Сохраняем данные ДО перемещения для отладки
+                    const movedTaskBefore = tasks[fromIndex];
+                    console.log('   📋 ДО перемещения - задача:', movedTaskBefore.task || movedTaskBefore.name);
+                    console.log('   📋 ДО перемещения - даты:', movedTaskBefore.dates?.map(d => formatDateKey(d)));
+                    console.log('   📋 ДО перемещения - статусы дат:', movedTaskBefore.dateStatuses);
+                    console.log('   📋 ДО перемещения - комментарии:', movedTaskBefore.dateComments);
+                    console.log('   📋 ДО перемещения - общий статус:', movedTaskBefore.status);
+
                     const [moved] = tasks.splice(fromIndex, 1);
                     const targetIndex = tasks.findIndex(t => t.id === targetId);
                     let newIndex;
@@ -5774,8 +6053,17 @@
                         newIndex = targetIndex;
                     }
 
+                    console.log('   Новый индекс:', newIndex);
+                    console.log('   📋 ПОСЛЕ перемещения (до пересчета) - статусы дат:', moved.dateStatuses);
+                    console.log('   📋 ПОСЛЕ перемещения (до пересчета) - комментарии:', moved.dateComments);
+
                     const startIndex = Math.min(fromIndex, newIndex);
+                    console.log('   🔢 Начинаем пересчет с индекса:', startIndex);
                     recalculateDatesFrom(startIndex);
+
+                    console.log('   📋 ПОСЛЕ пересчета - статусы дат:', moved.dateStatuses);
+                    console.log('   📋 ПОСЛЕ пересчета - комментарии:', moved.dateComments);
+                    console.log('   📋 ПОСЛЕ пересчета - новые даты:', moved.dates?.map(d => formatDateKey(d)));
 
                     draggingTaskId = null;
                     updateStatistics();
@@ -5817,6 +6105,44 @@
             if (field === 'taskTitle') {
                 task.task = input.value || '';
                 task.name = task.task; // Синхронизируем оба поля
+            } else if (field === 'stageSelect') {
+                // Обработка изменения этапа через выпадающий список
+                const newStageShort = input.value;
+                const oldStage = task.stage || '';
+                
+                // Извлекаем суффикс из старого этапа (если есть)
+                let stageSuffix = '';
+                const oldStageMatch = oldStage.match(/^(Этап\s+\d+\.?\s*)(.*)$/);
+                if (oldStageMatch) {
+                    stageSuffix = oldStageMatch[2] || '';
+                } else if (oldStage) {
+                    // Если старый этап не соответствует формату "Этап N", используем его как суффикс
+                    stageSuffix = oldStage;
+                }
+                
+                // Формируем новый этап: префикс + суффикс (если есть)
+                let newStage;
+                if (stageSuffix.trim()) {
+                    // Если есть суффикс, добавляем его к новому этапу
+                    newStage = `${newStageShort}. ${stageSuffix.trim()}`;
+                } else {
+                    // Если суффикса нет, используем только название этапа
+                    newStage = newStageShort;
+                }
+                
+                // Обновляем этап только для текущей задачи (не групповое переименование)
+                task.stage = newStage;
+                
+                // Переинициализируем конфигурацию этапов и вкладки
+                initializeStageConfig();
+                renderStageTabs();
+                
+                // Обновляем отображение графика и таблицы
+                renderGantt();
+                renderTable();
+                
+                // Сохраняем изменения
+                debouncedSave();
             } else if (field === 'stageSuffix') {
                 const oldStage = task.stage || '';
                 const prefix = input.getAttribute('data-prefix') || '';
@@ -6011,10 +6337,13 @@
 
         // Пересчитать все задачи после указанного индекса в строгой последовательности
         function recalculateFollowingTasks(changedIndex) {
+            console.log('🔢 recalculateFollowingTasks: Начало пересчета с индекса', changedIndex);
             for (let i = changedIndex + 1; i < tasks.length; i++) {
                 const prevTask = tasks[i - 1];
                 const task = tasks[i];
                 if (!prevTask.endDate) continue;
+
+                console.log(`\n   🔄 Обработка задачи ${i}:`, task.task || task.name || `ID ${task.id}`);
 
                 // Новый старт — следующий календарный день после конца предыдущей задачи
                 const newStart = new Date(prevTask.endDate);
@@ -6022,23 +6351,40 @@
 
                 // Пересчитываем только если реально меняется старт
                 if (task.startDate && task.startDate.getTime() === newStart.getTime()) {
+                    console.log('   ⏭️  Дата начала не изменилась, пропускаем');
                     continue;
                 }
+
+                console.log('   📅 Старая дата начала:', task.startDate ? formatDateKey(task.startDate) : 'нет');
+                console.log('   📅 Новая дата начала:', formatDateKey(newStart));
+                console.log('   📅 Старые даты:', task.dates?.map(d => formatDateKey(d)) || []);
+                console.log('   📊 Старые статусы дат:', task.dateStatuses);
+                console.log('   💬 Старые комментарии:', task.dateComments);
 
                 const dates = getTaskDates(newStart, task.days);
                 task.dates = dates;
                 task.startDate = dates[0];
                 task.endDate = dates[dates.length - 1];
 
+                console.log('   📅 Новые даты:', dates.map(d => formatDateKey(d)));
+                console.log('   ⚠️  СБРОС статусов дат!');
+                console.log('      - Статусы ДО сброса:', task.dateStatuses);
+                console.log('      - Комментарии ДО сброса:', task.dateComments);
+
                 // Сбрасываем индивидуальные статусы дат для сдвинутых задач
                 task.dateStatuses = {};
+                
+                console.log('      - Статусы ПОСЛЕ сброса:', task.dateStatuses);
+                console.log('   ❌ ВСЕ СТАТУСЫ УДАЛЕНЫ!');
             }
+            console.log('🔢 recalculateFollowingTasks: Пересчет завершен\n');
         }
 
         // Пересчитать даты задач начиная с указанного индекса (используется после drag&drop)
         function recalculateDatesFrom(startIndex) {
             if (startIndex < 0 || startIndex >= tasks.length) return;
-	    autoSaveGanttState();
+            console.log('🔢 recalculateDatesFrom: Начало пересчета с индекса', startIndex);
+            autoSaveGanttState();
             let prevEnd = null;
             if (startIndex > 0) {
                 const prevTask = tasks[startIndex - 1];
@@ -6048,6 +6394,7 @@
 
             for (let i = startIndex; i < tasks.length; i++) {
                 const task = tasks[i];
+                console.log(`\n   🔄 Обработка задачи ${i}:`, task.task || task.name || `ID ${task.id}`);
 
                 let newStart;
                 if (prevEnd) {
@@ -6058,23 +6405,50 @@
                     newStart = new Date(task.startDate);
                 }
 
+                console.log('   📅 Старая дата начала:', task.startDate ? formatDateKey(task.startDate) : 'нет');
+                console.log('   📅 Новая дата начала:', formatDateKey(newStart));
+                console.log('   📅 Старые даты:', task.dates?.map(d => formatDateKey(d)) || []);
+                console.log('   📊 Старые статусы дат:', task.dateStatuses);
+                console.log('   💬 Старые комментарии:', task.dateComments);
+
                 const dates = getTaskDates(newStart, task.days);
+                
+                // Сохраняем старые статусы и комментарии перед изменением дат
+                const oldDateStatuses = { ...task.dateStatuses };
+                const oldDateComments = { ...(task.dateComments || {}) };
+                const oldDates = [...(task.dates || [])];
+                
+                console.log('   💾 Сохранены старые данные:');
+                console.log('      - Статусы:', oldDateStatuses);
+                console.log('      - Комментарии:', oldDateComments);
+                console.log('      - Старые даты:', oldDates.map(d => formatDateKey(d)));
+                
                 task.dates = dates;
                 task.startDate = dates[0];
                 task.endDate = dates[dates.length - 1];
 
-                // После изменения цепочки сбрасываем покраску дат,
-                // но если у задачи есть статус строки, перекидываем его на новые даты
+                console.log('   📅 Новые даты:', dates.map(d => formatDateKey(d)));
+                console.log('   ⚠️  СБРОС статусов и комментариев!');
+                console.log('      - Статусы ДО сброса:', task.dateStatuses);
+                console.log('      - Комментарии ДО сброса:', task.dateComments);
+
+                // После изменения цепочки сбрасываем покраску дат
+                // НЕ применяем общий статус задачи ко всем датам автоматически
+                // Индивидуальные статусы дат должны устанавливаться вручную
                 task.dateStatuses = {};
-                if (task.status === 'in-progress' || task.status === 'completed') {
-                    task.dates.forEach(d => {
-                        const key = formatDateKey(d);
-                        task.dateStatuses[key] = task.status;
-                    });
-                }
+                task.dateComments = {};
+                
+                console.log('      - Статусы ПОСЛЕ сброса:', task.dateStatuses);
+                console.log('      - Комментарии ПОСЛЕ сброса:', task.dateComments);
+                console.log('   ❌ ВСЕ СТАТУСЫ И КОММЕНТАРИИ УДАЛЕНЫ!');
+
+                // Если задача была перемещена, но даты остались теми же (маловероятно, но возможно),
+                // можно попытаться сохранить статусы, но в большинстве случаев даты меняются,
+                // поэтому просто сбрасываем все индивидуальные статусы
 
                 prevEnd = task.endDate;
             }
+            console.log('🔢 recalculateDatesFrom: Пересчет завершен\n');
         }
 
         // Вставка новой задачи под выбранной (Insert)
@@ -6268,8 +6642,8 @@ function loadHtml2Pdf() {
     });
 }
 
-// Экспорт в PDF: детальный Гант по выбранному масштабу + таблица задач с комментариями
-async function exportPDF(scaleMode = 'day') {
+// Экспорт в PDF: детальный Гант (опционально) по выбранному масштабу + таблица задач с комментариями
+async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     if (!tasks || !tasks.length) return;
     
     // Загружаем библиотеку html2pdf.js перед использованием
@@ -6292,6 +6666,7 @@ async function exportPDF(scaleMode = 'day') {
     // Контейнер для экспорта
     const exportWrapper = document.createElement('div');
     exportWrapper.style.padding = '16px';
+    exportWrapper.style.paddingBottom = '40px'; // Увеличиваем отступ снизу, чтобы последняя строка не обрезалась
     exportWrapper.style.background = '#ffffff';
     exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'sans-serif';
     exportWrapper.style.fontSize = '10px';
@@ -6343,163 +6718,164 @@ async function exportPDF(scaleMode = 'day') {
     // --- Шапка ---
     exportWrapper.appendChild(createHeader());
 
-    // --- Подготовка временной шкалы по выбранному масштабу ---
-    const timelineUnits = buildExportTimeline(scaleMode);
-    if (!timelineUnits.length) return;
-
-    const scaleLabel = getExportScaleLabel(scaleMode);
-    const ganttTitle = document.createElement('div');
-    ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
-    ganttTitle.style.fontSize = '12px';
-    ganttTitle.style.fontWeight = '600';
-    ganttTitle.style.margin = '4px 0 6px 0';
-    exportWrapper.appendChild(ganttTitle);
-
     // Функция для создания ячейки с границей
     const addCellBorder = (td) => {
         td.style.border = '1px solid #cccccc';
         td.style.padding = '2px 3px';
     };
 
-    // Цвета статусов
-    const statusColors = {
-        pending: '#1e88e5',
-        'in-progress': '#ff9800',
-        completed: '#4caf50',
-        'weekend-manual': '#ffe0e0',
-        'holiday-manual': '#fff9c4'
-    };
+    let diagramRendered = false;
+    const shouldIncludeDiagram = includeDiagram !== false;
 
-    // Разбиваем временную шкалу на чанки - НО НЕ РАЗБИВАЕМ НА СТРАНИЦЫ
-    // Вместо этого просто создаём одну большую таблицу
-    const unitsPerPage = scaleMode === 'day' ? 22 : scaleMode === 'week' ? 12 : 6;
-    const chunks = [];
-    for (let i = 0; i < timelineUnits.length; i += unitsPerPage) {
-        chunks.push(timelineUnits.slice(i, i + unitsPerPage));
-    }
+    if (shouldIncludeDiagram) {
+        const timelineUnits = buildExportTimeline(scaleMode);
+        if (!timelineUnits.length) {
+            console.warn('Не удалось построить временную шкалу для PDF. Будет экспортирована только таблица.');
+        } else {
+            diagramRendered = true;
+            const scaleLabel = getExportScaleLabel(scaleMode);
+            const ganttTitle = document.createElement('div');
+            ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
+            ganttTitle.style.fontSize = '12px';
+            ganttTitle.style.fontWeight = '600';
+            ganttTitle.style.margin = '4px 0 6px 0';
+            exportWrapper.appendChild(ganttTitle);
 
-    // Создаём таблицу для каждого чанка
-    chunks.forEach((chunk, chunkIdx) => {
-        if (chunkIdx > 0) {
-            // Добавляем пустое пространство между чанками
-            const spacer = document.createElement('div');
-            spacer.style.height = '40px';
-            exportWrapper.appendChild(spacer);
-        }
+            const statusColors = {
+                pending: '#1e88e5',
+                'in-progress': '#ff9800',
+                completed: '#4caf50',
+                'weekend-manual': '#ffe0e0',
+                'holiday-manual': '#fff9c4'
+            };
 
-        const ganttTable = document.createElement('table');
-        ganttTable.style.borderCollapse = 'collapse';
-        ganttTable.style.width = '100%';
-        ganttTable.style.fontSize = '8px';
-        ganttTable.style.marginBottom = '20px';
+            const unitsPerPage = scaleMode === 'day' ? 22 : scaleMode === 'week' ? 12 : 6;
+            const chunks = [];
+            for (let i = 0; i < timelineUnits.length; i += unitsPerPage) {
+                chunks.push(timelineUnits.slice(i, i + unitsPerPage));
+            }
 
-        // Заголовок таблицы
-        const headerTr = document.createElement('tr');
-        const baseHeaders = ['Задача', 'Ответственный', 'Дата начала', 'Дата окончания', 'Рабочих дней'];
-        baseHeaders.forEach(text => {
-            const th = document.createElement('th');
-            th.textContent = text;
-            th.style.background = '#f5f5f5';
-            th.style.color = '#222222';
-            th.style.fontWeight = '600';
-            th.style.fontSize = '8px';
-            th.style.whiteSpace = 'nowrap';
-            addCellBorder(th);
-            headerTr.appendChild(th);
-        });
+            chunks.forEach((chunk, chunkIdx) => {
+                if (chunkIdx > 0) {
+                    const spacer = document.createElement('div');
+                    spacer.style.height = '40px';
+                    exportWrapper.appendChild(spacer);
+                }
 
-        chunk.forEach(unit => {
-            const th = document.createElement('th');
-            th.textContent = unit.label;
-            th.style.background = '#e3f2fd';
-            th.style.color = '#222222';
-            th.style.fontWeight = '600';
-            th.style.fontSize = '7px';
-            th.style.whiteSpace = 'nowrap';
-            addCellBorder(th);
-            headerTr.appendChild(th);
-        });
+                const ganttTable = document.createElement('table');
+                ganttTable.style.borderCollapse = 'collapse';
+                ganttTable.style.width = '100%';
+                ganttTable.style.fontSize = '8px';
+                ganttTable.style.marginBottom = '20px';
 
-        ganttTable.appendChild(headerTr);
+                const headerTr = document.createElement('tr');
+                const baseHeaders = ['Задача', 'Ответственный', 'Дата начала', 'Дата окончания', 'Рабочих дней'];
+                baseHeaders.forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    th.style.background = '#f5f5f5';
+                    th.style.color = '#222222';
+                    th.style.fontWeight = '600';
+                    th.style.fontSize = '8px';
+                    th.style.whiteSpace = 'nowrap';
+                    addCellBorder(th);
+                    headerTr.appendChild(th);
+                });
 
-        // Строки задач
-        tasks.forEach(task => {
-            const tr = document.createElement('tr');
+                chunk.forEach(unit => {
+                    const th = document.createElement('th');
+                    th.textContent = unit.label;
+                    th.style.background = '#e3f2fd';
+                    th.style.color = '#222222';
+                    th.style.fontWeight = '600';
+                    th.style.fontSize = '7px';
+                    th.style.whiteSpace = 'nowrap';
+                    addCellBorder(th);
+                    headerTr.appendChild(th);
+                });
 
-            const baseValues = [
-                task.task,
-                task.responsible || '',
-                task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
-                task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
-                task.days != null ? String(task.days) : ''
-            ];
+                ganttTable.appendChild(headerTr);
 
-            baseValues.forEach((val, idx) => {
-                const td = document.createElement('td');
-                td.textContent = val;
-                td.style.fontSize = '8px';
-                if (idx === 0) td.style.whiteSpace = 'nowrap';
-                addCellBorder(td);
-                tr.appendChild(td);
-            });
+                tasks.forEach(task => {
+                    const tr = document.createElement('tr');
 
-            const statuses = task.dateStatuses || {};
+                    const baseValues = [
+                        task.task,
+                        task.responsible || '',
+                        task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
+                        task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
+                        task.days != null ? String(task.days) : ''
+                    ];
 
-            chunk.forEach(unit => {
-                const td = document.createElement('td');
-                addCellBorder(td);
-
-                const unitStart = unit.start.getTime();
-                const unitEnd = unit.end.getTime();
-
-                let hasWorkday = false;
-                let intervalStatus = 'pending';
-
-                if (Array.isArray(task.dates)) {
-                    const daysInUnit = task.dates.filter(d => {
-                        const t = d.getTime();
-                        return t >= unitStart && t <= unitEnd;
+                    baseValues.forEach((val, idx) => {
+                        const td = document.createElement('td');
+                        td.textContent = val;
+                        td.style.fontSize = '8px';
+                        if (idx === 0) td.style.whiteSpace = 'nowrap';
+                        addCellBorder(td);
+                        tr.appendChild(td);
                     });
 
-                    if (daysInUnit.length > 0) {
-                        hasWorkday = true;
-                        if (scaleMode === 'day' && daysInUnit.length === 1) {
-                            const key = formatDateKey(daysInUnit[0]);
-                            intervalStatus = statuses[key] || 'pending';
-                        } else {
-                            const statusesInUnit = new Set();
-                            daysInUnit.forEach(d => {
-                                const key = formatDateKey(d);
-                                const s = statuses[key];
-                                if (s) statusesInUnit.add(s);
+                    const statuses = task.dateStatuses || {};
+
+                    chunk.forEach(unit => {
+                        const td = document.createElement('td');
+                        addCellBorder(td);
+
+                        const unitStart = unit.start.getTime();
+                        const unitEnd = unit.end.getTime();
+
+                        let hasWorkday = false;
+                        let intervalStatus = 'pending';
+
+                        if (Array.isArray(task.dates)) {
+                            const daysInUnit = task.dates.filter(d => {
+                                const t = d.getTime();
+                                return t >= unitStart && t <= unitEnd;
                             });
-                            if (statusesInUnit.has('completed')) intervalStatus = 'completed';
-                            else if (statusesInUnit.has('in-progress')) intervalStatus = 'in-progress';
-                            else if (statusesInUnit.has('weekend-manual')) intervalStatus = 'weekend-manual';
-                            else if (statusesInUnit.has('holiday-manual')) intervalStatus = 'holiday-manual';
-                            else intervalStatus = 'pending';
+
+                            if (daysInUnit.length > 0) {
+                                hasWorkday = true;
+                                if (scaleMode === 'day' && daysInUnit.length === 1) {
+                                    const key = formatDateKey(daysInUnit[0]);
+                                    intervalStatus = statuses[key] || 'pending';
+                                } else {
+                                    const statusesInUnit = new Set();
+                                    daysInUnit.forEach(d => {
+                                        const key = formatDateKey(d);
+                                        const s = statuses[key];
+                                        if (s) statusesInUnit.add(s);
+                                    });
+                                    if (statusesInUnit.has('completed')) intervalStatus = 'completed';
+                                    else if (statusesInUnit.has('in-progress')) intervalStatus = 'in-progress';
+                                    else if (statusesInUnit.has('weekend-manual')) intervalStatus = 'weekend-manual';
+                                    else if (statusesInUnit.has('holiday-manual')) intervalStatus = 'holiday-manual';
+                                    else intervalStatus = 'pending';
+                                }
+                            }
                         }
-                    }
-                }
 
-                if (hasWorkday) {
-                    const color = statusColors[intervalStatus] || statusColors.pending;
-                    td.style.background = color;
-                }
+                        if (hasWorkday) {
+                            const color = statusColors[intervalStatus] || statusColors.pending;
+                            td.style.background = color;
+                        }
 
-                tr.appendChild(td);
+                        tr.appendChild(td);
+                    });
+
+                    ganttTable.appendChild(tr);
+                });
+
+                exportWrapper.appendChild(ganttTable);
             });
+        }
+    }
 
-            ganttTable.appendChild(tr);
-        });
-
-        exportWrapper.appendChild(ganttTable);
-    });
-
-    // --- Разделитель перед детальной таблицей ---
-    const separator = document.createElement('div');
-    separator.style.height = '60px';
-    exportWrapper.appendChild(separator);
+    if (diagramRendered) {
+        const separator = document.createElement('div');
+        separator.style.height = '60px';
+        exportWrapper.appendChild(separator);
+    }
 
     // --- Детальная таблица задач с комментариями ---
     const detailTitle = document.createElement('div');
@@ -6512,6 +6888,7 @@ async function exportPDF(scaleMode = 'day') {
     const detailTable = document.createElement('table');
     detailTable.style.borderCollapse = 'collapse';
     detailTable.style.width = '100%';
+    detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
 
     // Заголовок таблицы
     const detailHeaderTr = document.createElement('tr');
@@ -6602,13 +6979,15 @@ async function exportPDF(scaleMode = 'day') {
     document.body.appendChild(exportWrapper);
 
     const opt = {
-        margin: 10,
+        margin: [10, 10, 20, 10], // [top, left, bottom, right] - увеличиваем нижний отступ
         filename: 'График_внедрения_ICONA.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
             scale: 2,
             useCORS: true,
-            logging: false
+            logging: false,
+            windowWidth: exportWrapper.scrollWidth,
+            windowHeight: exportWrapper.scrollHeight
         },
         jsPDF: { 
             orientation: 'landscape', 
@@ -7308,8 +7687,10 @@ async function exportPDF(scaleMode = 'day') {
             let scaleMode = 'day';
             if (rawMode.startsWith('week') || rawMode.startsWith('нед')) scaleMode = 'week';
             else if (rawMode.startsWith('month') || rawMode.startsWith('мес')) scaleMode = 'month';
+            const modeRadio = document.querySelector('input[name="pdfContentMode"]:checked');
+            const includeDiagram = modeRadio ? modeRadio.value !== 'table' : true;
             closePDFExportModal();
-            exportPDF(scaleMode);
+            exportPDF(scaleMode, includeDiagram);
         }
 
         // Изменение даты начала
@@ -8431,15 +8812,21 @@ async function exportPDF(scaleMode = 'day') {
             const fullStateLoaded = await loadFullGanttState();
             if (!fullStateLoaded) {
                 // Если полное состояние не загружено, инициализируем задачи по умолчанию
+                console.log('🔄 Загрузка не удалась, инициализируем задачи по умолчанию...');
                 initializeTasks();
                 // Загружаем baseline для обратной совместимости
                 await loadBaselineFromServer();
             }
             // Убеждаемся, что график отрисован
+            console.log('📊 Финальное количество задач:', tasks.length);
             if (tasks.length > 0) {
+                console.log('✅ Отрисовка графика и таблицы...');
                 renderGantt();
                 renderTable();
                 renderStageTabs();
+            } else {
+                console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Массив задач пустой после инициализации!');
+                console.error('   Проверьте консоль на наличие ошибок выше.');
             }
             // Обновляем состояние кнопки "Директивный план"
             updateBaselineToggleButton();

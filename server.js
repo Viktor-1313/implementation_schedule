@@ -91,6 +91,48 @@ app.post('/api/companies', (req, res) => {
   }
 });
 
+// Обновить порядок компаний (должен быть ПЕРЕД /api/companies/:id)
+app.put('/api/companies/order', (req, res) => {
+  try {
+    const { companyIds } = req.body;
+    
+    if (!Array.isArray(companyIds)) {
+      return res.status(400).json({ ok: false, error: 'companyIds должен быть массивом' });
+    }
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Файл компаний не найден' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    // Создаем карту компаний для быстрого доступа
+    const companyMap = new Map(companies.map(c => [c.id, c]));
+
+    // Проверяем, что все ID существуют
+    for (const id of companyIds) {
+      if (!companyMap.has(id)) {
+        return res.status(400).json({ ok: false, error: `Компания с ID ${id} не найдена` });
+      }
+    }
+
+    // Переупорядочиваем компании согласно переданному порядку
+    const orderedCompanies = companyIds.map(id => companyMap.get(id));
+    
+    // Добавляем компании, которых нет в списке (на случай, если порядок обновляется частично)
+    const existingIds = new Set(companyIds);
+    const remainingCompanies = companies.filter(c => !existingIds.has(c.id));
+    orderedCompanies.push(...remainingCompanies);
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(orderedCompanies, null, 2), 'utf8');
+    res.json({ ok: true, companies: orderedCompanies });
+  } catch (e) {
+    console.error('Ошибка обновления порядка компаний:', e);
+    res.status(500).json({ ok: false, error: 'update_order_failed' });
+  }
+});
+
 // Обновить компанию (изменить ID и/или название)
 app.put('/api/companies/:id', (req, res) => {
   try {
