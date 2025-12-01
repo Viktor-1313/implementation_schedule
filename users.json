@@ -96,8 +96,10 @@
     "name": "Карина",
     "login": "Elesina_KM",
     "password": "$2b$10$xAdac7p0CppS.vM091qq1.kSIbQUkDmYI4gifMz2R8.Ak/w9fKGWe",
-    "role": "admin",
-    "companies": [],
+    "role": "user",
+    "companies": [
+      "Sminex"
+    ],
     "createdAt": "2025-11-30T11:55:47.694Z"
   }
 ]
