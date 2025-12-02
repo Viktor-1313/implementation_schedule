@@ -298,6 +298,58 @@ app.post('/api/gantt-state', (req, res) => {
   }
 });
 
+// ========== API ДЛЯ РАБОТЫ СО СКЕЛЕТОМ ГРАФИКА ==========
+
+// Получить скелет графика по типу
+app.get('/api/gantt-skeleton', (req, res) => {
+  try {
+    const chartType = req.query.chartType || 'icona';
+    const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartType}.json`);
+    
+    if (!fs.existsSync(skeletonFile)) {
+      // Если файл не существует, возвращаем пустой массив
+      return res.json({ chartType, skeleton: [] });
+    }
+    
+    const raw = fs.readFileSync(skeletonFile, 'utf8');
+    const data = JSON.parse(raw);
+    res.json({ chartType, skeleton: data.skeleton || [] });
+  } catch (e) {
+    console.error('Ошибка загрузки скелета:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
+  }
+});
+
+// Сохранить скелет графика
+app.post('/api/gantt-skeleton', (req, res) => {
+  try {
+    const { chartType, skeleton } = req.body;
+    
+    if (!chartType) {
+      return res.status(400).json({ ok: false, error: 'Тип графика обязателен' });
+    }
+    
+    if (!Array.isArray(skeleton)) {
+      return res.status(400).json({ ok: false, error: 'Скелет должен быть массивом' });
+    }
+    
+    const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartType}.json`);
+    const dataToSave = {
+      chartType,
+      skeleton,
+      updatedAt: new Date().toISOString()
+    };
+    
+    fs.writeFileSync(skeletonFile, JSON.stringify(dataToSave, null, 2), 'utf8');
+    console.log(`✅ Скелет для ${chartType} сохранён, задач:`, skeleton.length);
+    
+    res.json({ ok: true, chartType, taskCount: skeleton.length });
+  } catch (e) {
+    console.error('Ошибка сохранения скелета:', e);
+    res.status(500).json({ ok: false, error: 'save_failed', message: e.message });
+  }
+});
+
 // получить информацию о компании (название и логотип)
 app.get('/api/company-info', (req, res) => {
   try {

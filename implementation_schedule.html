@@ -1242,6 +1242,36 @@
             transform: translate(-50%, 0);
         }
 
+        /* Подсказка для столбцов таблицы (этап, вид контроля, мероприятие) - чёрный фон, как у редакции этапов */
+        .tasks-table td[data-tooltip] {
+            position: relative;
+        }
+
+        .tasks-table td[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: #fff !important;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom center;
+            z-index: 9999;
+        }
+
+        .tasks-table td[data-tooltip]:hover::after {
+            opacity: 1 !important;
+            transform: translate(-50%, -6px);
+            transition-delay: 1s;
+        }
+
         /* Подсказка для длинного списка ответственных в Ганте (чёрный фон, как у остальных) */
         .gantt-details-cell[data-tooltip] {
             position: relative;
@@ -1269,6 +1299,38 @@
         .gantt-details-cell[data-tooltip]:hover::after {
             opacity: 1;
             transform: translate(-50%, 0);
+        }
+
+        /* Подсказка для строки задачи в диаграмме Ганта (чёрный фон, как у остальных) */
+        .gantt-row[data-tooltip] {
+            position: relative;
+            overflow: visible !important;
+        }
+
+        .gantt-row[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 0;
+            transform: translateY(0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.85) !important;
+            color: #fff !important;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom left;
+            z-index: 10000 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .gantt-row[data-tooltip]:hover::after {
+            opacity: 1 !important;
+            transform: translateY(-6px);
+            transition-delay: 1s;
         }
 
         .form-group {
@@ -1560,7 +1622,6 @@
 
         .gantt-label {
             min-width: 180px;
-            max-width: 180px;
             padding: 8px 10px;
             border-right: 2px solid var(--color-border);
             background: var(--color-bg);
@@ -1572,6 +1633,15 @@
             box-sizing: border-box;
             /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
             clip-path: inset(0);
+            overflow: visible;
+            white-space: nowrap;
+        }
+
+        .gantt-label span {
+            display: inline-block;
+            max-width: 100%;
+            overflow: visible;
+            white-space: nowrap;
         }
 
         .gantt-task-input {
@@ -1966,6 +2036,8 @@
         td {
             padding: 10px 12px;
             border: 1px solid var(--color-border);
+            /* Разрешаем перенос текста в ячейках для корректного отображения длинного текста */
+            white-space: normal;
         }
 
         .tasks-table-input {
@@ -1974,6 +2046,18 @@
             font-size: 11px;
             border-radius: 4px;
             border: 1px solid var(--color-border);
+            /* Убираем обрезку текста - при расширении столбца текст будет виден полностью */
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
+            word-wrap: break-word;
+        }
+        
+        /* Дополнительная специфичность для input полей в таблице */
+        .tasks-table td .tasks-table-input {
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: normal !important;
         }
 
         .tasks-table-input[type="number"] {
@@ -3031,7 +3115,8 @@
             .tasks-table td {
                 padding: 6px 4px;
                 font-size: 0.7rem;
-                white-space: nowrap;
+                /* Убираем nowrap для ячеек, чтобы текст в input полях мог переноситься */
+                white-space: normal;
             }
 
             .tasks-table-input {
@@ -3039,6 +3124,11 @@
                 font-size: 0.7rem;
                 width: 100%;
                 min-width: 60px;
+                /* Убираем обрезку текста - при расширении столбца текст будет виден полностью */
+                overflow: visible !important;
+                text-overflow: clip !important;
+                white-space: normal !important;
+                word-wrap: break-word;
             }
 
             /* Улучшенный скролл для таблицы на мобильных */
@@ -3809,12 +3899,7 @@
                 
                 // Используем navigator.sendBeacon для надежного сохранения при закрытии страницы
                 try {
-                    // Проверяем тип графика перед сохранением
-                    if (companyChartType === 'praktis') {
-                        console.warn('⚠️ Тип графика Praktis ID - сохранение при уходе пропущено');
-                        return;
-                    }
-                    
+                    // Разблокировано сохранение для всех типов графиков, включая Praktis ID
                     const snapshot = createFullGanttSnapshot();
                     const companyParam = `?company=${currentCompany}`;
                     // sendBeacon требует FormData или Blob, но наш API ожидает JSON
@@ -4068,6 +4153,12 @@
                 days: 3,
                 substage: "Подзадача 3"
             }
+        ];
+
+        // Скелет графика для типа "Praktis ID"
+        let projectDataPraktis = [
+            // Здесь будет структура задач для Praktis ID
+            // Пока оставляем пустым, будет загружаться с сервера или заполняться вручную
         ];
 
         // Российские выходные и праздники
@@ -4343,12 +4434,7 @@
                         companyLogoData = data.logoData || null;
                         companyChartType = data.chartType || 'icona';
                         
-                        // Если тип графика Praktis ID, показываем сообщение "в разработке"
-                        if (companyChartType === 'praktis') {
-                            showDevelopmentMessage();
-                            return;
-                        }
-                        
+                        // Разблокирован функционал для Praktis ID - можно работать с графиком
                         applyCompanyInfoToUI();
                         return;
                     }
@@ -4367,11 +4453,7 @@
                     companyLogoData = stored.logoData || null;
                     companyChartType = stored.chartType || 'icona';
                     
-                    // Если тип графика Praktis ID, показываем сообщение "в разработке"
-                    if (companyChartType === 'praktis') {
-                        showDevelopmentMessage();
-                        return;
-                    }
+                    // Разблокирован функционал для Praktis ID - можно работать с графиком
                 }
             } catch (e) {
                 console.warn('Не удалось загрузить информацию о компании из localStorage:', e);
@@ -4633,22 +4715,52 @@
         let baselineToastTimer = null;
 
         // Инициализация задач
-        function initializeTasks() {
+        async function initializeTasks() {
             console.log('🔄 Инициализация задач по умолчанию...');
-            console.log('   projectData.length:', projectData ? projectData.length : 'undefined');
+            
+            // Выбираем правильный скелет в зависимости от типа графика
+            let skeletonData = projectData; // По умолчанию используем Icona
+            if (companyChartType === 'praktis') {
+                skeletonData = projectDataPraktis;
+                console.log('📊 Используется скелет для Praktis ID');
+            } else {
+                console.log('📊 Используется скелет для Icona');
+            }
+            
+            console.log('   skeletonData.length:', skeletonData ? skeletonData.length : 'undefined');
             console.log('   startDate:', startDate);
             
             tasks = [];
             // Сбрасываем счётчик id (исходные задачи идут с 0..N-1)
-            nextTaskId = projectData ? projectData.length : 0;
+            nextTaskId = skeletonData ? skeletonData.length : 0;
             let currentDate = new Date(startDate);
 
-            if (!projectData || !Array.isArray(projectData) || projectData.length === 0) {
-                console.error('❌ projectData пустой или не определен!');
-                return;
+            if (!skeletonData || !Array.isArray(skeletonData) || skeletonData.length === 0) {
+                console.warn('⚠️ Скелет пустой или не определен! Пытаемся загрузить с сервера...');
+                // Пытаемся загрузить скелет с сервера синхронно
+                const skeletonLoaded = await loadSkeletonFromServer();
+                if (skeletonLoaded) {
+                    // После загрузки повторяем инициализацию с правильным скелетом
+                    if (companyChartType === 'praktis') {
+                        skeletonData = projectDataPraktis;
+                    } else {
+                        skeletonData = projectData;
+                    }
+                    // Продолжаем инициализацию, если скелет загружен
+                    if (skeletonData && skeletonData.length > 0) {
+                        console.log('✅ Скелет загружен, продолжаем инициализацию с', skeletonData.length, 'задачами');
+                        // Продолжаем выполнение функции дальше, не возвращаемся
+                    } else {
+                        console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Скелет не загружен или пустой после попытки загрузки!');
+                        return;
+                    }
+                } else {
+                    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Не удалось загрузить скелет с сервера!');
+                    return;
+                }
             }
 
-            projectData.forEach((item, index) => {
+            skeletonData.forEach((item, index) => {
                 try {
                     const taskDates = getTaskDates(currentDate, item.days);
                     if (!taskDates || taskDates.length === 0) {
@@ -4689,6 +4801,58 @@
 	    // лок начало: автосохранение
 	    autoSaveGanttState();
 	    // энд конец
+        }
+
+        // Загрузить скелет графика с сервера
+        async function loadSkeletonFromServer() {
+            try {
+                const chartType = companyChartType === 'praktis' ? 'praktis' : 'icona';
+                console.log('📥 Загрузка скелета для типа графика:', chartType);
+                const response = await fetch(`/api/gantt-skeleton?chartType=${chartType}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.skeleton && Array.isArray(data.skeleton) && data.skeleton.length > 0) {
+                        if (chartType === 'praktis') {
+                            projectDataPraktis = data.skeleton;
+                            console.log('✅ Скелет для Praktis ID загружен с сервера, задач:', projectDataPraktis.length);
+                        } else {
+                            // Для Icona можно обновить projectData, если нужно
+                            console.log('✅ Скелет для Icona загружен с сервера, задач:', data.skeleton.length);
+                        }
+                        return true;
+                    } else {
+                        console.warn('⚠️ Скелет пустой или не найден на сервере для типа:', chartType);
+                    }
+                } else {
+                    console.warn('⚠️ Ошибка загрузки скелета:', response.status, response.statusText);
+                }
+            } catch (e) {
+                console.warn('⚠️ Не удалось загрузить скелет с сервера:', e);
+            }
+            return false;
+        }
+
+        // Сохранить скелет графика на сервер
+        async function saveSkeletonToServer(chartType, skeleton) {
+            try {
+                const response = await fetch('/api/gantt-skeleton', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chartType, skeleton })
+                });
+                
+                if (response.ok) {
+                    console.log(`✅ Скелет для ${chartType} сохранён на сервер`);
+                    return true;
+                } else {
+                    console.error('❌ Ошибка сохранения скелета:', response.statusText);
+                    return false;
+                }
+            } catch (e) {
+                console.error('❌ Ошибка сохранения скелета:', e);
+                return false;
+            }
             renderGantt();
             renderTable();
             applyCompanyInfoToUI();
@@ -4797,13 +4961,7 @@
                     return;
                 }
                 
-                // Проверяем тип графика компании перед сохранением
-                // Если тип графика Praktis ID, не сохраняем данные графика Icona
-                if (companyChartType === 'praktis') {
-                    console.warn('⚠️ Тип графика Praktis ID - сохранение данных графика пропущено');
-                    return;
-                }
-                
+                // Разблокировано сохранение для всех типов графиков, включая Praktis ID
                 const snapshot = createFullGanttSnapshot();
                 const companyParam = `?company=${currentCompany}`;
                 const url = `/api/gantt-state${companyParam}`;
@@ -4959,12 +5117,7 @@
                             const chartType = companyInfo.chartType;
                             console.log('📊 Тип графика компании:', chartType);
                             
-                            // Если тип графика Praktis ID, не загружаем данные графика Icona
-                            if (chartType === 'praktis') {
-                                console.log('⚠️ Тип графика Praktis ID - данные графика не загружаются');
-                                return false;
-                            }
-                            
+                            // Разблокирована загрузка для всех типов графиков, включая Praktis ID
                             // Сохраняем тип графика для дальнейшего использования
                             companyChartType = chartType;
                         }
@@ -5397,14 +5550,94 @@
             element.appendChild(resizer);
         }
 
+        // Вспомогательная функция для вычисления количества символов, которые помещаются в ширину
+        // Используем кэшированный элемент для измерения, чтобы не создавать его каждый раз
+        let measureElement = null;
+        function getMeasureElement() {
+            if (!measureElement) {
+                measureElement = document.createElement('span');
+                measureElement.style.position = 'absolute';
+                measureElement.style.visibility = 'hidden';
+                measureElement.style.whiteSpace = 'nowrap';
+                measureElement.style.fontSize = '11px';
+                measureElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                measureElement.style.fontWeight = '500';
+                document.body.appendChild(measureElement);
+            }
+            return measureElement;
+        }
+
+        function calculateVisibleChars(text, maxWidth, fontSize = 11, fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif') {
+            if (!text || text.length === 0) return 0;
+            
+            const measureEl = getMeasureElement();
+            measureEl.style.fontSize = fontSize + 'px';
+            measureEl.style.fontFamily = fontFamily;
+            
+            // Проверяем, помещается ли весь текст
+            measureEl.textContent = text;
+            const fullWidth = measureEl.offsetWidth;
+            
+            // Если текст помещается полностью, возвращаем полную длину
+            if (fullWidth <= maxWidth) {
+                return text.length;
+            }
+            
+            // Бинарный поиск для определения максимального количества символов
+            let left = 0;
+            let right = text.length;
+            let result = 0;
+            
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2);
+                const testText = text.substring(0, mid);
+                
+                measureEl.textContent = testText;
+                const testWidth = measureEl.offsetWidth;
+                
+                if (testWidth <= maxWidth) {
+                    result = mid;
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+            
+            return result;
+        }
+
         // Отрисовка названия задачи в левой колонке (с поддержкой редактирования)
         function renderTaskLabelContent(labelElement, task, index) {
             labelElement.innerHTML = '';
-            const span = document.createElement('span');
             const taskName = task.task || task.name || 'Без названия';
-            span.title = taskName;
-            const displayName = taskName.length > 40 ? taskName.substring(0, 40) + '...' : taskName;
+            
+            // Получаем текущую ширину столбца
+            const columnWidth = ganttColumnWidths.label || 260;
+            // Вычитаем padding (8px слева + 10px справа = 18px) и границу (2px)
+            const availableWidth = columnWidth - 18 - 2;
+            
+            // Вычисляем, сколько символов поместится в доступную ширину
+            const visibleChars = calculateVisibleChars(taskName, availableWidth);
+            
+            // Определяем, нужно ли обрезать текст
+            const needsTruncation = visibleChars < taskName.length;
+            
+            // Формируем отображаемое имя
+            let displayName;
+            if (needsTruncation) {
+                displayName = taskName.substring(0, visibleChars) + '...';
+            } else {
+                displayName = taskName;
+            }
+            
+            const span = document.createElement('span');
             span.textContent = displayName;
+            
+            // Удаляем старый title, чтобы не показывать стандартную подсказку браузера
+            span.removeAttribute('title');
+            
+            // Подсказка теперь устанавливается на строку (.gantt-row), а не на label
+            // Это убирает дублирование подсказок
 
             span.addEventListener('dblclick', () => {
                 if (!canEdit()) {
@@ -5695,6 +5928,12 @@
                 const row = document.createElement('div');
                 row.className = 'gantt-row';
                 row.dataset.taskId = String(task.id);
+                
+                // Добавляем data-tooltip на строку с названием задачи для подсказки при наведении
+                const taskName = task.task || task.name || 'Без названия';
+                if (taskName && taskName.trim()) {
+                    row.setAttribute('data-tooltip', taskName.replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+                }
 
                 // Статус строки относительно выбранного этапа
                 if (currentStageFilter !== 'all') {
@@ -6236,6 +6475,11 @@
                 const isEditable = canEdit();
                 const disabledAttr = isEditable ? '' : 'disabled';
 
+                // Подготавливаем значения для подсказок
+                const fullStage = task.stage || '';
+                const fullControl = task.control || task.controlType || '';
+                const fullTaskTitle = task.task || task.name || '';
+                
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>
@@ -6243,27 +6487,30 @@
                             ${stageSelectOptions}
                         </select>
                     </td>
-                    <td>
+                    <td ${fullStage ? `data-tooltip="${fullStage.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"` : ''}>
                         <span class="stage-prefix">${stagePrefix}</span>
                         <input type="text"
                                class="tasks-table-input"
                                data-index="${index}"
                                data-field="stageSuffix"
                                data-prefix="${stagePrefix}"
+                               title=""
                                ${isEditable ? '' : 'readonly'}>
                     </td>
-                    <td>
+                    <td ${fullControl ? `data-tooltip="${fullControl.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"` : ''}>
                         <input type="text"
                                class="tasks-table-input"
                                data-index="${index}"
                                data-field="control"
+                               title=""
                                ${isEditable ? '' : 'readonly'}>
                     </td>
-                    <td>
+                    <td ${fullTaskTitle ? `data-tooltip="${fullTaskTitle.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"` : ''}>
                         <input type="text"
                                class="tasks-table-input"
                                data-index="${index}"
                                data-field="taskTitle"
+                               title=""
                                ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td>
@@ -6479,6 +6726,16 @@
                     openStatusMenu(x, y, task.id, dateStrs);
                 });
                 
+                // Обработчик click для предотвращения закрытия меню при клике на select
+                select.addEventListener('click', (event) => {
+                    if (!canEdit()) {
+                        event.preventDefault();
+                        return;
+                    }
+                    // Останавливаем всплытие события, чтобы window.onclick не закрыл меню
+                    event.stopPropagation();
+                });
+                
                 // Также обрабатываем touch события для мобильных устройств
                 select.addEventListener('touchstart', (event) => {
                     if (!canEdit()) {
@@ -6543,6 +6800,15 @@
             if (field === 'taskTitle') {
                 task.task = input.value || '';
                 task.name = task.task; // Синхронизируем оба поля
+                // Обновляем подсказку на родительском td
+                const td = input.closest('td');
+                if (td) {
+                    if (task.task) {
+                        td.setAttribute('data-tooltip', task.task);
+                    } else {
+                        td.removeAttribute('data-tooltip');
+                    }
+                }
             } else if (field === 'stageSelect') {
                 // Обработка изменения этапа через выпадающий список
                 const newStageShort = input.value;
@@ -6609,8 +6875,27 @@
                 // Переинициализируем конфигурацию этапов и вкладки
                 initializeStageConfig();
                 renderStageTabs();
+                
+                // Обновляем подсказку на родительском td
+                const td = input.closest('td');
+                if (td) {
+                    if (task.stage) {
+                        td.setAttribute('data-tooltip', task.stage);
+                    } else {
+                        td.removeAttribute('data-tooltip');
+                    }
+                }
             } else if (field === 'control') {
                 task.control = input.value || '';
+                // Обновляем подсказку на родительском td
+                const td = input.closest('td');
+                if (td) {
+                    if (task.control) {
+                        td.setAttribute('data-tooltip', task.control);
+                    } else {
+                        td.removeAttribute('data-tooltip');
+                    }
+                }
             } else if (field === 'startDate') {
                 task.startDate = parseDateFromInput(input.value);
 
@@ -8196,13 +8481,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             modal.style.display = 'block';
         }
 
-        function updateStartDate() {
+        async function updateStartDate() {
             const input = document.getElementById('startDateInput');
             const newDate = parseDateFromInput(input.value);
             
             if (isWorkday(newDate)) {
                 startDate = newDate;
-                initializeTasks();
+                await initializeTasks();
                 closeModal();
             } else {
                 alert('Пожалуйста, выберите рабочий день');
@@ -8504,12 +8789,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         }
 
         // Подтвердить сброс плана к дефолтному состоянию
-        function confirmResetPlan() {
+        async function confirmResetPlan() {
             if (!canEdit()) {
                 return; // Блокируем сброс плана в режиме просмотра
             }
             startDate = new Date(INITIAL_START_DATE);
-            initializeTasks();
+            
+            // Пытаемся загрузить скелет с сервера перед инициализацией
+            await loadSkeletonFromServer();
+            
+            await initializeTasks();
             renderGantt();
             renderTable();
             updateStatistics();
@@ -8969,7 +9258,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             });
         }
 
-        function deleteStage(shortName) {
+        async function deleteStage(shortName) {
             stageConfig = stageConfig.filter(name => name !== shortName);
             projectData = projectData.filter(item => !item.stage || !item.stage.startsWith(shortName));
 
@@ -8977,12 +9266,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 currentStageFilter = 'all';
             }
 
-            initializeTasks();
+            await initializeTasks();
             renderStageTabs();
             buildStageSettingsList();
         }
 
-        function addNewStage() {
+        async function addNewStage() {
             // Блокируем добавление этапа в режиме просмотра
             if (!canEdit()) {
                 return;
@@ -9010,12 +9299,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             });
 
             currentStageFilter = shortName;
-            initializeTasks();
+            await initializeTasks();
             renderStageTabs();
             buildStageSettingsList();
         }
 
-        function renameStage(oldShortName, newShortName) {
+        async function renameStage(oldShortName, newShortName) {
             stageConfig = stageConfig.map(name => name === oldShortName ? newShortName : name);
 
             projectData.forEach(item => {
@@ -9029,7 +9318,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 currentStageFilter = newShortName;
             }
 
-            initializeTasks();
+            await initializeTasks();
             renderStageTabs();
             buildStageSettingsList();
         }
@@ -9936,7 +10225,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
             const menu = document.getElementById('statusMenu');
             if (menu && !menu.contains(target)) {
-                closeStatusMenu();
+                // Не закрываем меню, если клик был на select статуса
+                const isStatusSelect = target.tagName === 'SELECT' && target.getAttribute('data-field') === 'status';
+                if (!isStatusSelect) {
+                    closeStatusMenu();
+                }
             }
 
             // Сброс множественного выбора при клике вне ячеек
@@ -10263,12 +10556,15 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             // Сначала загружаем информацию о компании, чтобы узнать тип графика
             await loadCompanyInfo();
             
-            // Пытаемся загрузить полное состояние графика (только если тип графика Icona)
+            // Загружаем скелет графика с сервера (если есть)
+            await loadSkeletonFromServer();
+            
+            // Пытаемся загрузить полное состояние графика
             const fullStateLoaded = await loadFullGanttState();
             if (!fullStateLoaded) {
                 // Если полное состояние не загружено, инициализируем задачи по умолчанию
                 console.log('🔄 Загрузка не удалась, инициализируем задачи по умолчанию...');
-                initializeTasks();
+                await initializeTasks();
                 // Загружаем baseline для обратной совместимости
                 await loadBaselineFromServer();
             }
