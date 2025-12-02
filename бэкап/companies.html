@@ -43,6 +43,8 @@
             pointer-events: none;
             z-index: 2;
             will-change: transform;
+            transform: translateZ(0); /* Аппаратное ускорение */
+            backface-visibility: hidden; /* Оптимизация для анимации */
         }
 
         /* Анимация появления из тумана */
@@ -452,6 +454,28 @@
 
         .company-card:hover::before {
             transform: scaleX(1);
+        }
+
+        /* Drag and Drop стили */
+        .company-card.draggable {
+            cursor: grab;
+        }
+
+        .company-card.draggable:active {
+            cursor: grabbing;
+        }
+
+        .company-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+            box-shadow: 0 20px 60px rgba(33, 150, 243, 0.4);
+            z-index: 1000;
+        }
+
+        .company-card.drag-over {
+            border: 2px dashed #42a5f5;
+            background: rgba(66, 165, 245, 0.1);
+            transform: translateY(-10px);
         }
 
         .company-card .company-logo {
@@ -1582,6 +1606,34 @@
 
         // Загрузить данные текущего пользователя
         function loadCurrentUser() {
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            // В режиме просмотра не загружаем пользователя и скрываем кнопки профиля
+            if (isViewMode) {
+                const profileBtn = document.getElementById('profileBtn');
+                const logoutBtn = document.getElementById('logoutBtn');
+                const adminPanelLink = document.getElementById('adminPanelLink');
+                
+                if (profileBtn) {
+                    profileBtn.style.display = 'none';
+                }
+                if (logoutBtn) {
+                    logoutBtn.style.display = 'none';
+                }
+                if (adminPanelLink) {
+                    adminPanelLink.style.display = 'none';
+                }
+                
+                // Обновляем заголовок для режима просмотра
+                const subtitle = document.getElementById('headerSubtitle');
+                if (subtitle) {
+                    subtitle.textContent = 'Режим просмотра. Выберите компанию для просмотра графика.';
+                }
+                
+                return; // Выходим, не проверяя авторизацию
+            }
+            
             const userStr = localStorage.getItem('gantt-user');
             if (userStr) {
                 try {
@@ -1628,18 +1680,28 @@
         // Загрузить список компаний
         async function loadCompanies() {
             try {
+                const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+                const isViewMode = ganttMode === 'view';
+                
                 const response = await fetch('/api/companies');
                 const allCompanies = await response.json() || [];
                 
                 // Фильтруем компании по доступу пользователя
                 let availableCompanies = [];
-                if (isAdmin) {
+                
+                // В режиме просмотра показываем все компании
+                if (isViewMode) {
+                    availableCompanies = allCompanies;
+                } else if (isAdmin) {
                     // Админы видят все компании
                     availableCompanies = allCompanies;
-                } else {
+                } else if (currentUser) {
                     // Обычные пользователи видят только свои компании
                     const userCompanies = currentUser.companies || [];
                     availableCompanies = allCompanies.filter(c => userCompanies.includes(c.id));
+                } else {
+                    // Если пользователь не авторизован и не в режиме просмотра, не показываем компании
+                    availableCompanies = [];
                 }
                 
                 renderCompanies(availableCompanies, allCompanies);
@@ -1669,9 +1731,19 @@
         // Отобразить список компаний
         async function renderCompanies(companies, allCompanies = []) {
             const container = document.getElementById('companiesContainer');
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
             
             if (companies.length === 0) {
-                if (isAdmin) {
+                if (isViewMode) {
+                    container.innerHTML = `
+                        <div class="companies-grid">
+                            <div class="empty-state">
+                                <p>Компании не найдены.</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (isAdmin) {
                     container.innerHTML = `
                         <div class="companies-grid">
                             <div class="empty-state">
@@ -1727,25 +1799,25 @@
                 if (isAdmin) {
                     // Используем data-атрибуты вместо inline onclick для безопасности
                     actionsHtml = `
-                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
+                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}" draggable="false">
                             Открыть график
                         </button>
-                        <button class="btn btn-primary btn-edit-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
+                        <button class="btn btn-primary btn-edit-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}" draggable="false">
                             Редактировать компанию
                         </button>
-                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
+                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра" draggable="false">
                             Копировать ссылку
                         </button>
-                        <button class="btn btn-primary btn-delete-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}">
+                        <button class="btn btn-primary btn-delete-company" data-company-id="${safeCompanyId}" data-company-name="${safeCompanyName}" draggable="false">
                             Удалить
                         </button>
                     `;
                 } else {
                     actionsHtml = `
-                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}">
+                        <button class="btn btn-primary btn-open-company" data-company-id="${safeCompanyId}" draggable="false">
                             Открыть график
                         </button>
-                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра">
+                        <button class="btn btn-primary btn-copy-link" data-company-id="${safeCompanyId}" title="Копировать ссылку для просмотра" draggable="false">
                             Копировать ссылку
                         </button>
                     `;
@@ -1753,10 +1825,10 @@
                 
                 // Кнопка копирования только для админов
                 const copyButtonHtml = isAdmin ? `
-                    <button class="copy-company-btn" data-company-id="${safeCompanyId}" data-tooltip="Копировать компанию" onclick="event.stopPropagation(); copyCompany('${safeCompanyIdForJs}');"></button>
+                    <button class="copy-company-btn" data-company-id="${safeCompanyId}" data-tooltip="Копировать компанию" draggable="false" onclick="event.stopPropagation(); copyCompany('${safeCompanyIdForJs}');"></button>
                 ` : '';
                 return `
-                <div class="company-card" ${isAdmin ? '' : `data-company-id="${safeCompanyId}"`}>
+                <div class="company-card ${isAdmin ? 'draggable' : ''}" ${isAdmin ? '' : `data-company-id="${safeCompanyId}"`} ${isAdmin ? `draggable="true" data-company-id="${safeCompanyId}"` : ''}>
                     ${copyButtonHtml}
                     ${logoHtml}
                     <h3>${company.name}</h3>
@@ -1836,6 +1908,11 @@
             
             // Добавляем обработчики событий для кнопок через делегирование событий
             setupCompanyButtons();
+            
+            // Добавляем обработчики drag and drop для карточек компаний (только для админов)
+            if (isAdmin) {
+                setupDragAndDrop();
+            }
         }
         
         // Настройка обработчиков событий для кнопок компаний
@@ -1912,18 +1989,181 @@
             container.addEventListener('click', companyButtonsHandler);
         }
 
+        // Настройка drag and drop для карточек компаний
+        function setupDragAndDrop() {
+            const container = document.getElementById('companiesContainer');
+            if (!container) return;
+
+            let draggedElement = null;
+            let draggedOverElement = null;
+
+            // Обработчик начала перетаскивания
+            container.addEventListener('dragstart', (e) => {
+                const card = e.target.closest('.company-card.draggable');
+                if (!card) return;
+
+                // Игнорируем перетаскивание, если клик был на кнопке или интерактивном элементе
+                if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) {
+                    e.preventDefault();
+                    return;
+                }
+
+                draggedElement = card;
+                card.classList.add('dragging');
+                isDragging = true; // Пауза анимации светлячков во время перетаскивания
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', card.outerHTML);
+            });
+
+            // Обработчик окончания перетаскивания
+            container.addEventListener('dragend', (e) => {
+                if (draggedElement) {
+                    draggedElement.classList.remove('dragging');
+                    draggedElement = null;
+                }
+                
+                isDragging = false; // Возобновляем анимацию светлячков
+                
+                // Убираем класс drag-over со всех элементов
+                const allCards = container.querySelectorAll('.company-card.drag-over');
+                allCards.forEach(card => card.classList.remove('drag-over'));
+            });
+
+            // Обработчик перетаскивания над элементом с throttling для производительности
+            let lastDragOverTime = 0;
+            const dragOverThrottle = 16; // ~60fps
+            
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                const now = performance.now();
+                if (now - lastDragOverTime < dragOverThrottle) {
+                    return; // Пропускаем слишком частые обновления
+                }
+                lastDragOverTime = now;
+
+                const card = e.target.closest('.company-card.draggable');
+                if (!card || card === draggedElement) return;
+
+                // Убираем класс drag-over с предыдущего элемента только если он изменился
+                if (draggedOverElement && draggedOverElement !== card) {
+                    draggedOverElement.classList.remove('drag-over');
+                }
+
+                // Добавляем класс только если элемент изменился
+                if (draggedOverElement !== card) {
+                    draggedOverElement = card;
+                    card.classList.add('drag-over');
+                }
+            });
+
+            // Обработчик выхода из элемента
+            container.addEventListener('dragleave', (e) => {
+                const card = e.target.closest('.company-card.draggable');
+                if (card && card !== draggedElement) {
+                    card.classList.remove('drag-over');
+                }
+            });
+
+            // Обработчик сброса элемента
+            container.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const targetCard = e.target.closest('.company-card.draggable');
+                if (!targetCard || !draggedElement || targetCard === draggedElement) {
+                    return;
+                }
+
+                // Убираем классы
+                targetCard.classList.remove('drag-over');
+                draggedElement.classList.remove('dragging');
+
+                // Находим родительские контейнеры (grid)
+                const sourceGrid = draggedElement.closest('.companies-grid');
+                const targetGrid = targetCard.closest('.companies-grid');
+
+                // Можно перетаскивать только внутри одного grid (одного типа графика)
+                if (sourceGrid !== targetGrid) {
+                    draggedElement = null;
+                    return;
+                }
+
+                // Определяем позиции элементов
+                const allCards = Array.from(targetGrid.querySelectorAll('.company-card.draggable'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const targetIndex = allCards.indexOf(targetCard);
+
+                if (draggedIndex === -1 || targetIndex === -1) {
+                    draggedElement = null;
+                    return;
+                }
+
+                // Перемещаем элемент в DOM
+                if (draggedIndex < targetIndex) {
+                    targetGrid.insertBefore(draggedElement, targetCard.nextSibling);
+                } else {
+                    targetGrid.insertBefore(draggedElement, targetCard);
+                }
+
+                // Сохраняем новый порядок
+                await saveCompaniesOrder();
+                
+                draggedElement = null;
+            });
+        }
+
+        // Сохранение порядка компаний на сервер
+        async function saveCompaniesOrder() {
+            try {
+                const container = document.getElementById('companiesContainer');
+                if (!container) return;
+
+                // Собираем все карточки компаний в порядке их отображения
+                const allGrids = container.querySelectorAll('.companies-grid');
+                const companyIds = [];
+
+                allGrids.forEach(grid => {
+                    const cards = grid.querySelectorAll('.company-card.draggable');
+                    cards.forEach(card => {
+                        const companyId = card.getAttribute('data-company-id');
+                        if (companyId) {
+                            companyIds.push(companyId);
+                        }
+                    });
+                });
+
+                if (companyIds.length === 0) return;
+
+                // Отправляем новый порядок на сервер
+                const response = await fetch('/api/companies/order', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ companyIds })
+                });
+
+                const result = await response.json();
+                if (!result.ok) {
+                    console.error('Ошибка сохранения порядка компаний:', result.error);
+                    showMessage('Не удалось сохранить порядок компаний', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения порядка компаний:', error);
+                showMessage('Не удалось сохранить порядок компаний', 'error');
+            }
+        }
+
         // Открыть график компании
         async function openCompany(companyId) {
-            // Проверяем тип графика компании
+            // Разблокирован функционал для всех типов графиков, включая Praktis ID
+            // Проверяем тип графика компании (для информации, но не блокируем)
             try {
                 const companyInfo = await loadCompanyInfo(companyId);
                 const chartType = companyInfo && companyInfo.chartType ? companyInfo.chartType : 'icona';
-                
-                // Если тип графика Praktis ID, показываем сообщение "в разработке"
-                if (chartType === 'praktis') {
-                    showMessage('График "Внедрение Praktis ID" находится в разработке', 'error');
-                    return;
-                }
+                console.log('📊 Открываем график типа:', chartType);
             } catch (e) {
                 console.warn('Не удалось загрузить информацию о компании:', e);
                 // Продолжаем с обычным графиком, если не удалось загрузить информацию
@@ -2497,6 +2737,7 @@
         const fireflies = [];
         let mouseX = 0;
         let mouseY = 0;
+        let isDragging = false; // Флаг для паузы анимации светлячков во время drag and drop
 
         function initFireflies() {
             // Инициализация всех светлячков
@@ -2521,8 +2762,8 @@
                 fireflyData.vx = (Math.random() - 0.5) * 2;
                 fireflyData.vy = (Math.random() - 0.5) * 2;
                 
-                // Устанавливаем начальную позицию через transform
-                fireflyData.element.style.transform = `translate(${fireflyData.x}px, ${fireflyData.y}px)`;
+                // Устанавливаем начальную позицию через transform3d для аппаратного ускорения
+                fireflyData.element.style.transform = `translate3d(${fireflyData.x}px, ${fireflyData.y}px, 0)`;
 
                 fireflies.push(fireflyData);
             }
@@ -2558,10 +2799,23 @@
                 }
             }, { passive: true });
 
+            // Пауза анимации, когда страница не видна
+            let isPageVisible = true;
+            document.addEventListener('visibilitychange', () => {
+                isPageVisible = !document.hidden;
+            });
+
             function animateFireflies() {
                 if (fireflies.length === 0) {
                     fireflyAnimationIds.forEach(id => cancelAnimationFrame(id));
                     fireflyAnimationIds = [];
+                    return;
+                }
+
+                // Пауза анимации, если страница не видна или идет перетаскивание
+                if (!isPageVisible || isDragging) {
+                    const animationId = requestAnimationFrame(animateFireflies);
+                    fireflyAnimationIds = [animationId];
                     return;
                 }
 
@@ -2626,7 +2880,8 @@
 
                     // Применение позиции через transform для лучшей производительности
                     if (firefly.element) {
-                        firefly.element.style.transform = `translate(${firefly.x}px, ${firefly.y}px)`;
+                        // Используем will-change для оптимизации (уже установлен в CSS)
+                        firefly.element.style.transform = `translate3d(${firefly.x}px, ${firefly.y}px, 0)`;
                     }
                 });
 
@@ -2641,7 +2896,12 @@
         // Загрузить компании при загрузке страницы
         window.addEventListener('DOMContentLoaded', function() {
             loadCurrentUser();
-            if (currentUser) {
+            
+            // Загружаем компании, если пользователь авторизован или в режиме просмотра
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            if (currentUser || isViewMode) {
                 loadCompanies();
             }
             // Настраиваем обработчики кнопок при загрузке страницы

@@ -5,6 +5,7 @@ node_modules/
 *.json
 !package.json
 !package-lock.json
+!gantt-skeleton-*.json
 
 # Резервные копии
 бэкап/
