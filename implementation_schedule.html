@@ -1334,6 +1334,26 @@
             position: relative;
             /* Ограничиваем область, чтобы sticky-элементы не выходили за пределы */
             contain: layout style paint;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            /* Убеждаемся, что скроллбар всегда виден при переполнении */
+            scrollbar-width: thin; /* Для Firefox */
+            scrollbar-color: #90caf9 #e3f2fd; /* Для Firefox */
+        }
+        
+        /* Стили скроллбара для десктопа */
+        .gantt-chart::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .gantt-chart::-webkit-scrollbar-thumb {
+            background: #90caf9;
+            border-radius: 4px;
+        }
+        
+        .gantt-chart::-webkit-scrollbar-track {
+            background: #e3f2fd;
         }
 
         /* Для планшетов и мобильных убираем contain, чтобы не блокировать прокрутку */
@@ -1432,6 +1452,17 @@
             border-radius: 4px;
             border: 1px solid var(--color-border);
             box-sizing: border-box;
+        }
+
+        /* Заблокированные поля в режиме просмотра */
+        body.view-mode .gantt-details-input[readonly],
+        body.view-mode .gantt-details-input[data-field="startDate"],
+        body.view-mode .gantt-details-input[data-field="endDate"],
+        body.view-mode .gantt-details-input[data-field="days"] {
+            background-color: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         .gantt-resizable {
@@ -1949,6 +1980,28 @@
             text-align: center;
         }
 
+        /* Заблокированные поля в режиме просмотра */
+        body.view-mode .tasks-table-input[readonly],
+        body.view-mode .tasks-table-input[data-field="startDate"],
+        body.view-mode .tasks-table-input[data-field="endDate"],
+        body.view-mode .tasks-table-input[data-field="days"],
+        body.view-mode .tasks-table-input[data-field="stageSuffix"],
+        body.view-mode .tasks-table-input[data-field="control"],
+        body.view-mode .tasks-table-input[data-field="taskTitle"] {
+            background-color: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Заблокированные select в режиме просмотра */
+        body.view-mode .tasks-table-input-select[disabled] {
+            background-color: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
         .tasks-table-input-select {
             width: 100%;
             padding: 4px 6px;
@@ -2327,6 +2380,11 @@
             transform: translateY(-1px);
         }
 
+        /* Скрываем кнопку редактирования этапов в режиме просмотра */
+        body.view-mode .stage-settings-btn {
+            display: none;
+        }
+
         .stage-settings-btn::after,
         .gantt-style-toggle-btn::after,
         .baseline-toggle-btn::after,
@@ -2639,6 +2697,9 @@
                 box-sizing: border-box;
                 z-index: 1;
                 touch-action: pan-x pan-y pinch-zoom; /* Разрешаем прокрутку и pinch-to-zoom на планшетах и мобильных */
+                /* Убеждаемся, что скроллбар всегда виден при переполнении */
+                scrollbar-width: thin; /* Для Firefox */
+                scrollbar-color: #90caf9 #e3f2fd; /* Для Firefox */
             }
 
             /* На мобильных отключаем sticky для колонки названий, чтобы она не перекрывала график */
@@ -3324,7 +3385,7 @@
                 >
                     <span>Детальный вид</span>
                 </button>
-                <button class="stage-settings-btn" onclick="openStageSettingsModal()" data-tooltip="Редакция этапов">
+                <button class="stage-settings-btn" onclick="openStageSettingsModal(event)" data-tooltip="Редакция этапов">
                     <span class="stage-settings-icon">
                         <span class="stage-settings-bar stage-settings-bar-1"></span>
                         <span class="stage-settings-bar stage-settings-bar-2"></span>
@@ -3659,6 +3720,14 @@
 
         // Показать кнопки авторизации (определяем раньше, чтобы использовать ниже)
         function showAuthButtons() {
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            // В режиме просмотра не показываем кнопки авторизации
+            if (isViewMode) {
+                return;
+            }
+            
             const profileBtn = document.getElementById('profileBtn');
             const companiesBottomBtn = document.getElementById('companiesBottomBtn');
             const logoutBtn = document.getElementById('logoutBtn');
@@ -3684,6 +3753,14 @@
         // Показываем кнопки авторизации сразу, если пользователь авторизован
         (function checkAuthButtons() {
             const userStr = localStorage.getItem('gantt-user');
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            // В режиме просмотра не показываем кнопки авторизации
+            if (isViewMode) {
+                return;
+            }
+            
             if (userStr) {
                 // Функция для показа кнопок
                 const tryShowButtons = () => {
@@ -4017,6 +4094,8 @@
         let currentScaleMode = 'day';
         // Ожидающий применения статус после подтверждения предупреждения о масштабе
         let pendingStatusAfterScaleWarning = null;
+        // Ожидающий применения статус из таблицы (индекс задачи и новый статус)
+        let pendingStatusFromTable = null;
         let zoomLevel = 1; // 1 = 100%, влияет только на ширину колонок
         let viewStartDate = null; // если задано, используем как левую границу отображения
         let viewEndDate = null;   // если задано, используем как правую границу отображения
@@ -5660,7 +5739,12 @@
                 startInput.value = task.startDate ? formatDateForInput(task.startDate) : '';
                 startInput.setAttribute('data-index', index);
                 startInput.setAttribute('data-field', 'startDate');
-                startInput.addEventListener('change', onTaskTableInputChange);
+                // Блокируем поле в режиме просмотра
+                if (isViewMode) {
+                    startInput.setAttribute('readonly', 'readonly');
+                } else {
+                    startInput.addEventListener('change', onTaskTableInputChange);
+                }
                 startCell.appendChild(startInput);
                 applyColumnWidth(startCell, 'start');
 
@@ -5672,7 +5756,12 @@
                 endInput.value = task.endDate ? formatDateForInput(task.endDate) : '';
                 endInput.setAttribute('data-index', index);
                 endInput.setAttribute('data-field', 'endDate');
-                endInput.addEventListener('change', onTaskTableInputChange);
+                // Блокируем поле в режиме просмотра
+                if (isViewMode) {
+                    endInput.setAttribute('readonly', 'readonly');
+                } else {
+                    endInput.addEventListener('change', onTaskTableInputChange);
+                }
                 endCell.appendChild(endInput);
                 applyColumnWidth(endCell, 'end');
 
@@ -5685,7 +5774,12 @@
                 daysInput.value = task.days;
                 daysInput.setAttribute('data-index', index);
                 daysInput.setAttribute('data-field', 'days');
-                daysInput.addEventListener('change', onTaskTableInputChange);
+                // Блокируем поле в режиме просмотра
+                if (isViewMode) {
+                    daysInput.setAttribute('readonly', 'readonly');
+                } else {
+                    daysInput.addEventListener('change', onTaskTableInputChange);
+                }
                 daysCell.appendChild(daysInput);
                 applyColumnWidth(daysCell, 'days');
 
@@ -5950,7 +6044,8 @@
                                     updateCellSelection();
                                 }
                                 
-                                openStatusMenu(clickX, clickY, task.id, selectedDates);
+                                // Передаем barElement для точного позиционирования меню рядом с ячейкой
+                                openStatusMenu(clickX, clickY, task.id, selectedDates, barElement);
                             }
                         }
                         
@@ -6154,33 +6249,38 @@
                                class="tasks-table-input"
                                data-index="${index}"
                                data-field="stageSuffix"
-                               data-prefix="${stagePrefix}">
+                               data-prefix="${stagePrefix}"
+                               ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td>
                         <input type="text"
                                class="tasks-table-input"
                                data-index="${index}"
-                               data-field="control">
+                               data-field="control"
+                               ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td>
                         <input type="text"
                                class="tasks-table-input"
                                data-index="${index}"
-                               data-field="taskTitle">
+                               data-field="taskTitle"
+                               ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td>
                         <input type="date"
                                class="tasks-table-input"
                                value="${startStr}"
                                data-index="${index}"
-                               data-field="startDate">
+                               data-field="startDate"
+                               ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td>
                         <input type="date"
                                class="tasks-table-input"
                                value="${endStr}"
                                data-index="${index}"
-                               data-field="endDate">
+                               data-field="endDate"
+                               ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td>
                         <input type="number"
@@ -6188,7 +6288,8 @@
                                min="0"
                                value="${task.days}"
                                data-index="${index}"
-                               data-field="days">
+                               data-field="days"
+                               ${isEditable ? '' : 'readonly'}>
                     </td>
                     <td class="table-col-responsible" ${task.responsible ? `data-tooltip="${task.responsible.replace(/"/g, '&quot;')}"` : ''}>
                         <input type="text"
@@ -6198,7 +6299,7 @@
                                data-field="responsible">
                     </td>
                     <td>
-                        <select class="tasks-table-input-select" data-index="${index}" data-field="status">
+                        <select class="tasks-table-input-select" data-index="${index}" data-field="status" ${disabledAttr}>
                             <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Запланирована</option>
                             <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>В работе</option>
                             <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Завершено</option>
@@ -6329,6 +6430,99 @@
             // Навешиваем обработчики изменений
             tbody.querySelectorAll('.tasks-table-input, .tasks-table-input-select').forEach(input => {
                 input.addEventListener('change', onTaskTableInputChange);
+            });
+            
+            // Специальный обработчик для select статуса - открываем меню статуса вместо стандартного выпадающего списка
+            tbody.querySelectorAll('select[data-field="status"]').forEach(select => {
+                // Блокируем стандартное открытие выпадающего списка
+                select.addEventListener('mousedown', (event) => {
+                    if (!canEdit()) {
+                        event.preventDefault();
+                        return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    const index = parseInt(select.getAttribute('data-index'), 10);
+                    const task = tasks[index];
+                    if (!task) return;
+                    
+                    // Получаем координаты select для позиционирования меню
+                    // Используем getBoundingClientRect() для получения координат относительно viewport
+                    const rect = select.getBoundingClientRect();
+                    // Позиционируем меню справа от select, выравнивая по верхнему краю
+                    // Координаты getBoundingClientRect() уже относительно viewport
+                    const x = rect.right; // Правая граница select
+                    const y = rect.top; // Верхний край select (меню будет выровнено по верхнему краю)
+                    
+                    console.log('📍 Select координаты:', { 
+                        left: rect.left, 
+                        right: rect.right, 
+                        top: rect.top, 
+                        bottom: rect.bottom,
+                        width: rect.width,
+                        height: rect.height,
+                        x: x,
+                        y: y
+                    });
+                    
+                    // Сохраняем координаты для позиционирования
+                    lastClickCoordinates.x = x;
+                    lastClickCoordinates.y = y;
+                    
+                    // Открываем меню статуса рядом с select
+                    // Используем все даты задачи для открытия меню
+                    const taskDates = task.dates || [];
+                    const dateStrs = taskDates.map(d => formatDateKey(d));
+                    
+                    // Открываем меню с правильными координатами
+                    openStatusMenu(x, y, task.id, dateStrs);
+                });
+                
+                // Также обрабатываем touch события для мобильных устройств
+                select.addEventListener('touchstart', (event) => {
+                    if (!canEdit()) {
+                        event.preventDefault();
+                        return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    const index = parseInt(select.getAttribute('data-index'), 10);
+                    const task = tasks[index];
+                    if (!task) return;
+                    
+                    // Получаем координаты тапа и позиционируем меню рядом с select
+                    const rect = select.getBoundingClientRect();
+                    const touch = event.touches[0];
+                    // Используем координаты тапа, но если они далеко от select, используем позицию select
+                    const tapX = touch.clientX;
+                    const tapY = touch.clientY;
+                    // Позиционируем меню справа от select, выравнивая по верхнему краю
+                    const x = rect.right; // Правая граница select
+                    const y = rect.top; // Верхний край select (меню будет выровнено по верхнему краю)
+                    
+                    console.log('📍 Touch координаты:', { 
+                        tapX, 
+                        tapY,
+                        selectLeft: rect.left,
+                        selectRight: rect.right,
+                        selectTop: rect.top,
+                        selectBottom: rect.bottom,
+                        finalX: x,
+                        finalY: y
+                    });
+                    
+                    // Сохраняем координаты для позиционирования
+                    lastClickCoordinates.x = x;
+                    lastClickCoordinates.y = y;
+                    
+                    // Открываем меню статуса рядом с select
+                    const taskDates = task.dates || [];
+                    const dateStrs = taskDates.map(d => formatDateKey(d));
+                    
+                    openStatusMenu(x, y, task.id, dateStrs);
+                });
             });
         }
 
@@ -6469,17 +6663,26 @@
                     }
                 }
             } else if (field === 'status') {
+                // Обработка изменения статуса через select теперь происходит через меню статуса
+                // Этот обработчик оставлен на случай, если статус изменится другим способом
+                // Но обычно меню статуса открывается при клике на select
                 const newStatus = input.value;
-                task.status = newStatus;
-
-                // Применяем статус ко всем датам задачи
-                task.dateStatuses = {};
-                if (newStatus === 'in-progress' || newStatus === 'completed') {
-                    task.dates.forEach(d => {
-                        const key = formatDateKey(d);
-                        task.dateStatuses[key] = newStatus;
-                    });
+                const oldStatus = task.status;
+                
+                // Если статус действительно изменился (не через меню), применяем его
+                if (newStatus !== oldStatus) {
+                    // Сохраняем старое значение для отката, если пользователь отменит
+                    input.value = oldStatus; // Возвращаем старое значение в select
+                    
+                    // Сохраняем координаты элемента select для позиционирования модального окна
+                    const rect = input.getBoundingClientRect();
+                    lastClickCoordinates.x = rect.left + rect.width / 2;
+                    lastClickCoordinates.y = rect.top + rect.height / 2;
+                    
+                    // Показываем предупреждение перед применением статуса
+                    openScaleWarning(newStatus, null, true, index);
                 }
+                return; // Не применяем статус сразу, ждём подтверждения
             }
 
             // Пересчитываем даты задачи в зависимости от заполненных полей.
@@ -6888,6 +7091,60 @@ function loadHtml2Pdf() {
     });
 }
 
+// Функция генерации имени файла с названием компании и датой/временем
+function generateExportFileName(extension) {
+    // Получаем название компании из элемента или глобальной переменной
+    const nameEl = document.getElementById('companyNameDisplay');
+    let companyNameText = '';
+    
+    // Сначала пытаемся получить из элемента
+    if (nameEl) {
+        if (nameEl.classList.contains('has-value')) {
+            companyNameText = nameEl.innerText || nameEl.textContent || '';
+        }
+    }
+    
+    // Если не получилось, используем глобальную переменную
+    if ((!companyNameText || companyNameText.trim() === '') && typeof companyName !== 'undefined' && companyName) {
+        companyNameText = companyName;
+    }
+    
+    // Если название не задано, используем дефолтное
+    if (!companyNameText || companyNameText.trim() === '' || companyNameText === 'Введите название компании') {
+        companyNameText = 'ICONA';
+    }
+    
+    // Очищаем название от недопустимых символов для имени файла
+    // Убираем: / \ : * ? " < > |
+    companyNameText = companyNameText
+        .replace(/[/\\:*?"<>|]/g, '')
+        .replace(/\s+/g, '_') // Заменяем пробелы на подчеркивания
+        .replace(/_+/g, '_') // Убираем множественные подчеркивания
+        .replace(/^_+|_+$/g, '') // Убираем подчеркивания в начале и конце
+        .trim();
+    
+    // Если после очистки название пустое, используем дефолтное
+    if (!companyNameText) {
+        companyNameText = 'ICONA';
+    }
+    
+    // Генерируем дату и время в формате YYYY-MM-DD_HH-MM-SS
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    const dateTime = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+    
+    // Формируем имя файла
+    const fileName = `График_внедрения_${companyNameText}_${dateTime}.${extension}`;
+    
+    return fileName;
+}
+
 // Экспорт в PDF: детальный Гант (опционально) по выбранному масштабу + таблица задач с комментариями
 async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     if (!tasks || !tasks.length) return;
@@ -7224,7 +7481,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
     const opt = {
         margin: [10, 10, 20, 10], // [top, left, bottom, right] - увеличиваем нижний отступ
-        filename: 'График_внедрения_ICONA.pdf',
+        filename: generateExportFileName('pdf'),
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
             scale: 2,
@@ -7483,7 +7740,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'График_внедрения_ICONA.csv';
+                    a.download = generateExportFileName('csv');
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -7719,7 +7976,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             XLSX.utils.book_append_sheet(wb, ws, 'Задачи');
 
             // Лист со статистикой
-            XLSX.writeFile(wb, 'График_внедрения_ICONA.xlsx');
+            XLSX.writeFile(wb, generateExportFileName('xlsx'));
             
             // Закрываем индикатор
             loadingIndicator.textContent = 'Excel готов!';
@@ -8029,34 +8286,48 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         // Закрыть модальное окно подтверждения сброса плана
         // Функции для работы с модальным окном предупреждения о масштабе
-        function openScaleWarning(status, scaleMode) {
+        function openScaleWarning(status, scaleMode, fromTable = false, taskIndex = null) {
             const modal = document.getElementById('scaleWarningModal');
             const warningText = document.getElementById('scaleWarningText');
             if (!modal || !warningText) return;
             
-            // Формируем текст предупреждения в зависимости от масштаба
-            let scaleText = '';
-            if (scaleMode === 'week') {
-                scaleText = 'неделе';
-            } else if (scaleMode === 'month') {
-                scaleText = 'месяцу';
+            // Формируем текст предупреждения в зависимости от источника
+            if (fromTable) {
+                warningText.textContent = 'Вы собираетесь проставить статус для всего срока задачи. Вы уверены, что хотите это сделать?';
+                // Сохраняем данные для применения после подтверждения
+                pendingStatusFromTable = { status, taskIndex };
+                pendingStatusAfterScaleWarning = null;
+            } else {
+                // Формируем текст предупреждения в зависимости от масштаба
+                let scaleText = '';
+                if (scaleMode === 'week') {
+                    scaleText = 'неделе';
+                } else if (scaleMode === 'month') {
+                    scaleText = 'месяцу';
+                }
+                
+                warningText.textContent = `Вы собираетесь проставить статус всей ${scaleText}. Вы уверены, что хотите это сделать?`;
+                
+                // Сохраняем статус для применения после подтверждения
+                pendingStatusAfterScaleWarning = status;
+                pendingStatusFromTable = null;
             }
-            
-            warningText.textContent = `Вы собираетесь проставить статус всей ${scaleText}. Вы уверены, что хотите это сделать?`;
-            
-            // Сохраняем статус для применения после подтверждения
-            pendingStatusAfterScaleWarning = status;
             
             // Показываем модальное окно
             modal.style.display = 'block';
             
-            // На мобильных устройствах позиционируем модальное окно рядом с точкой клика
-            const isMobile = window.innerWidth <= 1024;
-            if (isMobile) {
-                requestAnimationFrame(() => {
-                    const modalContent = modal.querySelector('.modal-content');
-                    if (modalContent && lastClickCoordinates.x && lastClickCoordinates.y) {
-                        const viewportHeight = window.innerHeight;
+            // Позиционируем модальное окно в зоне видимости
+            requestAnimationFrame(() => {
+                const modalContent = modal.querySelector('.modal-content');
+                if (!modalContent) return;
+                
+                const isMobile = window.innerWidth <= 1024;
+                const viewportHeight = window.innerHeight;
+                const viewportWidth = window.innerWidth;
+                
+                if (isMobile) {
+                    // На мобильных устройствах позиционируем рядом с точкой клика
+                    if (lastClickCoordinates.x && lastClickCoordinates.y) {
                         const clickY = lastClickCoordinates.y;
                         const spaceBelow = viewportHeight - clickY;
                         const spaceAbove = clickY;
@@ -8072,7 +8343,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         const maxTop = viewportHeight - 300;
                         topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
                         
-                        modalContent.style.setProperty('position', 'absolute', 'important');
+                        modalContent.style.setProperty('position', 'fixed', 'important');
                         modalContent.style.setProperty('top', topPosition + 'px', 'important');
                         modalContent.style.setProperty('left', '50%', 'important');
                         modalContent.style.setProperty('transform', 'translateX(-50%)', 'important');
@@ -8080,8 +8351,57 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         modalContent.style.setProperty('width', 'calc(100% - 40px)', 'important');
                         modalContent.style.setProperty('max-width', '500px', 'important');
                     }
-                });
-            } else {
+                } else {
+                    // На десктопе позиционируем в центре видимой области или рядом с элементом
+                    if (lastClickCoordinates.x && lastClickCoordinates.y) {
+                        const clickY = lastClickCoordinates.y;
+                        const modalHeight = 250; // Примерная высота модального окна
+                        const spaceBelow = viewportHeight - clickY;
+                        const spaceAbove = clickY;
+                        
+                        let topPosition;
+                        // Если элемент в верхней части экрана, показываем ниже
+                        if (clickY < viewportHeight / 3) {
+                            topPosition = Math.min(clickY + 60, viewportHeight - modalHeight - 20);
+                        }
+                        // Если элемент в нижней части экрана, показываем выше
+                        else if (clickY > viewportHeight * 2 / 3) {
+                            topPosition = Math.max(clickY - modalHeight - 60, 20);
+                        }
+                        // Иначе центрируем в видимой области
+                        else {
+                            topPosition = (viewportHeight - modalHeight) / 2;
+                        }
+                        
+                        // Ограничиваем позицию границами viewport
+                        topPosition = Math.max(20, Math.min(topPosition, viewportHeight - modalHeight - 20));
+                        
+                        modalContent.style.setProperty('position', 'fixed', 'important');
+                        modalContent.style.setProperty('top', topPosition + 'px', 'important');
+                        modalContent.style.setProperty('left', '50%', 'important');
+                        modalContent.style.setProperty('transform', 'translateX(-50%)', 'important');
+                        modalContent.style.setProperty('margin', '0', 'important');
+                        modalContent.style.setProperty('width', '90%', 'important');
+                        modalContent.style.setProperty('max-width', '600px', 'important');
+                    } else {
+                        // Если координаты не известны, центрируем в viewport
+                        modalContent.style.setProperty('position', 'fixed', 'important');
+                        modalContent.style.setProperty('top', '50%', 'important');
+                        modalContent.style.setProperty('left', '50%', 'important');
+                        modalContent.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+                        modalContent.style.setProperty('margin', '0', 'important');
+                        modalContent.style.setProperty('width', '90%', 'important');
+                        modalContent.style.setProperty('max-width', '600px', 'important');
+                    }
+                }
+            });
+        }
+        
+        function cancelScaleWarning() {
+            const modal = document.getElementById('scaleWarningModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Сбрасываем стили позиционирования
                 const modalContent = modal.querySelector('.modal-content');
                 if (modalContent) {
                     modalContent.style.position = '';
@@ -8093,14 +8413,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     modalContent.style.maxWidth = '';
                 }
             }
-        }
-        
-        function cancelScaleWarning() {
-            const modal = document.getElementById('scaleWarningModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
             pendingStatusAfterScaleWarning = null;
+            pendingStatusFromTable = null;
             closeStatusMenu();
         }
         
@@ -8110,6 +8424,17 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 modal.style.display = 'none';
             }
             
+            // Обработка статуса из таблицы
+            if (pendingStatusFromTable) {
+                const { status, taskIndex } = pendingStatusFromTable;
+                pendingStatusFromTable = null;
+                
+                // Применяем статус к задаче из таблицы
+                applyStatusFromTable(status, taskIndex);
+                return;
+            }
+            
+            // Обработка статуса из масштаба (неделя/месяц)
             if (pendingStatusAfterScaleWarning) {
                 const status = pendingStatusAfterScaleWarning;
                 pendingStatusAfterScaleWarning = null;
@@ -8123,6 +8448,41 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     applyStatusToSelection(status);
                 }
             }
+        }
+        
+        // Применение статуса к задаче из таблицы после подтверждения предупреждения
+        function applyStatusFromTable(status, taskIndex) {
+            const task = tasks[taskIndex];
+            if (!task) return;
+            
+            // Обновляем статус задачи
+            task.status = status;
+            
+            // Применяем статус ко всем датам задачи
+            task.dateStatuses = {};
+            if (status === 'in-progress' || status === 'completed') {
+                task.dates.forEach(d => {
+                    const key = formatDateKey(d);
+                    task.dateStatuses[key] = status;
+                });
+            }
+            
+            // Обновляем значение в select
+            const statusSelect = document.querySelector(`select[data-index="${taskIndex}"][data-field="status"]`);
+            if (statusSelect) {
+                statusSelect.value = status;
+            }
+            
+            // Обновляем отображение
+            updateStatistics();
+            if (currentView === 'gantt') {
+                renderGantt();
+            }
+            renderTable();
+            
+            // Немедленное сохранение для критических операций (статусы)
+            console.log('💾 Критическое изменение: статус из таблицы, сохраняем немедленно');
+            saveFullGanttState();
         }
 
         function cancelResetPlan() {
@@ -8255,11 +8615,84 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         // --- Настройка этапов ---
 
-        function openStageSettingsModal() {
+        function openStageSettingsModal(event) {
+            // Блокируем открытие модального окна в режиме просмотра
+            if (!canEdit()) {
+                return;
+            }
             buildStageSettingsList();
             const modal = document.getElementById('stageSettingsModal');
-            if (modal) {
-                modal.style.display = 'block';
+            if (!modal) return;
+            
+            // Получаем кнопку, которая была нажата
+            const button = event ? (event.currentTarget || event.target) : document.querySelector('.stage-settings-btn');
+            
+            modal.style.display = 'block';
+            
+            // Для мобильных и планшетов позиционируем модальное окно рядом с кнопкой
+            const isMobile = window.innerWidth <= 1024;
+            if (isMobile && button) {
+                // Двойной requestAnimationFrame для гарантии, что контент отрендерился
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const modalContent = modal.querySelector('.modal-content');
+                        if (!modalContent) return;
+                        
+                        const buttonRect = button.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const viewportWidth = window.innerWidth;
+                        
+                        // Получаем реальные размеры модального окна после рендера
+                        const modalRect = modalContent.getBoundingClientRect();
+                        const modalHeight = modalRect.height || 400; // Примерная высота по умолчанию
+                        const modalWidth = Math.min(modalRect.width || 500, viewportWidth - 40);
+                        
+                        // Вычисляем пространство сверху и снизу от кнопки
+                        const spaceBelow = viewportHeight - buttonRect.bottom;
+                        const spaceAbove = buttonRect.top;
+                        
+                        // Определяем, где больше места - сверху или снизу
+                        let topPosition;
+                        if (spaceBelow < modalHeight + 20 && spaceAbove > spaceBelow) {
+                            // Показываем над кнопкой
+                            topPosition = buttonRect.top - modalHeight - 20;
+                        } else {
+                            // Показываем под кнопкой
+                            topPosition = buttonRect.bottom + 20;
+                        }
+                        
+                        // Убеждаемся, что окно не выходит за пределы экрана
+                        const minTop = 20;
+                        const maxTop = viewportHeight - modalHeight - 20;
+                        topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
+                        
+                        // Центрируем по горизонтали
+                        const leftPosition = (viewportWidth - modalWidth) / 2;
+                        
+                        // Применяем позиционирование
+                        modalContent.style.setProperty('position', 'fixed', 'important');
+                        modalContent.style.setProperty('top', topPosition + 'px', 'important');
+                        modalContent.style.setProperty('left', leftPosition + 'px', 'important');
+                        modalContent.style.setProperty('transform', 'none', 'important');
+                        modalContent.style.setProperty('margin', '0', 'important');
+                        modalContent.style.setProperty('width', 'calc(100% - 40px)', 'important');
+                        modalContent.style.setProperty('max-width', '500px', 'important');
+                    });
+                });
+            } else {
+                // На десктопе сбрасываем стили и используем стандартное центрирование
+                requestAnimationFrame(() => {
+                    const modalContent = modal.querySelector('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.removeProperty('position');
+                        modalContent.style.removeProperty('top');
+                        modalContent.style.removeProperty('left');
+                        modalContent.style.removeProperty('transform');
+                        modalContent.style.removeProperty('margin');
+                        modalContent.style.removeProperty('width');
+                        modalContent.style.removeProperty('max-width');
+                    }
+                });
             }
         }
 
@@ -8267,6 +8700,18 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const modal = document.getElementById('stageSettingsModal');
             if (modal) {
                 modal.style.display = 'none';
+                
+                // Сбрасываем все стили позиционирования при закрытии
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.removeProperty('position');
+                    modalContent.style.removeProperty('top');
+                    modalContent.style.removeProperty('left');
+                    modalContent.style.removeProperty('transform');
+                    modalContent.style.removeProperty('margin');
+                    modalContent.style.removeProperty('width');
+                    modalContent.style.removeProperty('max-width');
+                }
             }
 
             // При выходе из режима редактирования этапов всегда включаем "Все этапы"
@@ -8320,7 +8765,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             modal.style.display = 'block';
             
             // На мобильных устройствах позиционируем модальное окно рядом с точкой клика
-            const isMobile = window.innerWidth <= 768;
+            // Для мобильных и планшетов используем улучшенное позиционирование рядом с ячейкой
+            const isMobile = window.innerWidth <= 1024;
             if (isMobile) {
                 const modalContent = modal.querySelector('.modal-content');
                 if (modalContent) {
@@ -8491,6 +8937,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 nameEl.title = 'Двойной клик, чтобы переименовать';
 
                 nameEl.addEventListener('dblclick', () => {
+                    // Блокируем переименование в режиме просмотра
+                    if (!canEdit()) {
+                        return;
+                    }
                     const newName = prompt('Новое название этапа:', shortName);
                     if (!newName) return;
                     const trimmed = newName.trim();
@@ -8533,6 +8983,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         }
 
         function addNewStage() {
+            // Блокируем добавление этапа в режиме просмотра
+            if (!canEdit()) {
+                return;
+            }
             let maxNumber = 0;
             stageConfig.forEach(name => {
                 const match = name.match(/^Этап\s+(\d+)/);
@@ -8624,7 +9078,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         let draggingTaskId = null;
 
         // Открытие/закрытие меню статуса
-        function openStatusMenu(x, y, taskId, dateStrs) {
+        function openStatusMenu(x, y, taskId, dateStrs, targetElement = null) {
             // dateStrs может быть массивом дат (для недель/месяцев) или одной датой (для дней)
             const dateArray = Array.isArray(dateStrs) ? dateStrs : [dateStrs];
             currentStatusTarget = { taskId, dateStrs: dateArray };
@@ -8636,69 +9090,235 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const menu = document.getElementById('statusMenu');
             if (!menu) return;
             
-            const isMobile = window.innerWidth <= 768;
+            // Для мобильных и планшетов используем улучшенное позиционирование рядом с ячейкой
+            const isMobile = window.innerWidth <= 1024;
+            
+            // Убеждаемся, что меню находится в body (не внутри других элементов с transform)
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+            
+            // Сбрасываем все стили позиционирования перед установкой новых
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.transform = '';
+            menu.style.margin = '0';
+            menu.style.padding = '';
             
             // Сначала показываем меню, чтобы получить правильные размеры
             menu.style.display = 'block';
             menu.style.position = 'fixed';
+            menu.style.zIndex = '200';
             
             // Получаем размеры меню и позиционируем его
             requestAnimationFrame(() => {
                 const menuRect = menu.getBoundingClientRect();
-                let left = x;
-                let top = y;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                // Если передан targetElement, используем его координаты вместо координат события
+                let referenceX = x;
+                let referenceY = y;
+                
+                if (targetElement) {
+                    const targetRect = targetElement.getBoundingClientRect();
+                    referenceX = targetRect.right; // Правая граница элемента
+                    referenceY = targetRect.top + targetRect.height / 2; // Центр по вертикали
+                    console.log('📍 Используем координаты элемента:', {
+                        elementRect: { left: targetRect.left, top: targetRect.top, right: targetRect.right, bottom: targetRect.bottom },
+                        referenceX,
+                        referenceY
+                    });
+                }
+                
+                let left = referenceX;
+                let top = referenceY;
                 
                 console.log('📍 Клик на позиции:', { 
                     clickX: x, 
-                    clickY: y, 
+                    clickY: y,
+                    referenceX,
+                    referenceY,
                     isMobile, 
                     menuWidth: menuRect.width, 
                     menuHeight: menuRect.height,
-                    viewport: { width: window.innerWidth, height: window.innerHeight }
+                    viewport: { width: viewportWidth, height: viewportHeight }
                 });
                 
                 if (isMobile) {
-                    // На мобильных ОБЯЗАТЕЛЬНО показываем меню рядом с точкой тапа
+                    // На мобильных и планшетах показываем меню рядом с ячейкой
                     const offset = 15; // чуть больше отступ, чтобы палец не закрывал
                     
                     // Проверяем, влезает ли меню справа от точки клика
-                    if (x + menuRect.width + offset > window.innerWidth) {
+                    if (referenceX + menuRect.width + offset > viewportWidth) {
                         // Показываем слева от точки клика
-                        left = Math.max(10, x - menuRect.width - offset);
+                        left = Math.max(10, referenceX - menuRect.width - offset);
                     } else {
-                        left = x + offset;
+                        left = referenceX + offset;
                     }
                     
-                    // Проверяем, влезает ли меню снизу от точки клика
-                    if (y + menuRect.height + offset > window.innerHeight) {
-                        // Показываем над точкой клика
-                        top = Math.max(10, y - menuRect.height - offset);
+                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
+                    const spaceBelow = viewportHeight - referenceY - offset;
+                    const spaceAbove = referenceY - offset;
+                    
+                    if (spaceBelow >= menuRect.height + 10) {
+                        // Есть место снизу - показываем меню ниже точки клика
+                        top = referenceY + offset;
+                    } else if (spaceAbove >= menuRect.height + 10) {
+                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
+                        top = referenceY - menuRect.height - offset;
                     } else {
-                        top = y + offset;
+                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
+                        if (spaceBelow > spaceAbove) {
+                            // Больше места снизу - показываем снизу, но с учетом границ
+                            top = Math.min(referenceY + offset, viewportHeight - menuRect.height - 10);
+                        } else {
+                            // Больше места сверху - показываем сверху, но с учетом границ
+                            top = Math.max(10, referenceY - menuRect.height - offset);
+                        }
                     }
                     
-                    console.log('📱 Мобильная позиция меню:', { left, top });
+                    // Финальная проверка: убеждаемся, что меню не выходит за границы
+                    if (top < 10) {
+                        top = 10;
+                    } else if (top + menuRect.height > viewportHeight - 10) {
+                        top = viewportHeight - menuRect.height - 10;
+                    }
+                    
+                    console.log('📱 Мобильная позиция меню:', { left, top, referenceX, referenceY, spaceBelow, spaceAbove });
                 } else {
-                    // На десктопе
+                    // На десктопе позиционируем меню рядом с точкой клика
                     const offset = 5;
                     
-                    if (x + menuRect.width + offset > window.innerWidth) {
-                        left = Math.max(10, x - menuRect.width - offset);
+                    // Проверяем, влезает ли меню справа
+                    if (referenceX + menuRect.width + offset > viewportWidth) {
+                        // Показываем слева от точки клика
+                        left = Math.max(10, referenceX - menuRect.width - offset);
                     } else {
-                        left = x + offset;
+                        // Показываем справа от точки клика
+                        left = referenceX + offset;
                     }
                     
-                    if (y + menuRect.height + offset > window.innerHeight) {
-                        top = Math.max(10, y - menuRect.height - offset);
+                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
+                    const spaceBelow = viewportHeight - referenceY - offset;
+                    const spaceAbove = referenceY - offset;
+                    
+                    if (spaceBelow >= menuRect.height + 10) {
+                        // Есть место снизу - показываем меню ниже точки клика
+                        top = referenceY + offset;
+                    } else if (spaceAbove >= menuRect.height + 10) {
+                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
+                        top = referenceY - menuRect.height - offset;
                     } else {
-                        top = y + offset;
+                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
+                        if (spaceBelow > spaceAbove) {
+                            // Больше места снизу - показываем снизу, но с учетом границ
+                            top = Math.min(referenceY + offset, viewportHeight - menuRect.height - 10);
+                        } else {
+                            // Больше места сверху - показываем сверху, но с учетом границ
+                            top = Math.max(10, referenceY - menuRect.height - offset);
+                        }
+                    }
+                    
+                    // Финальная проверка: убеждаемся, что меню не выходит за границы
+                    if (top < 10) {
+                        top = 10;
+                    } else if (top + menuRect.height > viewportHeight - 10) {
+                        top = viewportHeight - menuRect.height - 10;
                     }
                 }
 
+                // Устанавливаем позицию
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
                 
-                console.log('✅ Финальная позиция меню:', { left, top });
+                // Двойной requestAnimationFrame для гарантии, что стили применены
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const actualRect = menu.getBoundingClientRect();
+                        const scrollX = window.scrollX || window.pageXOffset;
+                        const scrollY = window.scrollY || window.pageYOffset;
+                        
+                        // Проверяем, не сдвинулось ли меню
+                        const topDiff = Math.abs(actualRect.top - top);
+                        const leftDiff = Math.abs(actualRect.left - left);
+                        
+                        console.log('✅ Финальная позиция меню:', { 
+                            left, 
+                            top, 
+                            menuWidth: menuRect.width, 
+                            menuHeight: menuRect.height,
+                            actualLeft: actualRect.left,
+                            actualTop: actualRect.top,
+                            scrollX,
+                            scrollY,
+                            topDiff,
+                            leftDiff,
+                            computedLeft: window.getComputedStyle(menu).left,
+                            computedTop: window.getComputedStyle(menu).top,
+                            computedPosition: window.getComputedStyle(menu).position,
+                            parentElement: menu.parentElement ? menu.parentElement.tagName : 'none',
+                            parentTransform: menu.parentElement ? window.getComputedStyle(menu.parentElement).transform : 'none'
+                        });
+                        
+                        // Если меню сдвинулось, корректируем позицию
+                        if (topDiff > 5 || leftDiff > 5) {
+                            console.warn('⚠️ Меню сдвинулось! Ожидалось:', { left, top }, 'Получилось:', { 
+                                left: actualRect.left, 
+                                top: actualRect.top 
+                            });
+                            
+                            // Корректируем позицию с учетом смещения
+                            // Вычисляем разницу и добавляем её к нужной позиции
+                            const topOffset = top - actualRect.top;
+                            const leftOffset = left - actualRect.left;
+                            const correctedTop = top + topOffset;
+                            const correctedLeft = left + leftOffset;
+                            
+                            console.log('🔧 Корректируем позицию:', { 
+                                correctedLeft, 
+                                correctedTop,
+                                topOffset,
+                                leftOffset,
+                                originalTop: top,
+                                actualTop: actualRect.top
+                            });
+                            menu.style.left = `${correctedLeft}px`;
+                            menu.style.top = `${correctedTop}px`;
+                            
+                            // Проверяем еще раз после коррекции
+                            requestAnimationFrame(() => {
+                                const finalRect = menu.getBoundingClientRect();
+                                const finalTopDiff = Math.abs(finalRect.top - top);
+                                const finalLeftDiff = Math.abs(finalRect.left - left);
+                                
+                                if (finalTopDiff > 5 || finalLeftDiff > 5) {
+                                    console.error('❌ Коррекция не помогла! Финальная позиция:', {
+                                        expected: { left, top },
+                                        actual: { left: finalRect.left, top: finalRect.top }
+                                    });
+                                    
+                                    // Последняя попытка: используем координаты напрямую с учетом прокрутки
+                                    const scrollY = window.scrollY || window.pageYOffset;
+                                    const scrollX = window.scrollX || window.pageXOffset;
+                                    
+                                    // Пробуем установить позицию относительно viewport без учета прокрутки
+                                    menu.style.position = 'fixed';
+                                    menu.style.left = `${left}px`;
+                                    menu.style.top = `${top}px`;
+                                    menu.style.margin = '0';
+                                    menu.style.transform = 'none';
+                                    
+                                    console.log('🔄 Последняя попытка коррекции:', { left, top, scrollX, scrollY });
+                                } else {
+                                    console.log('✅ Коррекция успешна!');
+                                }
+                            });
+                        }
+                    });
+                });
             });
         }
 
@@ -8786,43 +9406,196 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const menu = document.getElementById('statusMenu');
             if (!menu) return;
 
-            const isMobile = window.innerWidth <= 768;
+            // Убеждаемся, что меню находится в body (не внутри других элементов с transform)
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+
+            // Для мобильных и планшетов используем улучшенное позиционирование рядом с ячейкой
+            const isMobile = window.innerWidth <= 1024;
+            
+            // Сбрасываем все стили позиционирования перед установкой новых
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.transform = '';
+            menu.style.margin = '0';
+            
             menu.style.display = 'block';
             menu.style.position = 'fixed';
+            menu.style.zIndex = '200';
 
             requestAnimationFrame(() => {
                 const menuRect = menu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
                 let left = x;
                 let top = y;
 
                 if (isMobile) {
-                    const offset = 15;
-                    if (x + menuRect.width + offset > window.innerWidth) {
+                    // На мобильных и планшетах показываем меню рядом с точкой тапа
+                    const offset = 15; // чуть больше отступ, чтобы палец не закрывал
+                    
+                    // Проверяем, влезает ли меню справа от точки клика
+                    if (x + menuRect.width + offset > viewportWidth) {
+                        // Показываем слева от точки клика
                         left = Math.max(10, x - menuRect.width - offset);
                     } else {
                         left = x + offset;
                     }
-                    if (y + menuRect.height + offset > window.innerHeight) {
-                        top = Math.max(10, y - menuRect.height - offset);
-                    } else {
+                    
+                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
+                    const spaceBelow = viewportHeight - y - offset;
+                    const spaceAbove = y - offset;
+                    
+                    if (spaceBelow >= menuRect.height + 10) {
+                        // Есть место снизу - показываем меню ниже точки клика
                         top = y + offset;
+                    } else if (spaceAbove >= menuRect.height + 10) {
+                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
+                        top = y - menuRect.height - offset;
+                    } else {
+                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
+                        if (spaceBelow > spaceAbove) {
+                            // Больше места снизу - показываем снизу, но с учетом границ
+                            top = Math.min(y + offset, viewportHeight - menuRect.height - 10);
+                        } else {
+                            // Больше места сверху - показываем сверху, но с учетом границ
+                            top = Math.max(10, y - menuRect.height - offset);
+                        }
+                    }
+                    
+                    // Финальная проверка: убеждаемся, что меню не выходит за границы
+                    if (top < 10) {
+                        top = 10;
+                    } else if (top + menuRect.height > viewportHeight - 10) {
+                        top = viewportHeight - menuRect.height - 10;
                     }
                 } else {
                     const offset = 5;
-                    if (x + menuRect.width + offset > window.innerWidth) {
+                    // Проверяем, влезает ли меню справа
+                    if (x + menuRect.width + offset > viewportWidth) {
                         left = Math.max(10, x - menuRect.width - offset);
                     } else {
                         left = x + offset;
                     }
-                    if (y + menuRect.height + offset > window.innerHeight) {
-                        top = Math.max(10, y - menuRect.height - offset);
-                    } else {
+                    
+                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
+                    const spaceBelow = viewportHeight - y - offset;
+                    const spaceAbove = y - offset;
+                    
+                    if (spaceBelow >= menuRect.height + 10) {
+                        // Есть место снизу - показываем меню ниже точки клика
                         top = y + offset;
+                    } else if (spaceAbove >= menuRect.height + 10) {
+                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
+                        top = y - menuRect.height - offset;
+                    } else {
+                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
+                        if (spaceBelow > spaceAbove) {
+                            top = Math.min(y + offset, viewportHeight - menuRect.height - 10);
+                        } else {
+                            top = Math.max(10, y - menuRect.height - offset);
+                        }
+                    }
+                    
+                    // Финальная проверка: убеждаемся, что меню не выходит за границы
+                    if (top < 10) {
+                        top = 10;
+                    } else if (top + menuRect.height > viewportHeight - 10) {
+                        top = viewportHeight - menuRect.height - 10;
                     }
                 }
 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
+                
+                // Двойной requestAnimationFrame для гарантии, что стили применены
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const actualRect = menu.getBoundingClientRect();
+                        const scrollX = window.scrollX || window.pageXOffset;
+                        const scrollY = window.scrollY || window.pageYOffset;
+                        
+                        // Проверяем, не сдвинулось ли меню
+                        const topDiff = Math.abs(actualRect.top - top);
+                        const leftDiff = Math.abs(actualRect.left - left);
+                        
+                        console.log('✅ Финальная позиция меню (множественный выбор):', { 
+                            left, 
+                            top, 
+                            menuWidth: menuRect.width, 
+                            menuHeight: menuRect.height,
+                            actualLeft: actualRect.left,
+                            actualTop: actualRect.top,
+                            scrollX,
+                            scrollY,
+                            topDiff,
+                            leftDiff,
+                            computedLeft: window.getComputedStyle(menu).left,
+                            computedTop: window.getComputedStyle(menu).top,
+                            computedPosition: window.getComputedStyle(menu).position,
+                            parentElement: menu.parentElement ? menu.parentElement.tagName : 'none',
+                            parentTransform: menu.parentElement ? window.getComputedStyle(menu.parentElement).transform : 'none'
+                        });
+                        
+                        // Если меню сдвинулось, корректируем позицию
+                        if (topDiff > 5 || leftDiff > 5) {
+                            console.warn('⚠️ Меню сдвинулось (множественный выбор)! Ожидалось:', { left, top }, 'Получилось:', { 
+                                left: actualRect.left, 
+                                top: actualRect.top 
+                            });
+                            
+                            // Корректируем позицию с учетом смещения
+                            // Вычисляем разницу и добавляем её к нужной позиции
+                            const topOffset = top - actualRect.top;
+                            const leftOffset = left - actualRect.left;
+                            const correctedTop = top + topOffset;
+                            const correctedLeft = left + leftOffset;
+                            
+                            console.log('🔧 Корректируем позицию (множественный выбор):', { 
+                                correctedLeft, 
+                                correctedTop,
+                                topOffset,
+                                leftOffset,
+                                originalTop: top,
+                                actualTop: actualRect.top
+                            });
+                            menu.style.left = `${correctedLeft}px`;
+                            menu.style.top = `${correctedTop}px`;
+                            
+                            // Проверяем еще раз после коррекции
+                            requestAnimationFrame(() => {
+                                const finalRect = menu.getBoundingClientRect();
+                                const finalTopDiff = Math.abs(finalRect.top - top);
+                                const finalLeftDiff = Math.abs(finalRect.left - left);
+                                
+                                if (finalTopDiff > 5 || finalLeftDiff > 5) {
+                                    console.error('❌ Коррекция не помогла (множественный выбор)! Финальная позиция:', {
+                                        expected: { left, top },
+                                        actual: { left: finalRect.left, top: finalRect.top }
+                                    });
+                                    
+                                    // Последняя попытка: используем координаты напрямую с учетом прокрутки
+                                    const scrollY = window.scrollY || window.pageYOffset;
+                                    const scrollX = window.scrollX || window.pageXOffset;
+                                    
+                                    // Пробуем установить позицию относительно viewport без учета прокрутки
+                                    menu.style.position = 'fixed';
+                                    menu.style.left = `${left}px`;
+                                    menu.style.top = `${top}px`;
+                                    menu.style.margin = '0';
+                                    menu.style.transform = 'none';
+                                    
+                                    console.log('🔄 Последняя попытка коррекции (множественный выбор):', { left, top, scrollX, scrollY });
+                                } else {
+                                    console.log('✅ Коррекция успешна (множественный выбор)!');
+                                }
+                            });
+                        }
+                    });
+                });
             });
         }
 
@@ -9221,6 +9994,14 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         // Загрузить данные текущего пользователя
         function loadCurrentUser() {
             const userStr = localStorage.getItem('gantt-user');
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            // В режиме просмотра не загружаем пользователя и не показываем кнопки
+            if (isViewMode) {
+                return;
+            }
+            
             if (userStr) {
                 try {
                     currentUser = JSON.parse(userStr);
@@ -9509,6 +10290,14 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             // ПРИНУДИТЕЛЬНО показываем кнопки авторизации после загрузки страницы
             const forceShowAuthButtons = () => {
                 const userStr = localStorage.getItem('gantt-user');
+                const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+                const isViewMode = ganttMode === 'view';
+                
+                // В режиме просмотра не показываем кнопки авторизации
+                if (isViewMode) {
+                    return;
+                }
+                
                 if (userStr) {
                     const profileBtn = document.getElementById('profileBtn');
                     const companiesBottomBtn = document.getElementById('companiesBottomBtn');
@@ -9857,18 +10646,27 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 }
             });
 
-            // Колесо мыши над диаграммой: при зажатой Z — зум, иначе обычный скролл
-            if (chartContainer) {
-                chartContainer.addEventListener('wheel', (event) => {
-                    if (!isZoomKeyPressed) {
-                        return; // обычный скролл страницы
+            // Колесо мыши над диаграммой: при зажатой Z — зум, при Shift — горизонтальный скролл, иначе обычный скролл
+            const ganttChart = document.getElementById('ganttChart');
+            if (ganttChart) {
+                ganttChart.addEventListener('wheel', (event) => {
+                    // Если зажата Z — зум
+                    if (isZoomKeyPressed) {
+                        event.preventDefault();
+                        const direction = event.deltaY > 0 ? -1 : 1; // вниз = отдаление, вверх = приближение
+                        const step = 0.1 * direction;
+                        setZoom(zoomLevel + step);
+                        return;
                     }
-
-                    event.preventDefault();
-
-                    const direction = event.deltaY > 0 ? -1 : 1; // вниз = отдаление, вверх = приближение
-                    const step = 0.1 * direction;
-                    setZoom(zoomLevel + step);
+                    
+                    // Если зажат Shift — горизонтальный скролл
+                    if (event.shiftKey) {
+                        event.preventDefault();
+                        ganttChart.scrollLeft += event.deltaY; // deltaY для горизонтального скролла при Shift
+                        return;
+                    }
+                    
+                    // Иначе обычный вертикальный скролл (не блокируем)
                 }, { passive: false });
             }
 

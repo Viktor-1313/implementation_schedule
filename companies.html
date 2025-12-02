@@ -1606,6 +1606,34 @@
 
         // Загрузить данные текущего пользователя
         function loadCurrentUser() {
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            // В режиме просмотра не загружаем пользователя и скрываем кнопки профиля
+            if (isViewMode) {
+                const profileBtn = document.getElementById('profileBtn');
+                const logoutBtn = document.getElementById('logoutBtn');
+                const adminPanelLink = document.getElementById('adminPanelLink');
+                
+                if (profileBtn) {
+                    profileBtn.style.display = 'none';
+                }
+                if (logoutBtn) {
+                    logoutBtn.style.display = 'none';
+                }
+                if (adminPanelLink) {
+                    adminPanelLink.style.display = 'none';
+                }
+                
+                // Обновляем заголовок для режима просмотра
+                const subtitle = document.getElementById('headerSubtitle');
+                if (subtitle) {
+                    subtitle.textContent = 'Режим просмотра. Выберите компанию для просмотра графика.';
+                }
+                
+                return; // Выходим, не проверяя авторизацию
+            }
+            
             const userStr = localStorage.getItem('gantt-user');
             if (userStr) {
                 try {
@@ -1652,18 +1680,28 @@
         // Загрузить список компаний
         async function loadCompanies() {
             try {
+                const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+                const isViewMode = ganttMode === 'view';
+                
                 const response = await fetch('/api/companies');
                 const allCompanies = await response.json() || [];
                 
                 // Фильтруем компании по доступу пользователя
                 let availableCompanies = [];
-                if (isAdmin) {
+                
+                // В режиме просмотра показываем все компании
+                if (isViewMode) {
+                    availableCompanies = allCompanies;
+                } else if (isAdmin) {
                     // Админы видят все компании
                     availableCompanies = allCompanies;
-                } else {
+                } else if (currentUser) {
                     // Обычные пользователи видят только свои компании
                     const userCompanies = currentUser.companies || [];
                     availableCompanies = allCompanies.filter(c => userCompanies.includes(c.id));
+                } else {
+                    // Если пользователь не авторизован и не в режиме просмотра, не показываем компании
+                    availableCompanies = [];
                 }
                 
                 renderCompanies(availableCompanies, allCompanies);
@@ -1693,9 +1731,19 @@
         // Отобразить список компаний
         async function renderCompanies(companies, allCompanies = []) {
             const container = document.getElementById('companiesContainer');
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
             
             if (companies.length === 0) {
-                if (isAdmin) {
+                if (isViewMode) {
+                    container.innerHTML = `
+                        <div class="companies-grid">
+                            <div class="empty-state">
+                                <p>Компании не найдены.</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (isAdmin) {
                     container.innerHTML = `
                         <div class="companies-grid">
                             <div class="empty-state">
@@ -2852,7 +2900,12 @@
         // Загрузить компании при загрузке страницы
         window.addEventListener('DOMContentLoaded', function() {
             loadCurrentUser();
-            if (currentUser) {
+            
+            // Загружаем компании, если пользователь авторизован или в режиме просмотра
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            const isViewMode = ganttMode === 'view';
+            
+            if (currentUser || isViewMode) {
                 loadCompanies();
             }
             // Настраиваем обработчики кнопок при загрузке страницы
