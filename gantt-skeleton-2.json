@@ -1,0 +1,32 @@
+{
+  "chartType": "2",
+  "skeleton": [
+    {
+      "days": 8,
+      "stage": "тестоввая",
+      "control": "тест",
+      "task": "тест"
+    }
+  ],
+  "updatedAt": "2025-12-03T09:54:54.602Z",
+  "columns": [
+    {
+      "id": "stage",
+      "name": "Этап",
+      "field": "stage",
+      "order": 0
+    },
+    {
+      "id": "control",
+      "name": "Вид контроля",
+      "field": "control",
+      "order": 1
+    },
+    {
+      "id": "task",
+      "name": "Мероприятие",
+      "field": "task",
+      "order": 2
+    }
+  ]
+}

@@ -99,5 +99,14 @@
       "Sminex"
     ],
     "createdAt": "2025-11-30T11:55:47.694Z"
+  },
+  {
+    "id": "1764682122500",
+    "name": "Жека",
+    "login": "Galkin_EA",
+    "password": "$2b$10$0q2LmwhfZvk3vlsCGJXtB.2Kk0il1vTkPfNnhapb3McxbK3GMd5Jy",
+    "role": "admin",
+    "companies": [],
+    "createdAt": "2025-12-02T13:28:42.500Z"
   }
 ]

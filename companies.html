@@ -1481,8 +1481,7 @@
                 <div class="form-group">
                     <label for="editCompanyChartType">Тип графика *</label>
                     <select id="editCompanyChartType" name="editCompanyChartType" required class="tasks-table-input-select" style="width: 100%; padding: 12px 16px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; font-size: 1rem;">
-                        <option value="icona">Внедрение Icona</option>
-                        <option value="praktis">Внедрение Praktis ID</option>
+                        <!-- Опции будут добавлены динамически -->
                     </select>
                     <small>Выберите тип графика для компании</small>
                 </div>
@@ -1775,13 +1774,33 @@
                     const companyName = companyInfo && companyInfo.name ? companyInfo.name : company.name;
                     const logoData = companyInfo && companyInfo.logoData ? companyInfo.logoData : null;
                     const chartType = companyInfo && companyInfo.chartType ? companyInfo.chartType : 'icona';
-                    return { ...company, name: companyName, logoData, chartType };
+                    // Используем сохраненный containerName, если он есть
+                    const containerName = companyInfo && companyInfo.containerName ? companyInfo.containerName : null;
+                    return { ...company, name: companyName, logoData, chartType, containerName };
                 })
             );
 
-            // Разделяем компании по типам графиков
-            const iconaCompanies = companiesWithInfo.filter(c => c.chartType === 'icona');
-            const praktisCompanies = companiesWithInfo.filter(c => c.chartType === 'praktis');
+            // Группируем компании по контейнерам
+            const companiesByContainer = {};
+            companiesWithInfo.forEach(company => {
+                let containerName = company.containerName;
+                
+                // Если containerName не сохранен в company-info, пытаемся получить из chartTypesList
+                if (!containerName) {
+                    const chartType = company.chartType || 'icona';
+                    // Находим информацию о типе графика
+                    const chartTypeInfo = window.chartTypesList?.find(ct => ct.id === chartType);
+                    containerName = chartTypeInfo ? chartTypeInfo.containerName : (chartType === 'icona' ? 'Icona' : 'Praktis ID');
+                }
+                
+                if (!companiesByContainer[containerName]) {
+                    companiesByContainer[containerName] = [];
+                }
+                companiesByContainer[containerName].push(company);
+            });
+            
+            // Сохраняем список типов графиков в глобальную переменную для использования в других функциях
+            window.chartTypesList = window.chartTypesList || [];
 
             // Функция для генерации HTML карточки компании
             const renderCompanyCard = (company) => {
@@ -1859,14 +1878,14 @@
             // Собираем HTML с двумя блоками
             let html = '';
             
-            // Блок Icona (верхний)
-            html += renderCompanySection(iconaCompanies, 'Icona');
-            
-            // Блок Praktis ID (нижний)
-            html += renderCompanySection(praktisCompanies, 'Praktis ID');
+            // Отображаем компании по контейнерам
+            const containerNames = Object.keys(companiesByContainer).sort();
+            containerNames.forEach(containerName => {
+                html += renderCompanySection(companiesByContainer[containerName], containerName);
+            });
             
             // Добавляем кнопку создания только для админов (один раз в конце)
-            if (isAdmin && (iconaCompanies.length > 0 || praktisCompanies.length > 0)) {
+            if (isAdmin && containerNames.length > 0) {
                 html += `
                     <div class="chart-type-section">
                         <div class="companies-grid">
@@ -2252,6 +2271,9 @@
             const currentLogoDiv = document.getElementById('editCurrentLogo');
 
             if (!modal || !idInput || !nameInput || !chartTypeInput) return;
+            
+            // Обновляем список типов графиков перед открытием модального окна
+            updateChartTypeSelects();
 
             // Заполняем форму данными компании
             idInput.value = companyId;
@@ -2377,6 +2399,26 @@
                 }
 
                 // Сохраняем информацию о компании (используем новый ID, если он изменился)
+                // Получаем containerName из типа графика
+                let containerName = null;
+                try {
+                    const chartTypesResponse = await fetch('/api/chart-types');
+                    if (chartTypesResponse.ok) {
+                        const chartTypes = await chartTypesResponse.json();
+                        const chartTypeInfo = chartTypes.find(ct => ct.id === chartType);
+                        if (chartTypeInfo) {
+                            containerName = chartTypeInfo.containerName;
+                        } else {
+                            // Fallback для стандартных типов
+                            containerName = chartType === 'icona' ? 'Icona' : (chartType === 'praktis' ? 'Praktis ID' : null);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Не удалось загрузить типы графиков для получения containerName:', err);
+                    // Fallback для стандартных типов
+                    containerName = chartType === 'icona' ? 'Icona' : (chartType === 'praktis' ? 'Praktis ID' : null);
+                }
+                
                 const infoResponse = await fetch(`/api/company-info?company=${newCompanyId}`, {
                     method: 'POST',
                     headers: {
@@ -2385,7 +2427,8 @@
                     body: JSON.stringify({
                         name: companyName,
                         logoData: logoData,
-                        chartType: chartType
+                        chartType: chartType,
+                        containerName: containerName
                     })
                 });
 
@@ -2528,6 +2571,8 @@
 
         // Открыть модальное окно создания (только для админов)
         function openCreateModal() {
+            // Обновляем список типов графиков перед открытием модального окна
+            updateChartTypeSelects();
             if (!isAdmin) {
                 showMessage('Только администраторы могут создавать компании', 'error');
                 return;
@@ -2664,6 +2709,26 @@
                     logoData = await compressImage(logoFile);
                 }
                 
+                // Получаем containerName из типа графика
+                let containerName = null;
+                try {
+                    const chartTypesResponse = await fetch('/api/chart-types');
+                    if (chartTypesResponse.ok) {
+                        const chartTypes = await chartTypesResponse.json();
+                        const chartTypeInfo = chartTypes.find(ct => ct.id === chartType);
+                        if (chartTypeInfo) {
+                            containerName = chartTypeInfo.containerName;
+                        } else {
+                            // Fallback для стандартных типов
+                            containerName = chartType === 'icona' ? 'Icona' : (chartType === 'praktis' ? 'Praktis ID' : null);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Не удалось загрузить типы графиков для получения containerName:', err);
+                    // Fallback для стандартных типов
+                    containerName = chartType === 'icona' ? 'Icona' : (chartType === 'praktis' ? 'Praktis ID' : null);
+                }
+                
                 try {
                     const infoResponse = await fetch(`/api/company-info?company=${companyId}`, {
                         method: 'POST',
@@ -2673,7 +2738,8 @@
                         body: JSON.stringify({
                             name: companyName,
                             logoData: logoData,
-                            chartType: chartType
+                            chartType: chartType,
+                            containerName: containerName
                         })
                     });
                     if (!infoResponse.ok) {
@@ -2893,9 +2959,56 @@
             animateFireflies();
         }
 
+        // Загрузить список типов графиков
+        async function loadChartTypes() {
+            try {
+                const response = await fetch('/api/chart-types');
+                if (response.ok) {
+                    window.chartTypesList = await response.json() || [];
+                    updateChartTypeSelects();
+                } else {
+                    console.error('Ошибка загрузки типов графиков');
+                    window.chartTypesList = [];
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки типов графиков:', error);
+                window.chartTypesList = [];
+            }
+        }
+
+        // Обновить выпадающие списки типов графиков
+        function updateChartTypeSelects() {
+            const createSelect = document.getElementById('companyChartType');
+            const editSelect = document.getElementById('editCompanyChartType');
+            
+            const chartTypes = window.chartTypesList || [];
+            
+            // Обновляем список создания компании
+            if (createSelect) {
+                createSelect.innerHTML = chartTypes.map(ct => 
+                    `<option value="${ct.id}">${ct.chartTypeName}</option>`
+                ).join('');
+            }
+            
+            // Обновляем список редактирования компании
+            if (editSelect) {
+                const currentValue = editSelect.value;
+                editSelect.innerHTML = chartTypes.map(ct => 
+                    `<option value="${ct.id}">${ct.chartTypeName}</option>`
+                ).join('');
+                // Восстанавливаем выбранное значение, если оно есть
+                if (currentValue) {
+                    editSelect.value = currentValue;
+                }
+            }
+        }
+
         // Загрузить компании при загрузке страницы
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', async function() {
             loadCurrentUser();
+            
+            // Загружаем типы графиков перед загрузкой компаний
+            await loadChartTypes();
             
             // Загружаем компании, если пользователь авторизован или в режиме просмотра
             const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
@@ -3089,7 +3202,7 @@
                     }
                 }
 
-                // 6. Копируем информацию о компании (название, логотип и тип графика)
+                // 6. Копируем информацию о компании (название, логотип, тип графика и контейнер)
                 if (companyInfo) {
                     try {
                         await fetch(`/api/company-info?company=${newCompanyId}`, {
@@ -3100,7 +3213,8 @@
                             body: JSON.stringify({
                                 name: newCompanyName,
                                 logoData: companyInfo.logoData || null,
-                                chartType: companyInfo.chartType || 'icona'
+                                chartType: companyInfo.chartType || 'icona',
+                                containerName: companyInfo.containerName || null
                             })
                         });
                     } catch (e) {
@@ -3117,7 +3231,8 @@
                             body: JSON.stringify({
                                 name: newCompanyName,
                                 logoData: null,
-                                chartType: 'icona'
+                                chartType: 'icona',
+                                containerName: 'Icona'
                             })
                         });
                     } catch (e) {

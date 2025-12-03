@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3001; // порт для внутреннего сервера компании
 const USERS_FILE = path.join(__dirname, 'users.json');
 const COMPANIES_FILE = path.join(__dirname, 'companies.json');
+const CHART_TYPES_FILE = path.join(__dirname, 'chart-types.json');
 
 // Вспомогательные функции для работы с файлами компаний
 function getCompanyDataFile(companyId) {
@@ -313,7 +314,11 @@ app.get('/api/gantt-skeleton', (req, res) => {
     
     const raw = fs.readFileSync(skeletonFile, 'utf8');
     const data = JSON.parse(raw);
-    res.json({ chartType, skeleton: data.skeleton || [] });
+    res.json({ 
+      chartType, 
+      skeleton: data.skeleton || [],
+      columns: data.columns || null
+    });
   } catch (e) {
     console.error('Ошибка загрузки скелета:', e);
     res.status(500).json({ ok: false, error: 'load_failed' });
@@ -323,7 +328,7 @@ app.get('/api/gantt-skeleton', (req, res) => {
 // Сохранить скелет графика
 app.post('/api/gantt-skeleton', (req, res) => {
   try {
-    const { chartType, skeleton } = req.body;
+    const { chartType, skeleton, columns, containerName, chartTypeName } = req.body;
     
     if (!chartType) {
       return res.status(400).json({ ok: false, error: 'Тип графика обязателен' });
@@ -340,6 +345,39 @@ app.post('/api/gantt-skeleton', (req, res) => {
       updatedAt: new Date().toISOString()
     };
     
+    // Сохраняем метаданные столбцов, если они переданы
+    if (columns && Array.isArray(columns)) {
+      dataToSave.columns = columns;
+    }
+    
+    // Если переданы метаданные, обновляем список типов графиков
+    if (containerName && chartTypeName) {
+      let chartTypes = [];
+      if (fs.existsSync(CHART_TYPES_FILE)) {
+        const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
+        chartTypes = JSON.parse(raw);
+      }
+      
+      // Проверяем, существует ли уже такой тип
+      const existingIndex = chartTypes.findIndex(ct => ct.id === chartType);
+      const chartTypeData = {
+        id: chartType,
+        containerName,
+        chartTypeName,
+        createdAt: existingIndex >= 0 ? chartTypes[existingIndex].createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (existingIndex >= 0) {
+        chartTypes[existingIndex] = chartTypeData;
+      } else {
+        chartTypes.push(chartTypeData);
+      }
+      
+      fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(chartTypes, null, 2), 'utf8');
+      console.log(`✅ Тип графика ${chartType} обновлён в списке типов`);
+    }
+    
     fs.writeFileSync(skeletonFile, JSON.stringify(dataToSave, null, 2), 'utf8');
     console.log(`✅ Скелет для ${chartType} сохранён, задач:`, skeleton.length);
     
@@ -347,6 +385,126 @@ app.post('/api/gantt-skeleton', (req, res) => {
   } catch (e) {
     console.error('Ошибка сохранения скелета:', e);
     res.status(500).json({ ok: false, error: 'save_failed', message: e.message });
+  }
+});
+
+// Получить список всех типов графиков
+app.get('/api/chart-types', (req, res) => {
+  try {
+    if (!fs.existsSync(CHART_TYPES_FILE)) {
+      // Создаём дефолтные типы, если файла нет
+      const defaultTypes = [
+        { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      ];
+      fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(defaultTypes, null, 2), 'utf8');
+      return res.json(defaultTypes);
+    }
+    
+    const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
+    const chartTypes = JSON.parse(raw);
+    res.json(chartTypes);
+  } catch (e) {
+    console.error('Ошибка загрузки типов графиков:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
+  }
+});
+
+// Создать новый тип графика
+app.post('/api/chart-types', (req, res) => {
+  try {
+    const { containerName, chartTypeName } = req.body;
+    
+    if (!containerName || !chartTypeName) {
+      return res.status(400).json({ ok: false, error: 'Название контейнера и типа графика обязательны' });
+    }
+    
+    // Генерируем ID на основе названия контейнера (латиница, цифры, дефисы)
+    const chartTypeId = containerName.toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    if (!chartTypeId) {
+      return res.status(400).json({ ok: false, error: 'Некорректное название контейнера' });
+    }
+    
+    let chartTypes = [];
+    if (fs.existsSync(CHART_TYPES_FILE)) {
+      const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
+      chartTypes = JSON.parse(raw);
+    }
+    
+    // Проверяем, не существует ли уже такой ID
+    if (chartTypes.find(ct => ct.id === chartTypeId)) {
+      return res.status(400).json({ ok: false, error: 'Тип графика с таким ID уже существует' });
+    }
+    
+    const newChartType = {
+      id: chartTypeId,
+      containerName,
+      chartTypeName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    chartTypes.push(newChartType);
+    fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(chartTypes, null, 2), 'utf8');
+    
+    // Создаём пустой скелет для нового типа
+    const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartTypeId}.json`);
+    const emptySkeleton = {
+      chartType: chartTypeId,
+      skeleton: [],
+      updatedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(skeletonFile, JSON.stringify(emptySkeleton, null, 2), 'utf8');
+    
+    console.log(`✅ Создан новый тип графика: ${chartTypeId} (${chartTypeName})`);
+    res.json({ ok: true, chartType: newChartType });
+  } catch (e) {
+    console.error('Ошибка создания типа графика:', e);
+    res.status(500).json({ ok: false, error: 'create_failed', message: e.message });
+  }
+});
+
+// Удалить тип графика
+app.delete('/api/chart-types/:id', (req, res) => {
+  try {
+    const chartTypeId = req.params.id;
+    
+    // Защита от удаления дефолтных типов
+    if (chartTypeId === 'icona' || chartTypeId === 'praktis') {
+      return res.status(400).json({ ok: false, error: 'Нельзя удалить стандартные типы графиков (Icona и Praktis ID)' });
+    }
+    
+    if (!fs.existsSync(CHART_TYPES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Тип графика не найден' });
+    }
+    
+    const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
+    let chartTypes = JSON.parse(raw);
+    
+    const initialLength = chartTypes.length;
+    chartTypes = chartTypes.filter(ct => ct.id !== chartTypeId);
+    
+    if (chartTypes.length === initialLength) {
+      return res.status(404).json({ ok: false, error: 'Тип графика не найден' });
+    }
+    
+    fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(chartTypes, null, 2), 'utf8');
+    
+    // Удаляем файл скелета
+    const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartTypeId}.json`);
+    if (fs.existsSync(skeletonFile)) {
+      fs.unlinkSync(skeletonFile);
+    }
+    
+    console.log(`✅ Тип графика ${chartTypeId} удалён`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка удаления типа графика:', e);
+    res.status(500).json({ ok: false, error: 'delete_failed', message: e.message });
   }
 });
 
