@@ -397,16 +397,35 @@ app.get('/api/chart-types', (req, res) => {
         { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
         { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
       ];
+      // ВАЖНО: Не перезаписываем файл, если он уже существует в репозитории
+      // Файл chart-types.json должен быть закоммичен в репозиторий для сохранения всех контейнеров
+      console.log('⚠️ Файл chart-types.json не найден. Создаю дефолтные типы. Убедитесь, что файл chart-types.json закоммичен в репозиторий!');
       fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(defaultTypes, null, 2), 'utf8');
       return res.json(defaultTypes);
     }
     
     const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
     const chartTypes = JSON.parse(raw);
+    
+    // Проверяем, что файл не пустой и содержит валидные данные
+    if (!Array.isArray(chartTypes) || chartTypes.length === 0) {
+      console.warn('⚠️ Файл chart-types.json пустой или содержит невалидные данные. Используем дефолтные типы.');
+      const defaultTypes = [
+        { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      ];
+      return res.json(defaultTypes);
+    }
+    
     res.json(chartTypes);
   } catch (e) {
     console.error('Ошибка загрузки типов графиков:', e);
-    res.status(500).json({ ok: false, error: 'load_failed' });
+    // В случае ошибки возвращаем дефолтные типы
+    const defaultTypes = [
+      { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ];
+    res.json(defaultTypes);
   }
 });
 

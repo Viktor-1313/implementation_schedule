@@ -217,20 +217,18 @@
             margin-bottom: 10px;
             font-size: 0.95rem;
             position: relative;
-            padding-left: 25px;
+            padding-left: 20px;
         }
 
         .form-group label::before {
-            content: '';
+            content: '•';
             position: absolute;
             left: 0;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            border: 2px solid #42a5f5;
-            border-radius: 4px;
-            background: rgba(66, 165, 245, 0.1);
+            color: #42a5f5;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
         .form-group input,
@@ -994,8 +992,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="logout-admin-btn" onclick="logoutFromAdmin()" title="Выход в выбор компаний">
-                Выход
+            <button class="logout-admin-btn" onclick="logoutFromAdmin()" title="Управление компаниями">
+                Управление компаниями
             </button>
             <div class="header-content">
                 <div class="header-icon"></div>
@@ -1005,22 +1003,6 @@
         </div>
 
         <div id="message" class="message"></div>
-
-        <!-- Выбор компании -->
-        <div class="panel-section" style="margin-bottom: 30px;">
-            <h2>Выбор компании</h2>
-            <div class="form-group">
-                <label for="companySelect">Компания</label>
-                <select id="companySelect" name="companySelect" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
-                    <option value="">Все компании</option>
-                </select>
-            </div>
-            <div style="margin-top: 15px;">
-                <a href="companies.html" class="btn btn-primary" style="text-decoration: none; display: inline-block; width: auto; padding: 12px 24px;">
-                    Управление компаниями
-                </a>
-            </div>
-        </div>
 
         <div class="admin-panel">
             <!-- Форма регистрации -->
@@ -1053,6 +1035,12 @@
             <!-- Список пользователей -->
             <div class="panel-section">
                 <h2>Список пользователей</h2>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="companySelectUsers">Компания</label>
+                    <select id="companySelectUsers" name="companySelectUsers" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
+                        <option value="">Все компании</option>
+                    </select>
+                </div>
                 <div id="usersList" class="users-list">
                     <div class="empty-state">
                         <div class="empty-state-icon"></div>
@@ -1299,16 +1287,18 @@
             try {
                 const response = await fetch('/api/companies');
                 allCompanies = await response.json() || [];
-                const companySelect = document.getElementById('companySelect');
+                const companySelectUsers = document.getElementById('companySelectUsers');
                 
                 // Очищаем и заполняем список компаний
-                companySelect.innerHTML = '<option value="">Все компании</option>';
-                allCompanies.forEach(company => {
-                    const option = document.createElement('option');
-                    option.value = company.id;
-                    option.textContent = `${company.name} (${company.id})`;
-                    companySelect.appendChild(option);
-                });
+                if (companySelectUsers) {
+                    companySelectUsers.innerHTML = '<option value="">Все компании</option>';
+                    allCompanies.forEach(company => {
+                        const option = document.createElement('option');
+                        option.value = company.id;
+                        option.textContent = `${company.name} (${company.id})`;
+                        companySelectUsers.appendChild(option);
+                    });
+                }
             } catch (error) {
                 console.error('Ошибка загрузки компаний:', error);
             }
@@ -1317,21 +1307,24 @@
         // Загрузить список пользователей
         async function loadUsers() {
             try {
-                const url = currentCompanyId ? `/api/users?company=${currentCompanyId}` : '/api/users';
-                const response = await fetch(url);
+                const response = await fetch('/api/users');
                 allUsers = await response.json() || [];
                 
                 // Фильтруем пользователей по выбранной компании
                 let filteredUsers = allUsers;
                 if (currentCompanyId) {
+                    // При выборе конкретной компании показываем только пользователей этой компании (админы НЕ показываются)
                     filteredUsers = allUsers.filter(user => {
-                        // Администраторы имеют доступ ко всем компаниям
+                        // Администраторы не показываются при выборе конкретной компании
                         if (user.role === 'admin') {
-                            return true;
+                            return false;
                         }
                         // Для обычных пользователей проверяем наличие компании в списке
                         return user.companies && Array.isArray(user.companies) && user.companies.includes(currentCompanyId);
                     });
+                } else {
+                    // При выборе "Все компании" показываем всех пользователей, включая админов
+                    filteredUsers = allUsers;
                 }
                 
                 renderUsers(filteredUsers);
@@ -1725,10 +1718,13 @@
         }
 
         // Обработчик изменения выбранной компании
-        document.getElementById('companySelect').addEventListener('change', function(e) {
-            currentCompanyId = e.target.value;
-            loadUsers();
-        });
+        const companySelectUsers = document.getElementById('companySelectUsers');
+        if (companySelectUsers) {
+            companySelectUsers.addEventListener('change', function(e) {
+                currentCompanyId = e.target.value;
+                loadUsers();
+            });
+        }
 
         // Закрытие модального окна редактирования при клике вне его
         document.getElementById('editUserModal').addEventListener('click', function(e) {

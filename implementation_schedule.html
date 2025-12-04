@@ -6303,19 +6303,8 @@
 
         // Обновление статистики
         function updateStatistics() {
-            // Подсчитываем уникальные этапы по префиксу "Этап N", а не по полным названиям
-            const stageNumbers = new Set();
-            tasks.forEach(task => {
-                if (!task.stage) return;
-                const match = task.stage.match(/^Этап\s+(\d+)/);
-                if (match) {
-                    stageNumbers.add(parseInt(match[1], 10));
-                } else if (task.stage.trim()) {
-                    // Если этап не соответствует формату "Этап N", считаем его как отдельный этап
-                    stageNumbers.add(task.stage);
-                }
-            });
-            document.getElementById('totalStages').textContent = stageNumbers.size;
+            // Используем количество этапов из редакции этапов (stageConfig), независимо от названия
+            document.getElementById('totalStages').textContent = stageConfig.length;
             document.getElementById('totalTasks').textContent = tasks.length;
             
             // Подсчет рабочих дней по календарю из Ганта (между минимальной датой начала и максимальной датой окончания)

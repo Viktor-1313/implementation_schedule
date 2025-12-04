@@ -1823,7 +1823,17 @@
                     const chartType = company.chartType || 'icona';
                     // Находим информацию о типе графика
                     const chartTypeInfo = window.chartTypesList?.find(ct => ct.id === chartType);
-                    containerName = chartTypeInfo ? chartTypeInfo.containerName : (chartType === 'icona' ? 'Icona' : 'Praktis ID');
+                    if (chartTypeInfo && chartTypeInfo.containerName) {
+                        containerName = chartTypeInfo.containerName;
+                    } else {
+                        // Fallback для стандартных типов
+                        containerName = chartType === 'icona' ? 'Icona' : (chartType === 'praktis' ? 'Praktis ID' : 'Другие');
+                    }
+                }
+                
+                // Убеждаемся, что containerName не пустой
+                if (!containerName || containerName.trim() === '') {
+                    containerName = 'Другие';
                 }
                 
                 if (!companiesByContainer[containerName]) {
