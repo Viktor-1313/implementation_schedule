@@ -2003,14 +2003,18 @@
                                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
                                    onchange="updateSkeletonTask(${safeIndex}, '${col.field}', this.value)"
                                    onfocus="selectSkeletonRowSilent(${safeIndex})"
-                                   oninput="updateSkeletonTask(${safeIndex}, '${col.field}', this.value)">
+                                   oninput="updateSkeletonTask(${safeIndex}, '${col.field}', this.value)"
+                                   onclick="event.stopPropagation();"
+                                   onmousedown="event.stopPropagation();"
+                                   onmouseup="event.stopPropagation();"
+                                   onselectstart="event.stopPropagation();">
                         </td>
                     `;
                 }).join('');
 
                 return `
                     <tr class="skeleton-row" data-index="${safeIndex}" style="${rowStyle}" 
-                        onclick="selectSkeletonRow(${safeIndex})"
+                        onclick="if(event.target.tagName !== 'INPUT' && event.target.tagName !== 'BUTTON') selectSkeletonRow(${safeIndex})"
                         onmouseover="if(${safeIndex} !== selectedSkeletonRowIndex) this.style.backgroundColor='#f5f5f5'"
                         onmouseout="if(${safeIndex} !== selectedSkeletonRowIndex) this.style.backgroundColor=''">
                         <td style="padding: 10px; text-align: center; width: 50px;">${index + 1}</td>
@@ -2021,7 +2025,11 @@
                                    style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
                                    onchange="updateSkeletonTask(${safeIndex}, 'days', parseInt(this.value) || 1)"
                                    onfocus="selectSkeletonRowSilent(${safeIndex})"
-                                   oninput="updateSkeletonTask(${safeIndex}, 'days', parseInt(this.value) || 1)">
+                                   oninput="updateSkeletonTask(${safeIndex}, 'days', parseInt(this.value) || 1)"
+                                   onclick="event.stopPropagation();"
+                                   onmousedown="event.stopPropagation();"
+                                   onmouseup="event.stopPropagation();"
+                                   onselectstart="event.stopPropagation();">
                         </td>
                         <td style="padding: 10px; text-align: center;">
                             <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteSkeletonTask(${safeIndex});" style="width: auto; padding: 6px 12px;">Удалить</button>

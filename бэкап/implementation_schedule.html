@@ -5690,7 +5690,35 @@
             document.getElementById('totalStages').textContent = stageNumbers.size;
             document.getElementById('totalTasks').textContent = tasks.length;
             
-            const totalDays = tasks.reduce((sum, t) => sum + t.days, 0);
+            // Подсчет рабочих дней по календарю из Ганта (между минимальной датой начала и максимальной датой окончания)
+            let totalDays = 0;
+            if (tasks.length > 0) {
+                // Находим минимальную дату начала среди всех задач
+                let minStartDate = null;
+                // Находим максимальную дату окончания среди всех задач
+                let maxEndDate = null;
+                
+                tasks.forEach(task => {
+                    if (task.startDate) {
+                        const startDate = new Date(task.startDate);
+                        if (!minStartDate || startDate < minStartDate) {
+                            minStartDate = startDate;
+                        }
+                    }
+                    if (task.endDate) {
+                        const endDate = new Date(task.endDate);
+                        if (!maxEndDate || endDate > maxEndDate) {
+                            maxEndDate = endDate;
+                        }
+                    }
+                });
+                
+                // Если есть обе даты, считаем рабочие дни между ними
+                if (minStartDate && maxEndDate) {
+                    const workdays = getWorkdaysBetween(minStartDate, maxEndDate);
+                    totalDays = workdays.length;
+                }
+            }
             document.getElementById('totalDays').textContent = totalDays;
 
             if (tasks.length > 0) {
@@ -5843,10 +5871,23 @@
             // Подсказка теперь устанавливается на строку (.gantt-row), а не на label
             // Это убирает дублирование подсказок
 
-            span.addEventListener('dblclick', () => {
+            // Обработчик клика на всю область label (не только на текст)
+            const startEditing = (e) => {
+                // Предотвращаем срабатывание drag and drop при клике на label
+                if (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                
                 if (!canEdit()) {
                     return; // Блокируем редактирование в режиме просмотра
                 }
+                
+                // Проверяем, не редактируется ли уже эта задача
+                if (labelElement.querySelector('input.gantt-task-input')) {
+                    return; // Уже в режиме редактирования
+                }
+                
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'gantt-task-input';
@@ -5854,8 +5895,20 @@
 
                 labelElement.innerHTML = '';
                 labelElement.appendChild(input);
-                input.focus();
-                input.select();
+                
+                // Небольшая задержка для фокуса, чтобы избежать конфликтов с drag
+                setTimeout(() => {
+                    input.focus();
+                    input.select();
+                }, 10);
+
+                // Находим родительскую строку и отключаем drag and drop
+                const row = labelElement.closest('.gantt-row');
+                let wasDraggable = false;
+                if (row) {
+                    wasDraggable = row.draggable;
+                    row.draggable = false;
+                }
 
                 const finish = (save) => {
                     if (save) {
@@ -5865,6 +5918,12 @@
                             task.name = newName; // Синхронизируем оба поля
                         }
                     }
+                    
+                    // Включаем drag and drop обратно
+                    if (row && wasDraggable) {
+                        row.draggable = true;
+                    }
+                    
                     renderTaskLabelContent(labelElement, task, index);
                     renderTable();
                 };
@@ -5879,6 +5938,33 @@
                         finish(false);
                     }
                 });
+                
+                // Предотвращаем срабатывание drag and drop при взаимодействии с input
+                input.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                });
+                input.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                input.addEventListener('select', (e) => {
+                    e.stopPropagation();
+                });
+            };
+
+            // Обработчик клика на всю область label
+            labelElement.addEventListener('click', startEditing);
+            // Также добавляем на mousedown для предотвращения drag
+            labelElement.addEventListener('mousedown', (e) => {
+                // Если это не input для редактирования, предотвращаем drag
+                if (!e.target.classList.contains('gantt-task-input') && 
+                    !e.target.closest('input.gantt-task-input')) {
+                    e.stopPropagation();
+                }
+            });
+            
+            // Также добавляем на span для совместимости (но не дублируем обработчик)
+            span.addEventListener('click', (e) => {
+                e.stopPropagation(); // Предотвращаем всплытие, чтобы не срабатывало дважды
             });
 
             labelElement.appendChild(span);
@@ -6152,6 +6238,17 @@
                 // Drag & drop поведение
                 row.draggable = true;
                 row.addEventListener('dragstart', (e) => {
+                    // Не начинаем drag, если клик был на label или input для редактирования
+                    const target = e.target;
+                    if (target && (
+                        target.closest('.gantt-label') || 
+                        target.classList.contains('gantt-task-input') ||
+                        target.closest('input.gantt-task-input')
+                    )) {
+                        e.preventDefault();
+                        return;
+                    }
+                    
                     draggingTaskId = task.id;
                     row.classList.add('dragging');
                     if (e.dataTransfer) {
@@ -6169,6 +6266,16 @@
                 label.className = 'gantt-label';
                 applyColumnWidth(label, 'label');
                 renderTaskLabelContent(label, task, index);
+                
+                // Предотвращаем начало drag при клике на label (после создания label)
+                label.addEventListener('mousedown', (e) => {
+                    // Если это не input для редактирования, предотвращаем drag
+                    if (!e.target.classList.contains('gantt-task-input') && 
+                        !e.target.closest('input.gantt-task-input')) {
+                        e.stopPropagation();
+                    }
+                });
+                
                 row.appendChild(label);
 
                 // Дополнительные колонки "Дата начала / Дата окончания / Рабочих дней"

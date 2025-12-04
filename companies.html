@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Выбор компании — Управление графиками</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    
+    <!-- Open Graph метатеги для превью ссылок -->
+    <meta property="og:title" content="Выбор компании — График внедрения ICONA">
+    <meta property="og:description" content="Выбор компании для работы с графиком внедрения и обучения системы ICONA">
+    <meta property="og:image" content="logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
     <style>
         * {
             margin: 0;
@@ -429,10 +436,14 @@
             padding: 30px;
             box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
             border: 1px solid rgba(100, 181, 246, 0.3);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
             cursor: pointer;
             position: relative;
             overflow: visible;
+        }
+
+        .company-card.animating {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .company-card::before {
@@ -466,10 +477,11 @@
         }
 
         .company-card.dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-            box-shadow: 0 20px 60px rgba(33, 150, 243, 0.4);
-            z-index: 1000;
+            transform: scale(0.95) !important;
+            box-shadow: 0 20px 60px rgba(33, 150, 243, 0.5) !important;
+            z-index: 1000 !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            pointer-events: none;
         }
 
         .company-card.drag-over {
@@ -507,6 +519,14 @@
             font-size: 1.4rem;
             margin-bottom: 10px;
             font-weight: 700;
+        }
+
+        .company-card .company-object-name {
+            color: #64b5f6;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin: 8px 0 5px 0;
+            line-height: 1.4;
         }
 
         .company-card .company-id {
@@ -1479,6 +1499,12 @@
                            placeholder='ООО "СетлТех"'>
                 </div>
                 <div class="form-group">
+                    <label for="editCompanyObjectName">Название объекта</label>
+                    <input type="text" id="editCompanyObjectName" name="editCompanyObjectName" 
+                           placeholder='ЖК "Солнечный"'>
+                    <small>Необязательное поле</small>
+                </div>
+                <div class="form-group">
                     <label for="editCompanyChartType">Тип графика *</label>
                     <select id="editCompanyChartType" name="editCompanyChartType" required class="tasks-table-input-select" style="width: 100%; padding: 12px 16px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; font-size: 1rem;">
                         <!-- Опции будут добавлены динамически -->
@@ -1541,6 +1567,12 @@
                     <label for="companyName">Название компании *</label>
                     <input type="text" id="companyName" name="companyName" required 
                            placeholder='ООО "СетлТех"'>
+                </div>
+                <div class="form-group">
+                    <label for="companyObjectName">Название объекта</label>
+                    <input type="text" id="companyObjectName" name="companyObjectName" 
+                           placeholder='ЖК "Солнечный"'>
+                    <small>Необязательное поле</small>
                 </div>
                 <div class="form-group">
                     <label for="companyChartType">Тип графика *</label>
@@ -1772,11 +1804,12 @@
                     const companyInfo = await loadCompanyInfo(company.id);
                     // Используем название из company-info, если оно есть, иначе из companies.json
                     const companyName = companyInfo && companyInfo.name ? companyInfo.name : company.name;
+                    const objectName = companyInfo && companyInfo.objectName ? companyInfo.objectName : null;
                     const logoData = companyInfo && companyInfo.logoData ? companyInfo.logoData : null;
                     const chartType = companyInfo && companyInfo.chartType ? companyInfo.chartType : 'icona';
                     // Используем сохраненный containerName, если он есть
                     const containerName = companyInfo && companyInfo.containerName ? companyInfo.containerName : null;
-                    return { ...company, name: companyName, logoData, chartType, containerName };
+                    return { ...company, name: companyName, objectName, logoData, chartType, containerName };
                 })
             );
 
@@ -1851,6 +1884,7 @@
                     ${copyButtonHtml}
                     ${logoHtml}
                     <h3>${company.name}</h3>
+                    ${company.objectName ? `<div class="company-object-name">${company.objectName}</div>` : ''}
                     <div class="company-id">ID: ${company.id}</div>
                     <div class="company-actions">
                         ${actionsHtml}
@@ -1994,12 +2028,27 @@
                     return;
                 }
                 
-                // Обработчик клика по карточке компании (для не-админов)
+                // Обработчик клика по карточке компании (для всех, если не было drag)
                 const card = e.target.closest('.company-card');
-                if (card && !isAdmin) {
-                    const companyId = card.getAttribute('data-company-id');
-                    if (companyId) {
-                        openCompany(companyId);
+                if (card) {
+                    // Проверяем, что клик был не на кнопке
+                    const isButton = e.target.closest('button');
+                    
+                    // Не открываем график если был drag или клик по кнопке
+                    if (!isButton) {
+                        // Если был drag, не открываем график
+                        if (wasDragStarted) {
+                            // Сбрасываем флаг после небольшой задержки
+                            setTimeout(() => {
+                                wasDragStarted = false;
+                            }, 100);
+                            return;
+                        }
+                        
+                        const companyId = card.getAttribute('data-company-id');
+                        if (companyId) {
+                            openCompany(companyId);
+                        }
                     }
                 }
             };
@@ -2028,6 +2077,7 @@
                 }
 
                 draggedElement = card;
+                wasDragStarted = true; // Устанавливаем флаг что началось перетаскивание
                 card.classList.add('dragging');
                 isDragging = true; // Пауза анимации светлячков во время перетаскивания
                 e.dataTransfer.effectAllowed = 'move';
@@ -2043,10 +2093,16 @@
                 
                 isDragging = false; // Возобновляем анимацию светлячков
                 
+                // Сбрасываем флаг drag с небольшой задержкой, чтобы клик не сработал после drag
+                setTimeout(() => {
+                    wasDragStarted = false;
+                }, 200);
+                
                 // Убираем класс drag-over со всех элементов
                 const allCards = container.querySelectorAll('.company-card.drag-over');
                 allCards.forEach(card => card.classList.remove('drag-over'));
             });
+            
 
             // Обработчик перетаскивания над элементом с throttling для производительности
             let lastDragOverTime = 0;
@@ -2119,16 +2175,96 @@
                     return;
                 }
 
-                // Перемещаем элемент в DOM
+                // FLIP-техника для плавной анимации
+                // First: сохраняем начальные позиции всех карточек (ДО перемещения в DOM)
+                const firstPositions = new Map();
+                allCards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    firstPositions.set(card, {
+                        x: rect.left,
+                        y: rect.top
+                    });
+                });
+
+                // Сохраняем текущую позицию перетаскиваемой карточки (под курсором) ПЕРЕД перемещением в DOM
+                const draggedCurrentRect = draggedElement.getBoundingClientRect();
+                const draggedCurrentPosition = {
+                    x: draggedCurrentRect.left,
+                    y: draggedCurrentRect.top
+                };
+                
+                // Last: перемещаем элемент в DOM
                 if (draggedIndex < targetIndex) {
                     targetGrid.insertBefore(draggedElement, targetCard.nextSibling);
                 } else {
                     targetGrid.insertBefore(draggedElement, targetCard);
                 }
 
+                // Убираем класс dragging
+                draggedElement.classList.remove('dragging');
+                
+                // Invert: вычисляем разницу и применяем transform для ВСЕХ карточек
+                const newCards = Array.from(targetGrid.querySelectorAll('.company-card.draggable'));
+                const cardsToAnimate = [];
+                
+                newCards.forEach((card, newIndex) => {
+                    const oldIndex = allCards.indexOf(card);
+                    const lastRect = card.getBoundingClientRect();
+                    
+                    let deltaX, deltaY;
+                    
+                    if (card === draggedElement) {
+                        // Для перетаскиваемой карточки используем текущую позицию (под курсором)
+                        deltaX = draggedCurrentPosition.x - lastRect.left;
+                        deltaY = draggedCurrentPosition.y - lastRect.top;
+                    } else {
+                        // Для остальных используем начальную позицию
+                        if (firstPositions.has(card)) {
+                            const first = firstPositions.get(card);
+                            deltaX = first.x - lastRect.left;
+                            deltaY = first.y - lastRect.top;
+                        } else {
+                            return; // Пропускаем если нет начальной позиции
+                        }
+                    }
+                    
+                    // Анимируем только если перемещение значительное
+                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                        // Применяем обратный transform для анимации
+                        card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                        card.style.transition = 'none';
+                        cardsToAnimate.push(card);
+                    }
+                });
+
+                // Play: запускаем анимацию к новым позициям
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        cardsToAnimate.forEach(card => {
+                            card.classList.add('animating');
+                            card.style.transform = '';
+                            card.style.transition = '';
+                            
+                            // Убираем класс после завершения анимации
+                            const handleTransitionEnd = (e) => {
+                                // Проверяем, что анимация завершена именно для transform
+                                if (!e.propertyName || e.propertyName === 'transform') {
+                                    card.classList.remove('animating');
+                                    card.style.transform = '';
+                                    card.removeEventListener('transitionend', handleTransitionEnd);
+                                }
+                            };
+                            card.addEventListener('transitionend', handleTransitionEnd);
+                        });
+                    });
+                });
+
                 // Сохраняем новый порядок
                 await saveCompaniesOrder();
                 
+                // Сбрасываем флаги
+                mouseDownPosition = null;
+                mouseDownCard = null;
                 draggedElement = null;
             });
         }
@@ -2278,7 +2414,8 @@
             // Заполняем форму данными компании
             idInput.value = companyId;
             
-            // Загружаем текущий логотип, название и тип графика
+            // Загружаем текущий логотип, название, название объекта и тип графика
+            const objectNameInput = document.getElementById('editCompanyObjectName');
             try {
                 const companyInfo = await loadCompanyInfo(companyId);
                 // Используем название из company-info, если оно есть, иначе используем переданное название
@@ -2286,6 +2423,13 @@
                     nameInput.value = companyInfo.name;
                 } else {
                     nameInput.value = companyName;
+                }
+                
+                // Загружаем название объекта
+                if (objectNameInput && companyInfo && companyInfo.objectName) {
+                    objectNameInput.value = companyInfo.objectName;
+                } else if (objectNameInput) {
+                    objectNameInput.value = '';
                 }
                 
                 // Устанавливаем тип графика
@@ -2337,6 +2481,7 @@
             const oldCompanyId = companyToEdit.id;
             const newCompanyId = document.getElementById('editCompanyId').value.trim();
             const companyName = document.getElementById('editCompanyName').value.trim();
+            const objectName = document.getElementById('editCompanyObjectName') ? document.getElementById('editCompanyObjectName').value.trim() : '';
             const chartType = document.getElementById('editCompanyChartType').value;
             const logoFile = document.getElementById('editCompanyLogo').files[0];
             const messageEl = document.getElementById('editMessage');
@@ -2426,6 +2571,7 @@
                     },
                     body: JSON.stringify({
                         name: companyName,
+                        objectName: objectName || null,
                         logoData: logoData,
                         chartType: chartType,
                         containerName: containerName
@@ -2664,6 +2810,7 @@
             
             const companyId = document.getElementById('companyId').value.trim();
             const companyName = document.getElementById('companyName').value.trim();
+            const objectName = document.getElementById('companyObjectName') ? document.getElementById('companyObjectName').value.trim() : '';
             const chartType = document.getElementById('companyChartType').value;
             const logoFile = document.getElementById('companyLogo').files[0];
             const messageEl = document.getElementById('createMessage');
@@ -2737,6 +2884,7 @@
                         },
                         body: JSON.stringify({
                             name: companyName,
+                            objectName: objectName || null,
                             logoData: logoData,
                             chartType: chartType,
                             containerName: containerName
@@ -2804,6 +2952,7 @@
         let mouseX = 0;
         let mouseY = 0;
         let isDragging = false; // Флаг для паузы анимации светлячков во время drag and drop
+        let wasDragStarted = false; // Флаг для определения был ли drag (для разделения клика и drag)
 
         function initFireflies() {
             // Инициализация всех светлячков
