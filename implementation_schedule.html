@@ -6245,7 +6245,11 @@
                 baselineSnapshot.tasks.some(t => Array.isArray(t.baselineDates) && t.baselineDates.length > 0);
 
             if (!hasBaseline) {
-                showBaselineToast('Базовый план не задан. Нажмите F2, чтобы сохранить текущий график как директивный.');
+                if (isViewMode) {
+                    showBaselineToast('Директивный план не задан. В режиме просмотра можно только включить отображение существующего плана.');
+                } else {
+                    showBaselineToast('Базовый план не задан. Нажмите F2, чтобы сохранить текущий график как директивный.');
+                }
                 return;
             }
 
@@ -6270,7 +6274,7 @@
         // Функция для установки базового плана (дублирует F2)
         function setBaselinePlan() {
             if (!canEdit()) {
-                showBaselineToast('Режим просмотра: редактирование недоступно');
+                showBaselineToast('В режиме просмотра нельзя задать новый директивный план. Можно только включить отображение существующего.');
                 return;
             }
 
@@ -6337,6 +6341,14 @@
         }
 
         function confirmBaselineOverwrite() {
+            // Дополнительная проверка режима просмотра для безопасности
+            if (!canEdit()) {
+                showBaselineToast('В режиме просмотра нельзя задать новый директивный план. Можно только включить отображение существующего.');
+                pendingBaselineSnapshot = null;
+                closeBaselineConfirmModal();
+                return;
+            }
+
             if (pendingBaselineSnapshot) {
                 try {
                     baselineSnapshot = pendingBaselineSnapshot;
@@ -12795,6 +12807,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     }
                     event.preventDefault();
 
+                    // Проверяем режим просмотра
+                    if (!canEdit()) {
+                        showBaselineToast('В режиме просмотра нельзя задать новый директивный план. Можно только включить отображение существующего.');
+                        return;
+                    }
+
                     const newSnapshot = buildBaselineSnapshot();
                     const hasExistingBaseline =
                         baselineSnapshot &&
@@ -12846,7 +12864,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         baselineSnapshot.tasks.some(t => Array.isArray(t.baselineDates) && t.baselineDates.length > 0);
 
                     if (!hasBaseline) {
-                        showBaselineToast('Базовый план не задан. Нажмите F2, чтобы сохранить текущий график как директивный.');
+                        if (isViewMode) {
+                            showBaselineToast('Директивный план не задан. В режиме просмотра можно только включить отображение существующего плана.');
+                        } else {
+                            showBaselineToast('Базовый план не задан. Нажмите F2, чтобы сохранить текущий график как директивный.');
+                        }
                         return;
                     }
 
