@@ -6,6 +6,7 @@ node_modules/
 !package.json
 !package-lock.json
 !gantt-skeleton-*.json
+!chart-types.json
 
 # Резервные копии
 бэкап/

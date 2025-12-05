@@ -1,0 +1,23 @@
+[
+  {
+    "id": "icona",
+    "containerName": "Icona",
+    "chartTypeName": "Внедрение Icona",
+    "createdAt": "2025-12-03T06:09:03.209Z",
+    "updatedAt": "2025-12-03T06:09:03.209Z"
+  },
+  {
+    "id": "praktis",
+    "containerName": "Praktis ID",
+    "chartTypeName": "Внедрение Praktis ID",
+    "createdAt": "2025-12-03T06:09:03.209Z",
+    "updatedAt": "2025-12-03T07:03:08.287Z"
+  },
+  {
+    "id": "2",
+    "containerName": "КС-2",
+    "chartTypeName": "Внедрение сервис КС-2",
+    "createdAt": "2025-12-03T09:54:25.078Z",
+    "updatedAt": "2025-12-03T09:54:54.602Z"
+  }
+]
