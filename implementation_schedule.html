@@ -198,6 +198,41 @@
             z-index: 1002;
         }
 
+        /* Глаза профиля */
+        .profile-btn .profile-icon-head::before,
+        .profile-btn .profile-icon-head::after {
+            content: '';
+            position: absolute;
+            width: 2.5px;
+            height: 2.5px;
+            background: #42a5f5;
+            border-radius: 50%;
+            top: 5.5px;
+        }
+
+        .profile-btn .profile-icon-head::before {
+            left: 4.5px;
+        }
+
+        .profile-btn .profile-icon-head::after {
+            right: 4.5px;
+        }
+
+        /* Рот профиля */
+        .profile-icon-mouth {
+            position: absolute;
+            width: 7px;
+            height: 3.5px;
+            border: 2px solid #42a5f5;
+            border-top: none;
+            border-radius: 0 0 7px 7px;
+            top: 17px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1003;
+            background: transparent;
+        }
+
         /* Иконка профиля (плечи) */
         .profile-btn .profile-icon-shoulders {
             position: absolute;
@@ -472,24 +507,49 @@
             animation: rotateDot 2s linear infinite;
         }
 
-        /* Иконка квадрата с точкой для новой кнопки компаний */
+        /* Иконка зданий для кнопки компаний */
         .companies-bottom-icon {
             width: 18px;
             height: 18px;
-            border: 2px solid white;
-            border-radius: 4px;
             position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
         }
 
-        .companies-bottom-icon::before {
+        /* Три здания разной высоты */
+        .companies-bottom-icon::before,
+        .companies-bottom-icon::after {
             content: '';
-            width: 6px;
-            height: 6px;
             background: white;
-            border-radius: 50%;
+            border-radius: 2px 2px 0 0;
             position: absolute;
-            top: 4px;
-            left: 4px;
+            bottom: 0;
+        }
+
+        /* Левое здание (низкое) */
+        .companies-bottom-icon::before {
+            width: 4px;
+            height: 10px;
+            left: 2px;
+        }
+
+        /* Среднее здание (высокое) */
+        .companies-bottom-icon::after {
+            width: 4px;
+            height: 16px;
+            left: 7px;
+        }
+
+        /* Правое здание (среднее) */
+        .companies-bottom-icon .building-right {
+            position: absolute;
+            width: 4px;
+            height: 13px;
+            background: white;
+            border-radius: 2px 2px 0 0;
+            right: 2px;
+            bottom: 0;
         }
 
         /* Подсказка для новой кнопки компаний */
@@ -3686,11 +3746,14 @@
             </button>
             <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" style="display: none;">
                 <span class="profile-icon-head"></span>
+                <span class="profile-icon-mouth"></span>
                 <span class="profile-icon-shoulders"></span>
                 <span class="profile-tooltip">Редактировать профиль</span>
             </button>
             <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="goToCompanies()">
-                <span class="companies-bottom-icon"></span>
+                <span class="companies-bottom-icon">
+                    <span class="building-right"></span>
+                </span>
                 <span class="companies-bottom-tooltip">Компании</span>
             </button>
             <h1>
