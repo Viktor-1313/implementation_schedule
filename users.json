@@ -76,8 +76,11 @@
     "name": "Алиса",
     "login": "Vasileva_AA",
     "password": "$2b$10$th1OiRcKKPN8xGqtB.te7OXbvzDm7tk7rTDEVxF3pa5xzNQdnwo06",
-    "role": "admin",
-    "companies": [],
+    "role": "user",
+    "companies": [
+      "Sminex",
+      "Tst1"
+    ],
     "createdAt": "2025-11-30T11:53:45.564Z"
   },
   {

@@ -205,35 +205,98 @@
             position: relative;
         }
 
-        /* Неприметная кнопка перехода в админ-панель */
-        .admin-panel-link {
+        /* Кнопка перехода в админ-панель */
+        .admin-btn {
             position: absolute;
-            top: 15px;
-            right: 110px; /* Сдвинуто влево, чтобы не перекрывать кнопки профиля и выхода */
-            background: rgba(100, 181, 246, 0.1);
-            border: 1px solid rgba(100, 181, 246, 0.2);
-            border-radius: 8px;
-            padding: 6px 12px;
-            color: #64b5f6;
-            font-size: 0.75rem;
-            text-decoration: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
-            transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-            opacity: 0.6;
             display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            overflow: visible;
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            top: 30px;
+            left: 30px;
+            text-decoration: none;
         }
 
-        .admin-panel-link:hover {
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .admin-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1001;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .admin-btn:hover::after {
             opacity: 1;
-            background: rgba(100, 181, 246, 0.2);
-            border-color: rgba(100, 181, 246, 0.4);
-            transform: translateY(-1px);
+            animation: rotateDot 2s linear infinite;
         }
 
-        .admin-panel-link::before {
-            content: '⚙';
-            margin-right: 4px;
-            font-size: 0.7rem;
+        .admin-btn .admin-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-btn .admin-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: white;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+        }
+
+        /* Подсказка для кнопки админа */
+        .admin-btn[data-tooltip]:hover .admin-tooltip {
+            opacity: 1;
+            transition-delay: 1s;
+        }
+
+        .admin-tooltip {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: normal;
+            min-width: max-content;
+            max-width: 200px;
+            word-wrap: break-word;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10001;
+            width: auto;
+            height: auto;
         }
 
         /* Анимация вращения бордера */
@@ -266,9 +329,10 @@
             }
         }
 
-        /* Кнопки управления (профиль и выход) */
+        /* Кнопки управления (профиль, выход и админ) */
         .profile-btn,
-        .logout-btn {
+        .logout-btn,
+        .admin-btn {
             position: absolute;
             width: 40px;
             height: 40px;
@@ -286,7 +350,8 @@
 
         /* Золотая точка, вращающаяся по кругу при наведении */
         .profile-btn::after,
-        .logout-btn::after {
+        .logout-btn::after,
+        .admin-btn::after {
             content: '';
             position: absolute;
             width: 6px;
@@ -304,7 +369,8 @@
 
         /* При наведении показываем золотую точку и запускаем анимацию */
         .profile-btn:hover::after,
-        .logout-btn:hover::after {
+        .logout-btn:hover::after,
+        .admin-btn:hover::after {
             opacity: 1;
             animation: rotateDot 2s linear infinite;
         }
@@ -323,6 +389,41 @@
             border-radius: 50%;
             top: 8px;
             z-index: 1002;
+        }
+
+        /* Глаза профиля */
+        .profile-btn .profile-icon-head::before,
+        .profile-btn .profile-icon-head::after {
+            content: '';
+            position: absolute;
+            width: 2.5px;
+            height: 2.5px;
+            background: #42a5f5;
+            border-radius: 50%;
+            top: 5.5px;
+        }
+
+        .profile-btn .profile-icon-head::before {
+            left: 4.5px;
+        }
+
+        .profile-btn .profile-icon-head::after {
+            right: 4.5px;
+        }
+
+        /* Рот профиля */
+        .profile-icon-mouth {
+            position: absolute;
+            width: 7px;
+            height: 3.5px;
+            border: 2px solid #42a5f5;
+            border-top: none;
+            border-radius: 0 0 7px 7px;
+            top: 17px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1003;
+            background: transparent;
         }
 
         .profile-btn .profile-icon-shoulders {
@@ -363,7 +464,8 @@
 
         /* Подсказки для кнопок */
         .profile-btn[data-tooltip]:hover .profile-tooltip,
-        .logout-btn[data-tooltip]:hover .logout-tooltip {
+        .logout-btn[data-tooltip]:hover .logout-tooltip,
+        .admin-btn[data-tooltip]:hover .admin-tooltip {
             opacity: 1;
             transition-delay: 1s;
         }
@@ -981,25 +1083,27 @@
                 padding: 25px;
             }
 
-            /* Кнопки управления на планшетах - вертикальное выравнивание: админ сверху, потом кнопки */
+            /* Кнопки управления на планшетах */
             .profile-btn,
-            .logout-btn {
+            .logout-btn,
+            .admin-btn {
                 width: 40px;
                 height: 40px;
-                right: 25px !important;
             }
 
-            .admin-panel-link {
+            .admin-btn {
+                top: 25px;
+                left: 25px !important;
+            }
+
+            .profile-btn {
                 top: 25px;
                 right: 25px !important;
             }
 
-            .profile-btn {
-                top: 70px; /* 25px + высота админа (~30px) + 15px (одинаковый отступ) */
-            }
-
             .logout-btn {
-                top: 125px; /* 70px + 40px (высота) + 15px (одинаковый отступ) */
+                top: 70px; /* 25px + 40px (высота) + 5px (отступ) */
+                right: 25px !important;
             }
         }
 
@@ -1080,27 +1184,27 @@
                 font-size: 1.5rem;
             }
 
-            /* Кнопки управления на мобильных - вертикальное выравнивание: админ сверху, потом кнопки */
+            /* Кнопки управления на мобильных */
             .profile-btn,
-            .logout-btn {
+            .logout-btn,
+            .admin-btn {
                 width: 38px;
                 height: 38px;
-                right: 15px !important;
             }
 
-            .admin-panel-link {
+            .admin-btn {
                 top: 15px;
-                right: 15px !important;
-                padding: 6px 10px;
-                font-size: 0.7rem;
+                left: 15px !important;
             }
 
             .profile-btn {
-                top: 58px; /* 15px + высота админа (~28px) + 15px (одинаковый отступ) */
+                top: 15px;
+                right: 15px !important;
             }
 
             .logout-btn {
-                top: 111px; /* 58px + 38px (высота) + 15px (одинаковый отступ) */
+                top: 58px; /* 15px + 38px (высота) + 5px (отступ) */
+                right: 15px !important;
             }
         }
 
@@ -1185,27 +1289,27 @@
                 font-size: 1rem;
             }
 
-            /* Кнопки управления на маленьких экранах - вертикальное выравнивание: админ сверху, потом кнопки */
+            /* Кнопки управления на маленьких экранах */
             .profile-btn,
-            .logout-btn {
+            .logout-btn,
+            .admin-btn {
                 width: 35px;
                 height: 35px;
-                right: 12px !important;
             }
 
-            .admin-panel-link {
+            .admin-btn {
                 top: 12px;
-                right: 12px !important;
-                padding: 5px 8px;
-                font-size: 0.65rem;
+                left: 12px !important;
             }
 
             .profile-btn {
-                top: 52px; /* 12px + высота админа (~25px) + 15px (одинаковый отступ) */
+                top: 12px;
+                right: 12px !important;
             }
 
             .logout-btn {
-                top: 102px; /* 52px + 35px (высота) + 15px (одинаковый отступ) */
+                top: 52px; /* 12px + 35px (высота) + 5px (отступ) */
+                right: 12px !important;
             }
 
             .modal-content {
@@ -1457,11 +1561,19 @@
             </button>
             <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" onclick="openProfileModal()">
                 <span class="profile-icon-head"></span>
+                <span class="profile-icon-mouth"></span>
                 <span class="profile-icon-shoulders"></span>
                 <span class="profile-tooltip">Редактировать профиль</span>
             </button>
             
-            <a href="admin.html" class="admin-panel-link" id="adminPanelLink" title="Админ-панель">Админ</a>
+            <a href="admin.html" class="admin-btn" id="adminPanelLink" data-tooltip="Админ-панель">
+                <span class="admin-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5A3.5 3.5 0 0 1 15.5 12A3.5 3.5 0 0 1 12 15.5M19.43 12.97C19.47 12.65 19.5 12.33 19.5 12C19.5 11.67 19.47 11.34 19.43 11.03L21.54 9.37C21.73 9.22 21.78 8.95 21.66 8.73L19.66 5.27C19.54 5.05 19.27 4.96 19.05 5.05L16.56 6.05C16.04 5.66 15.5 5.32 14.87 5.07L14.5 2.42C14.46 2.18 14.25 2 14 2H10C9.75 2 9.54 2.18 9.5 2.42L9.13 5.07C8.5 5.32 7.96 5.66 7.44 6.05L4.95 5.05C4.73 4.96 4.46 5.05 4.34 5.27L2.34 8.73C2.22 8.95 2.27 9.22 2.46 9.37L4.57 11.03C4.53 11.34 4.5 11.67 4.5 12C4.5 12.33 4.53 12.65 4.57 12.97L2.46 14.63C2.27 14.78 2.22 15.05 2.34 15.27L4.34 18.73C4.46 18.95 4.73 19.03 4.95 18.95L7.44 17.94C7.96 18.34 8.5 18.68 9.13 18.93L9.5 21.58C9.54 21.82 9.75 22 10 22H14C14.25 22 14.46 21.82 14.5 21.58L14.87 18.93C15.5 18.68 16.04 18.34 16.56 17.94L19.05 18.95C19.27 19.03 19.54 18.95 19.66 18.73L21.66 15.27C21.78 15.05 21.73 14.78 21.54 14.63L19.43 12.97Z"/>
+                    </svg>
+                </span>
+                <span class="admin-tooltip">Админ-панель</span>
+            </a>
             <h1>Выбор компании</h1>
             <p id="headerSubtitle">Выберите компанию для работы</p>
         </div>
@@ -1674,7 +1786,7 @@
                     // Показываем кнопку админ-панели только для администраторов
                     const adminPanelLink = document.getElementById('adminPanelLink');
                     if (adminPanelLink) {
-                        adminPanelLink.style.display = isAdmin ? 'block' : 'none';
+                        adminPanelLink.style.display = isAdmin ? 'flex' : 'none';
                     }
                     
                     // Обновляем заголовок страницы
@@ -3371,6 +3483,7 @@
                             },
                             body: JSON.stringify({
                                 name: newCompanyName,
+                                objectName: companyInfo.objectName || null,
                                 logoData: companyInfo.logoData || null,
                                 chartType: companyInfo.chartType || 'icona',
                                 containerName: companyInfo.containerName || null
