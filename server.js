@@ -80,9 +80,9 @@ function writeLogs(logs) {
 }
 
 // Добавление лога
-function addLog(userName, action, details, companyId = null) {
+function addLog(userName, action, details, companyId = null, detailedChanges = null) {
   try {
-    console.log('📝 addLog вызвана:', { userName, action, details, companyId });
+    console.log('📝 addLog вызвана:', { userName, action, details, companyId, detailedChanges: detailedChanges ? detailedChanges.length : 0 });
     const logs = readLogs();
     console.log('   Текущее количество логов:', logs.length);
     
@@ -92,6 +92,7 @@ function addLog(userName, action, details, companyId = null) {
       action: action,
       details: details,
       companyId: companyId,
+      detailedChanges: detailedChanges || null, // Детальные изменения для экспорта
       timestamp: new Date().toISOString(),
       dateTime: new Date().toLocaleString('ru-RU', {
         year: 'numeric',
@@ -518,13 +519,35 @@ app.post('/api/gantt-state', (req, res) => {
     }
     
     // Логируем изменения графика с детальной информацией
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    // Сначала получаем userName из body (там всегда правильное значение)
+    let userName = req.body.userName || 'Неизвестный пользователь';
+    
+    // Если userName не в body, пытаемся получить из заголовка
+    if (userName === 'Неизвестный пользователь' && req.headers['x-user-name']) {
+      const headerUserName = req.headers['x-user-name'];
+      // Проверяем, закодировано ли имя (если есть флаг X-User-Name-Encoded)
+      if (req.headers['x-user-name-encoded'] === 'base64') {
+        try {
+          // Декодируем base64 -> decodeURIComponent
+          userName = decodeURIComponent(atob(headerUserName));
+          console.log('✅ Имя пользователя декодировано из заголовка:', userName);
+        } catch (e) {
+          console.warn('⚠️ Ошибка декодирования имени пользователя из заголовка:', e);
+          userName = 'Неизвестный пользователь';
+        }
+      } else {
+        // Если не закодировано, используем как есть (для обратной совместимости)
+        userName = headerUserName;
+      }
+    }
+    
     const userLogin = req.body.userLogin || null; // Логин пользователя для дополнительной идентификации
     const changeInfo = req.body.changeInfo; // Информация об изменениях от клиента
     
     console.log('📝 Логирование изменения графика:');
     console.log('   userName из body:', req.body.userName);
-    console.log('   userName из header:', req.headers['x-user-name']);
+    console.log('   userName из header (raw):', req.headers['x-user-name']);
+    console.log('   userName из header (encoded):', req.headers['x-user-name-encoded']);
     console.log('   userLogin из body:', req.body.userLogin);
     console.log('   Итоговый userName:', userName);
     console.log('   Итоговый userLogin:', userLogin);
@@ -534,15 +557,15 @@ app.post('/api/gantt-state', (req, res) => {
     // Если userName все еще "Неизвестный пользователь", но есть userLogin, используем его
     if (userName === 'Неизвестный пользователь' && userLogin) {
       console.warn('⚠️ userName не определен, но есть userLogin. Используем userLogin:', userLogin);
-      // Не перезаписываем userName здесь, так как это может быть намеренное значение
-      // Но логируем для отладки
+      userName = userLogin; // Используем логин как имя пользователя
     }
     
     // Если и userName, и userLogin не определены, это проблема
     if (userName === 'Неизвестный пользователь' && !userLogin) {
       console.error('❌ КРИТИЧЕСКАЯ ПРОБЛЕМА: Пользователь не определен!');
-      console.error('   req.body:', JSON.stringify(req.body, null, 2).substring(0, 500));
-      console.error('   req.headers:', JSON.stringify(req.headers, null, 2).substring(0, 500));
+      console.error('   req.body.userName:', req.body.userName);
+      console.error('   req.headers[x-user-name]:', req.headers['x-user-name']);
+      console.error('   req.body.userLogin:', req.body.userLogin);
     }
     
     // Получаем название компании для лога
@@ -562,6 +585,8 @@ app.post('/api/gantt-state', (req, res) => {
     
     // Всегда логируем изменения графика с деталями
     let logEntry = null;
+    const detailedChanges = req.body.detailedChanges || null; // Детальные изменения из клиента
+    
     if (changeInfo && changeInfo.action) {
       // Если есть детальная информация об изменениях
       // Форматируем детали для лучшей читаемости
@@ -575,12 +600,12 @@ app.post('/api/gantt-state', (req, res) => {
       }
       
       const details = `${formattedDetails} | Компания: ${companyName} (${companyId})`;
-      logEntry = addLog(userName, changeInfo.action, details, companyId);
+      logEntry = addLog(userName, changeInfo.action, details, companyId, detailedChanges);
     } else {
       // Общее логирование изменений графика с информацией о компании
       const taskCount = req.body.tasks ? req.body.tasks.length : 0;
       const details = `Изменения в графике (задач: ${taskCount}) | Компания: ${companyName} (${companyId})`;
-      logEntry = addLog(userName, 'Изменил график', details, companyId);
+      logEntry = addLog(userName, 'Изменил график', details, companyId, detailedChanges);
     }
     
     if (logEntry) {
@@ -1017,7 +1042,33 @@ app.post('/api/users', async (req, res) => {
 // Удалить пользователя
 app.delete('/api/users/:login', (req, res) => {
   try {
-    const login = req.params.login;
+    let login = req.params.login;
+    
+    // Декодируем логин из URL
+    try {
+      login = decodeURIComponent(login);
+    } catch (e) {
+      console.error('Ошибка декодирования логина:', e);
+    }
+    
+    // Валидация логина
+    if (!login || typeof login !== 'string' || login.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат логина' });
+    }
+    
+    login = login.trim();
+    
+    // Удаляем возможные артефакты в конце логина (например, :1, :2 и т.д.)
+    // Это может быть из-за проблем с кодированием или индексацией
+    if (login.includes(':')) {
+      const parts = login.split(':');
+      if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+        // Если последняя часть - это число, удаляем её
+        login = parts.slice(0, -1).join(':');
+        console.warn(`⚠️ Обнаружен артефакт в логине, исправлено: ${req.params.login} → ${login}`);
+      }
+    }
+    
     const MAIN_ADMIN_LOGIN = 'Driga_VA';
 
     // Защита от удаления главного администратора
@@ -1029,8 +1080,21 @@ app.delete('/api/users/:login', (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
-    const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let raw, users;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    } catch (e) {
+      console.error('Ошибка чтения файла users.json:', e);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
+    }
+
+    // Получаем информацию об удаляемом пользователе для лога ДО удаления
+    const deletedUser = users.find(u => u.login === login);
+    
+    if (!deletedUser) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
 
     const initialLength = users.length;
     users = users.filter(u => u.login !== login);
@@ -1038,22 +1102,22 @@ app.delete('/api/users/:login', (req, res) => {
     if (users.length === initialLength) {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
-
-    // Получаем информацию об удаляемом пользователе для лога
-    const deletedUser = users.find(u => u.login === login);
     
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
     
     // Логируем удаление пользователя
     const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
-    if (deletedUser) {
-      addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
-    }
+    addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
     
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка удаления пользователя:', e);
-    res.status(500).json({ ok: false, error: 'delete_failed' });
+    console.error('Детали ошибки:', {
+      message: e.message,
+      stack: e.stack,
+      login: req.params.login
+    });
+    res.status(500).json({ ok: false, error: 'delete_failed', details: e.message });
   }
 });
 
@@ -1118,7 +1182,33 @@ app.put('/api/users/update', async (req, res) => {
 // Обновить доступ пользователя к компаниям
 app.put('/api/users/:login/companies', (req, res) => {
   try {
-    const { login } = req.params;
+    let { login } = req.params;
+    
+    // Декодируем логин из URL
+    try {
+      login = decodeURIComponent(login);
+    } catch (e) {
+      console.error('Ошибка декодирования логина:', e);
+    }
+    
+    // Валидация логина
+    if (!login || typeof login !== 'string' || login.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат логина' });
+    }
+    
+    login = login.trim();
+    
+    // Удаляем возможные артефакты в конце логина (например, :1, :2 и т.д.)
+    // Это может быть из-за проблем с кодированием или индексацией
+    if (login.includes(':')) {
+      const parts = login.split(':');
+      if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+        // Если последняя часть - это число, удаляем её
+        login = parts.slice(0, -1).join(':');
+        console.warn(`⚠️ Обнаружен артефакт в логине, исправлено: ${req.params.login} → ${login}`);
+      }
+    }
+    
     const { companies } = req.body;
 
     if (!Array.isArray(companies)) {
@@ -1129,8 +1219,14 @@ app.put('/api/users/:login/companies', (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
-    const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let raw, users;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    } catch (e) {
+      console.error('Ошибка чтения файла users.json:', e);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
+    }
 
     const userIndex = users.findIndex(u => u.login === login);
     if (userIndex === -1) {
@@ -1154,14 +1250,46 @@ app.put('/api/users/:login/companies', (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления доступа к компаниям:', e);
-    res.status(500).json({ ok: false, error: 'update_failed' });
+    console.error('Детали ошибки:', {
+      message: e.message,
+      stack: e.stack,
+      login: req.params.login,
+      companies: req.body.companies
+    });
+    res.status(500).json({ ok: false, error: 'update_failed', details: e.message });
   }
 });
 
 // Обновление пользователя админом (имя, роль, компании, пароль)
 app.put('/api/users/:login', async (req, res) => {
   try {
-    const { login } = req.params;
+    let { login } = req.params;
+    
+    // Декодируем логин из URL
+    try {
+      login = decodeURIComponent(login);
+    } catch (e) {
+      console.error('Ошибка декодирования логина:', e);
+    }
+    
+    // Валидация логина
+    if (!login || typeof login !== 'string' || login.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат логина' });
+    }
+    
+    login = login.trim();
+    
+    // Удаляем возможные артефакты в конце логина (например, :1, :2 и т.д.)
+    // Это может быть из-за проблем с кодированием или индексацией
+    if (login.includes(':')) {
+      const parts = login.split(':');
+      if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+        // Если последняя часть - это число, удаляем её
+        login = parts.slice(0, -1).join(':');
+        console.warn(`⚠️ Обнаружен артефакт в логине, исправлено: ${req.params.login} → ${login}`);
+      }
+    }
+    
     const { name, role, companies, password } = req.body;
     const MAIN_ADMIN_LOGIN = 'Driga_VA';
 
@@ -1169,8 +1297,14 @@ app.put('/api/users/:login', async (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
-    const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let raw, users;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    } catch (e) {
+      console.error('Ошибка чтения файла users.json:', e);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
+    }
 
     const userIndex = users.findIndex(u => u.login === login);
     
@@ -1251,7 +1385,13 @@ app.put('/api/users/:login', async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления пользователя:', e);
-    res.status(500).json({ ok: false, error: 'update_failed' });
+    console.error('Детали ошибки:', {
+      message: e.message,
+      stack: e.stack,
+      login: req.params.login,
+      body: req.body
+    });
+    res.status(500).json({ ok: false, error: 'update_failed', details: e.message });
   }
 });
 
@@ -1415,7 +1555,20 @@ app.delete('/api/activity-logs', (req, res) => {
 
 // ========== СТАТИЧЕСКИЕ ФАЙЛЫ (после всех API маршрутов) ==========
 // Редирект с корня на страницу авторизации
+// Middleware для отключения кэширования HTML файлов
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
+
 app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.redirect('/auth.html');
 });
 

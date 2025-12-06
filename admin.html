@@ -12,6 +12,8 @@
     <meta property="og:image" content="logo.png">
     <meta property="og:type" content="website">
     <meta property="og:url" content="">
+    <!-- xlsx.min.js для экспорта в Excel -->
+    <script src="xlsx.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1179,6 +1181,8 @@
     </style>
 </head>
 <body>
+    <!-- Надпись DeadLinePro в правом верхнем углу -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
     <div class="container">
         <div class="header">
             <button class="logout-admin-btn" onclick="logoutFromAdmin()" data-tooltip="Управление компаниями">
@@ -1216,6 +1220,13 @@
                             <option value="user">Пользователь</option>
                             <option value="admin">Администратор</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="userCompaniesGroup" style="display: none;">
+                        <label for="userCompanies">Доступ к компаниям *</label>
+                        <div id="userCompaniesList" style="max-height: 200px; overflow-y: auto; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; padding: 10px; background: rgba(255, 255, 255, 0.9);">
+                            <p style="color: #999; font-size: 0.9rem;">Загрузка списка компаний...</p>
+                        </div>
+                        <small>Выберите компании, к которым у пользователя будет доступ (для администраторов доступ ко всем компаниям)</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Добавить пользователя</button>
                 </form>
@@ -1295,6 +1306,8 @@
                 </div>
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                     <button class="btn btn-primary" onclick="loadActivityLogs()" style="width: auto; padding: 14px 24px;">Обновить</button>
+                    <button class="btn btn-secondary" onclick="exportActivityLogs('excel')" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">Экспорт в Excel</button>
+                    <button class="btn btn-secondary" onclick="exportActivityLogs('txt')" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">Экспорт в TXT</button>
                     <button class="btn btn-secondary" onclick="clearActivityLogs()" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);">Очистить логи</button>
                 </div>
             </div>
@@ -1616,17 +1629,92 @@
             }).join('');
         }
 
+        // Загрузить компании для формы добавления пользователя
+        async function loadCompaniesForAdd() {
+            const companiesList = document.getElementById('userCompaniesList');
+            if (!companiesList) return;
+
+            try {
+                const response = await fetch('/api/companies');
+                const companies = await response.json() || [];
+                
+                if (companies.length === 0) {
+                    companiesList.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Компании не найдены</p>';
+                    return;
+                }
+
+                companiesList.innerHTML = companies.map(company => {
+                    return `
+                        <div class="company-checkbox">
+                            <input type="checkbox" id="add_company_${company.id}" value="${company.id}">
+                            <label for="add_company_${company.id}">${company.name} (${company.id})</label>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки компаний:', error);
+                companiesList.innerHTML = '<p style="color: #ef5350; font-size: 0.9rem;">Ошибка загрузки компаний</p>';
+            }
+        }
+
+        // Обработка изменения роли в форме добавления
+        document.getElementById('userRole').addEventListener('change', function(e) {
+            const role = e.target.value;
+            const companiesGroup = document.getElementById('userCompaniesGroup');
+            const companiesList = document.getElementById('userCompaniesList');
+            
+            if (role === 'admin') {
+                // Если роль администратор, скрываем поле компаний
+                if (companiesGroup) {
+                    companiesGroup.style.display = 'none';
+                }
+                // Снимаем все галочки
+                if (companiesList) {
+                    const checkboxes = companiesList.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = false;
+                    });
+                }
+            } else {
+                // Если роль пользователь, показываем поле компаний
+                if (companiesGroup) {
+                    companiesGroup.style.display = 'block';
+                }
+                // Загружаем компании, если еще не загружены или список пуст
+                if (companiesList) {
+                    const hasCompanies = companiesList.querySelectorAll('.company-checkbox').length > 0;
+                    if (!hasCompanies || companiesList.innerHTML.includes('Загрузка')) {
+                        loadCompaniesForAdd();
+                    }
+                }
+            }
+        });
+
         // Добавить пользователя
         document.getElementById('addUserForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const role = document.getElementById('userRole').value;
+            
+            // Собираем выбранные компании
+            let selectedCompanies = [];
+            if (role === 'user') {
+                const checkboxes = document.querySelectorAll('#userCompaniesList input[type="checkbox"]:checked');
+                selectedCompanies = Array.from(checkboxes).map(cb => cb.value);
+                
+                // Проверяем, что выбрана хотя бы одна компания
+                if (selectedCompanies.length === 0) {
+                    showMessage('Для обычного пользователя необходимо выбрать хотя бы одну компанию', 'error');
+                    return;
+                }
+            }
+            
             const formData = {
                 name: document.getElementById('userName').value.trim(),
                 login: document.getElementById('userLogin').value.trim(),
                 password: document.getElementById('userPassword').value,
                 role: role,
-                companies: role === 'admin' ? [] : (currentCompanyId ? [currentCompanyId] : [])
+                companies: selectedCompanies
             };
 
             try {
@@ -1643,6 +1731,16 @@
                 if (result.ok) {
                     showMessage('Пользователь успешно добавлен', 'success');
                     document.getElementById('addUserForm').reset();
+                    // Скрываем поле компаний после сброса формы
+                    const companiesGroup = document.getElementById('userCompaniesGroup');
+                    if (companiesGroup) {
+                        companiesGroup.style.display = 'none';
+                    }
+                    // Сбрасываем выбор компаний
+                    const checkboxes = document.querySelectorAll('#userCompaniesList input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = false;
+                    });
                     loadUsers();
                 } else {
                     showMessage(result.error || 'Ошибка добавления пользователя', 'error');
@@ -2029,8 +2127,24 @@
             }
         }
 
+        // Закрытие всех модальных окон
+        function closeAllModals() {
+            // Закрываем все модальные окна
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (modal) {
+                    // Удаляем класс show
+                    modal.classList.remove('show');
+                    // Принудительно устанавливаем display: none
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
         // Выход из админ-панели (переход на страницу выбора компаний)
         function logoutFromAdmin() {
+            // Закрываем все модальные окна перед переходом
+            closeAllModals();
             window.location.href = 'companies.html';
         }
 
@@ -2933,12 +3047,53 @@
             tbody.innerHTML = logs.map(log => {
                 const userName = log.userName || 'Неизвестный пользователь';
                 const dateTime = log.dateTime || new Date(log.timestamp).toLocaleString('ru-RU');
-                const action = log.action || 'Неизвестное действие';
+                let action = log.action || 'Неизвестное действие';
                 const companyId = log.companyId || '';
+                
+                // Проверяем, есть ли удаленные задачи в детальных изменениях
+                const hasDeletedTasks = log.detailedChanges && Array.isArray(log.detailedChanges) && 
+                    log.detailedChanges.some(change => change.changeType === 'deleted');
+                
+                if (hasDeletedTasks) {
+                    // Подсчитываем количество удаленных задач
+                    const deletedCount = log.detailedChanges.filter(change => change.changeType === 'deleted').length;
+                    const deletedTasks = log.detailedChanges.filter(change => change.changeType === 'deleted');
+                    action = `⚠️ УДАЛИЛ ЗАДАЧУ${deletedCount > 1 ? 'И' : ''} (${deletedCount})`;
+                }
                 
                 // Извлекаем название компании из деталей, если есть
                 let companyName = companyId;
                 let details = log.details || '';
+                
+                // Если есть удаленные задачи, формируем детальное описание
+                if (hasDeletedTasks) {
+                    const deletedTasks = log.detailedChanges.filter(change => change.changeType === 'deleted');
+                    const deletedDetails = deletedTasks.map(change => {
+                        const taskName = change.taskName || `Задача ${change.taskIndex + 1}`;
+                        const info = [`"${taskName}"`];
+                        if (change.stage) info.push(`Этап: ${change.stage}`);
+                        if (change.oldStartDate) {
+                            const dateStr = typeof formatDateForExport === 'function' 
+                                ? formatDateForExport(change.oldStartDate) 
+                                : change.oldStartDate;
+                            info.push(`Начало: ${dateStr}`);
+                        }
+                        if (change.oldEndDate) {
+                            const dateStr = typeof formatDateForExport === 'function' 
+                                ? formatDateForExport(change.oldEndDate) 
+                                : change.oldEndDate;
+                            info.push(`Окончание: ${dateStr}`);
+                        }
+                        if (change.oldStatus) {
+                            const statusStr = typeof getStatusName === 'function' 
+                                ? getStatusName(change.oldStatus) 
+                                : change.oldStatus;
+                            info.push(`Статус: ${statusStr}`);
+                        }
+                        return info.join(', ');
+                    });
+                    details = `УДАЛЕНО: ${deletedDetails.join('; ')}`;
+                }
                 
                 // Пытаемся извлечь название компании из деталей (формат: "... | Компания: Название (ID)")
                 const companyMatch = details.match(/Компания:\s*([^(]+)\s*\(([^)]+)\)/);
@@ -2953,11 +3108,19 @@
                     ? `${companyName} (${companyId})` 
                     : companyId || '—';
                 
+                // Стиль для удаленных задач - красный фон
+                const rowStyle = hasDeletedTasks 
+                    ? 'background-color: #ffebee; border-left: 4px solid #f44336;'
+                    : '';
+                const actionStyle = hasDeletedTasks
+                    ? 'color: #d32f2f; font-weight: 700;'
+                    : 'color: #1976d2; font-weight: 500;';
+                
                 return `
-                    <tr style="border-bottom: 1px solid rgba(100, 181, 246, 0.2);">
+                    <tr style="border-bottom: 1px solid rgba(100, 181, 246, 0.2); ${rowStyle}">
                         <td style="padding: 12px; color: #1565c0; font-weight: 600;">${escapeHtml(userName)}</td>
                         <td style="padding: 12px; color: #64b5f6; white-space: nowrap;">${escapeHtml(dateTime)}</td>
-                        <td style="padding: 12px; color: #1976d2; font-weight: 500;">${escapeHtml(action)}</td>
+                        <td style="padding: 12px; ${actionStyle}">${escapeHtml(action)}</td>
                         <td style="padding: 12px; color: #e91e63; font-weight: 500;">${escapeHtml(companyDisplay)}</td>
                         <td style="padding: 12px; color: #424242; max-width: 400px; word-wrap: break-word;">${escapeHtml(details)}</td>
                     </tr>
@@ -2997,6 +3160,398 @@
             return div.innerHTML;
         }
 
+        // Экспорт логов активности в Excel или TXT
+        async function exportActivityLogs(format) {
+            try {
+                const companyFilter = document.getElementById('logCompanyFilter')?.value || '';
+                const userFilter = document.getElementById('logUserFilter')?.value || '';
+                
+                let url = '/api/activity-logs?limit=10000'; // Получаем все логи
+                if (companyFilter) {
+                    url += `&companyId=${encodeURIComponent(companyFilter)}`;
+                }
+                if (userFilter) {
+                    url += `&userName=${encodeURIComponent(userFilter)}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (!result.ok || !result.logs) {
+                    showMessage('Ошибка загрузки логов для экспорта', 'error');
+                    return;
+                }
+                
+                const logs = result.logs || [];
+                if (logs.length === 0) {
+                    showMessage('Нет логов для экспорта', 'error');
+                    return;
+                }
+                
+                // Загружаем информацию о компаниях для получения названий
+                let companiesMap = {};
+                try {
+                    const companiesResponse = await fetch('/api/companies');
+                    const companies = await companiesResponse.json();
+                    companies.forEach(c => {
+                        companiesMap[c.id] = c.name || c.id;
+                    });
+                } catch (e) {
+                    console.warn('Не удалось загрузить компании:', e);
+                }
+                
+                if (format === 'excel') {
+                    exportToExcel(logs, companiesMap);
+                } else if (format === 'txt') {
+                    exportToTxt(logs, companiesMap);
+                }
+            } catch (error) {
+                console.error('Ошибка экспорта логов:', error);
+                showMessage('Ошибка экспорта логов', 'error');
+            }
+        }
+
+        // Экспорт в Excel
+        function exportToExcel(logs, companiesMap) {
+            if (typeof XLSX === 'undefined') {
+                showMessage('Библиотека XLSX не загружена. Проверьте наличие файла xlsx.min.js', 'error');
+                return;
+            }
+            
+            const rows = [];
+            
+            // Заголовок
+            rows.push(['Пользователь', 'Дата и время', 'Действие', 'Компания', 'Задача', 'Изменение', 'Старое значение', 'Новое значение']);
+            
+            // Обрабатываем каждый лог
+            logs.forEach(log => {
+                const userName = log.userName || 'Неизвестный пользователь';
+                const dateTime = log.dateTime || new Date(log.timestamp).toLocaleString('ru-RU');
+                const action = log.action || 'Неизвестное действие';
+                const companyName = companiesMap[log.companyId] || log.companyId || '—';
+                
+                // Если есть детальные изменения, выводим каждое построчно
+                if (log.detailedChanges && Array.isArray(log.detailedChanges) && log.detailedChanges.length > 0) {
+                    log.detailedChanges.forEach(change => {
+                        const taskName = change.taskName || `Задача ${change.taskIndex + 1}`;
+                        
+                        // Обработка удаленных задач
+                        if (change.changeType === 'deleted') {
+                            // Для удаленных задач выводим полную информацию одной строкой
+                            const deletedInfo = [];
+                            if (change.stage) deletedInfo.push(`Этап: ${change.stage}`);
+                            if (change.control) deletedInfo.push(`Вид контроля: ${change.control}`);
+                            if (change.oldStartDate) deletedInfo.push(`Дата начала: ${formatDateForExport(change.oldStartDate)}`);
+                            if (change.oldEndDate) deletedInfo.push(`Дата окончания: ${formatDateForExport(change.oldEndDate)}`);
+                            if (change.oldDays) deletedInfo.push(`Рабочих дней: ${change.oldDays}`);
+                            if (change.oldStatus) deletedInfo.push(`Статус: ${getStatusName(change.oldStatus)}`);
+                            if (change.oldLink) deletedInfo.push(`Связь: ${change.oldLink}`);
+                            if (change.oldResponsible) deletedInfo.push(`Ответственный: ${change.oldResponsible}`);
+                            
+                            rows.push([
+                                userName,
+                                dateTime,
+                                'УДАЛИЛ ЗАДАЧУ',
+                                companyName,
+                                taskName,
+                                'УДАЛЕНО',
+                                deletedInfo.join('; ') || 'Полная информация о задаче',
+                                '—'
+                            ]);
+                            
+                            // Если есть комментарии по датам, добавляем отдельную строку
+                            if (change.dateComments && Object.keys(change.dateComments).length > 0) {
+                                const commentsList = Object.entries(change.dateComments)
+                                    .map(([date, comment]) => `${formatDateForExport(date)}: ${comment}`)
+                                    .join('; ');
+                                rows.push([
+                                    userName,
+                                    dateTime,
+                                    'УДАЛИЛ ЗАДАЧУ',
+                                    companyName,
+                                    taskName,
+                                    'Комментарии по датам',
+                                    commentsList,
+                                    '—'
+                                ]);
+                            }
+                            return; // Переходим к следующему изменению
+                        }
+                        
+                        // Дата начала
+                        if (change.oldStartDate !== change.newStartDate) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Дата начала',
+                                formatDateForExport(change.oldStartDate),
+                                formatDateForExport(change.newStartDate)
+                            ]);
+                        }
+                        
+                        // Дата окончания
+                        if (change.oldEndDate !== change.newEndDate) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Дата окончания',
+                                formatDateForExport(change.oldEndDate),
+                                formatDateForExport(change.newEndDate)
+                            ]);
+                        }
+                        
+                        // Рабочих дней
+                        if (change.oldDays !== change.newDays) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Рабочих дней',
+                                change.oldDays || '—',
+                                change.newDays || '—'
+                            ]);
+                        }
+                        
+                        // Статус
+                        if (change.oldStatus !== change.newStatus) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Статус',
+                                getStatusName(change.oldStatus) || '—',
+                                getStatusName(change.newStatus) || '—'
+                            ]);
+                        }
+                        
+                        // Связь
+                        if (change.oldLink !== change.newLink) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Связь',
+                                change.oldLink || '—',
+                                change.newLink || '—'
+                            ]);
+                        }
+                        
+                        // Ответственный
+                        if (change.oldResponsible !== change.newResponsible) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Ответственный',
+                                change.oldResponsible || '—',
+                                change.newResponsible || '—'
+                            ]);
+                        }
+                        
+                        // Название задачи
+                        if (change.oldName !== change.newName) {
+                            rows.push([
+                                userName,
+                                dateTime,
+                                action,
+                                companyName,
+                                taskName,
+                                'Название задачи',
+                                change.oldName || '—',
+                                change.newName || '—'
+                            ]);
+                        }
+                    });
+                } else {
+                    // Если нет детальных изменений, выводим общую информацию
+                    rows.push([
+                        userName,
+                        dateTime,
+                        action,
+                        companyName,
+                        '—',
+                        'Общие изменения',
+                        '—',
+                        log.details || '—'
+                    ]);
+                }
+            });
+            
+            // Создаем книгу Excel
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            
+            // Устанавливаем ширину столбцов
+            ws['!cols'] = [
+                { wch: 20 }, // Пользователь
+                { wch: 20 }, // Дата и время
+                { wch: 20 }, // Действие
+                { wch: 25 }, // Компания
+                { wch: 40 }, // Задача
+                { wch: 20 }, // Изменение
+                { wch: 25 }, // Старое значение
+                { wch: 25 }  // Новое значение
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Логи активности');
+            XLSX.writeFile(wb, `Логи_активности_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            showMessage('Логи успешно экспортированы в Excel', 'success');
+        }
+
+        // Экспорт в TXT
+        function exportToTxt(logs, companiesMap) {
+            let txtContent = 'ЛОГИ АКТИВНОСТИ\n';
+            txtContent += '='.repeat(100) + '\n\n';
+            
+            logs.forEach(log => {
+                const userName = log.userName || 'Неизвестный пользователь';
+                const dateTime = log.dateTime || new Date(log.timestamp).toLocaleString('ru-RU');
+                const action = log.action || 'Неизвестное действие';
+                const companyName = companiesMap[log.companyId] || log.companyId || '—';
+                
+                txtContent += `Пользователь: ${userName}\n`;
+                txtContent += `Дата и время: ${dateTime}\n`;
+                txtContent += `Действие: ${action}\n`;
+                txtContent += `Компания: ${companyName}\n`;
+                txtContent += '-'.repeat(100) + '\n';
+                
+                // Если есть детальные изменения, выводим каждое построчно
+                if (log.detailedChanges && Array.isArray(log.detailedChanges) && log.detailedChanges.length > 0) {
+                    log.detailedChanges.forEach(change => {
+                        const taskName = change.taskName || `Задача ${change.taskIndex + 1}`;
+                        
+                        // Обработка удаленных задач
+                        if (change.changeType === 'deleted') {
+                            txtContent += `  ⚠️ УДАЛЕНА ЗАДАЧА: "${taskName}"\n`;
+                            if (change.stage) txtContent += `    Этап: ${change.stage}\n`;
+                            if (change.control) txtContent += `    Вид контроля: ${change.control}\n`;
+                            if (change.oldStartDate) txtContent += `    Дата начала: ${formatDateForExport(change.oldStartDate)}\n`;
+                            if (change.oldEndDate) txtContent += `    Дата окончания: ${formatDateForExport(change.oldEndDate)}\n`;
+                            if (change.oldDays) txtContent += `    Рабочих дней: ${change.oldDays}\n`;
+                            if (change.oldStatus) txtContent += `    Статус: ${getStatusName(change.oldStatus)}\n`;
+                            if (change.oldLink) txtContent += `    Связь: ${change.oldLink}\n`;
+                            if (change.oldResponsible) txtContent += `    Ответственный: ${change.oldResponsible}\n`;
+                            
+                            // Комментарии по датам
+                            if (change.dateComments && Object.keys(change.dateComments).length > 0) {
+                                txtContent += `    Комментарии по датам:\n`;
+                                Object.entries(change.dateComments).forEach(([date, comment]) => {
+                                    txtContent += `      ${formatDateForExport(date)}: ${comment}\n`;
+                                });
+                            }
+                            
+                            txtContent += '\n';
+                            return; // Переходим к следующему изменению
+                        }
+                        
+                        txtContent += `  Задача: "${taskName}"\n`;
+                        
+                        // Дата начала
+                        if (change.oldStartDate !== change.newStartDate) {
+                            txtContent += `    Дата начала: ${formatDateForExport(change.oldStartDate)} → ${formatDateForExport(change.newStartDate)}\n`;
+                        }
+                        
+                        // Дата окончания
+                        if (change.oldEndDate !== change.newEndDate) {
+                            txtContent += `    Дата окончания: ${formatDateForExport(change.oldEndDate)} → ${formatDateForExport(change.newEndDate)}\n`;
+                        }
+                        
+                        // Рабочих дней
+                        if (change.oldDays !== change.newDays) {
+                            txtContent += `    Рабочих дней: ${change.oldDays || '—'} → ${change.newDays || '—'}\n`;
+                        }
+                        
+                        // Статус
+                        if (change.oldStatus !== change.newStatus) {
+                            txtContent += `    Статус: ${getStatusName(change.oldStatus) || '—'} → ${getStatusName(change.newStatus) || '—'}\n`;
+                        }
+                        
+                        // Связь
+                        if (change.oldLink !== change.newLink) {
+                            txtContent += `    Связь: ${change.oldLink || '—'} → ${change.newLink || '—'}\n`;
+                        }
+                        
+                        // Ответственный
+                        if (change.oldResponsible !== change.newResponsible) {
+                            txtContent += `    Ответственный: ${change.oldResponsible || '—'} → ${change.newResponsible || '—'}\n`;
+                        }
+                        
+                        // Название задачи
+                        if (change.oldName !== change.newName) {
+                            txtContent += `    Название задачи: "${change.oldName || '—'}" → "${change.newName || '—'}"\n`;
+                        }
+                        
+                        txtContent += '\n';
+                    });
+                } else {
+                    // Если нет детальных изменений, выводим общую информацию
+                    txtContent += `  ${log.details || 'Нет детальной информации'}\n\n`;
+                }
+                
+                txtContent += '='.repeat(100) + '\n\n';
+            });
+            
+            // Создаем и скачиваем файл
+            const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Логи_активности_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showMessage('Логи успешно экспортированы в TXT', 'success');
+        }
+
+        // Форматирование даты для экспорта
+        function formatDateForExport(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    // Если это строка в формате YYYY-MM-DD
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                    }
+                    return dateStr;
+                }
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}.${month}.${year}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // Получить название статуса
+        function getStatusName(status) {
+            const statusNames = {
+                'pending': 'Запланирована',
+                'in-progress': 'В работе',
+                'completed': 'Завершено'
+            };
+            return statusNames[status] || status || '—';
+        }
+
         // Обновить список компаний в фильтре логов
         function updateLogCompanyFilter() {
             const logCompanyFilter = document.getElementById('logCompanyFilter');
@@ -3022,6 +3577,16 @@
             // Затем загружаем типы графиков
             loadCompanies().then(() => {
                 updateLogCompanyFilter();
+                // Загружаем компании для формы добавления пользователя
+                loadCompaniesForAdd();
+                // Проверяем выбранную роль и показываем/скрываем поле компаний
+                const userRole = document.getElementById('userRole');
+                if (userRole && userRole.value === 'user') {
+                    const companiesGroup = document.getElementById('userCompaniesGroup');
+                    if (companiesGroup) {
+                        companiesGroup.style.display = 'block';
+                    }
+                }
             });
             loadUsers();
             loadChartTypes();
