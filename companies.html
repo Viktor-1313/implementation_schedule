@@ -183,6 +183,12 @@
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 80px;
             right: 30px;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .archive-btn.show {
+            animation: fadeInScale 0.4s ease forwards;
         }
 
         .archive-btn:hover {
@@ -231,10 +237,16 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             overflow: visible;
-            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 30px;
             left: 80px;
             text-decoration: none;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .admin-btn.show {
+            animation: fadeInScale 0.4s ease forwards;
         }
 
         /* Кнопка переключения темы */
@@ -246,7 +258,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             border: 2px solid var(--color-border);
             cursor: pointer;
             display: flex !important;
@@ -257,12 +269,17 @@
             z-index: 1001 !important;
             overflow: visible;
             visibility: visible !important;
-            opacity: 1 !important;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .theme-toggle-btn.show {
+            animation: fadeInScale 0.4s ease forwards;
         }
 
         .theme-toggle-btn:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
 
         .theme-toggle-btn::before {
@@ -351,7 +368,7 @@
 
         .admin-btn:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
 
         /* Подсказка для кнопки админа */
@@ -460,6 +477,12 @@
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 30px;
             right: 80px;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .profile-btn.show {
+            animation: fadeInScale 0.4s ease forwards;
         }
 
         .profile-btn .profile-icon-head {
@@ -523,9 +546,15 @@
         }
 
         .companies-bottom-btn {
-            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 80px;
             right: 80px;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .companies-bottom-btn.show {
+            animation: fadeInScale 0.4s ease forwards;
         }
 
         .companies-bottom-btn:hover {
@@ -611,6 +640,12 @@
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 30px;
             right: 30px;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .logout-btn.show {
+            animation: fadeInScale 0.4s ease forwards;
         }
 
         .logout-btn .logout-icon {
@@ -1247,6 +1282,17 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
@@ -2758,7 +2804,10 @@
             if (themeToggleBtn) {
                 themeToggleBtn.style.display = 'flex';
                 themeToggleBtn.style.visibility = 'visible';
-                themeToggleBtn.style.opacity = '1';
+                // Добавляем класс для анимации появления
+                setTimeout(() => {
+                    themeToggleBtn.classList.add('show');
+                }, 50);
             }
         }
 
@@ -2871,12 +2920,24 @@
                     const archiveBtn = document.getElementById('archiveBtn');
                     if (archiveBtn) {
                         archiveBtn.style.display = isAdmin ? 'flex' : 'none';
+                        if (isAdmin) {
+                            // Запускаем анимацию появления для кнопки архива
+                            setTimeout(() => {
+                                archiveBtn.classList.add('show');
+                            }, 350);
+                        }
                     }
                     
                     // Показываем кнопку админ-панели только для администраторов
                     const adminPanelLink = document.getElementById('adminPanelLink');
                     if (adminPanelLink) {
                         adminPanelLink.style.display = isAdmin ? 'flex' : 'none';
+                        if (isAdmin) {
+                            // Запускаем анимацию появления для кнопки админа
+                            setTimeout(() => {
+                                adminPanelLink.classList.add('show');
+                            }, 300);
+                        }
                     }
                     
                     // Обновляем заголовок страницы
@@ -3975,7 +4036,13 @@
             if (companiesContainer) companiesContainer.style.display = 'none';
             if (archiveContainer) archiveContainer.style.display = 'block';
             if (pageTitle) pageTitle.textContent = 'Архив компаний';
-            if (companiesBottomBtn) companiesBottomBtn.style.display = 'flex';
+            if (companiesBottomBtn) {
+                companiesBottomBtn.style.display = 'flex';
+                // Запускаем анимацию появления
+                setTimeout(() => {
+                    companiesBottomBtn.classList.add('show');
+                }, 10);
+            }
             
             await loadArchivedCompanies();
         }
@@ -3990,7 +4057,13 @@
             if (companiesContainer) companiesContainer.style.display = 'block';
             if (archiveContainer) archiveContainer.style.display = 'none';
             if (pageTitle) pageTitle.textContent = 'Выбор компании';
-            if (companiesBottomBtn) companiesBottomBtn.style.display = 'none';
+            if (companiesBottomBtn) {
+                companiesBottomBtn.classList.remove('show');
+                // Скрываем кнопку после завершения анимации
+                setTimeout(() => {
+                    companiesBottomBtn.style.display = 'none';
+                }, 400);
+            }
         }
 
         // Загрузить архивированные компании
@@ -5253,6 +5326,27 @@
             // Инициализируем эффекты
             initFireflies();
             // Подсказки теперь работают через простой CSS, без JavaScript
+            
+            // Запускаем анимацию появления для всех кнопок
+            setTimeout(() => {
+                const themeBtn = document.getElementById('themeToggleBtn');
+                const adminBtn = document.getElementById('adminPanelLink');
+                const profileBtn = document.getElementById('profileBtn');
+                const logoutBtn = document.getElementById('logoutBtn');
+                
+                if (themeBtn) {
+                    setTimeout(() => themeBtn.classList.add('show'), 100);
+                }
+                if (adminBtn && adminBtn.style.display !== 'none') {
+                    setTimeout(() => adminBtn.classList.add('show'), 200);
+                }
+                if (profileBtn) {
+                    setTimeout(() => profileBtn.classList.add('show'), 150);
+                }
+                if (logoutBtn) {
+                    setTimeout(() => logoutBtn.classList.add('show'), 250);
+                }
+            }, 100);
             
             // Инициализируем систему подсказок для первого входа
             // Ждем загрузки компаний перед показом подсказок
