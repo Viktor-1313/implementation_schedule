@@ -15,13 +15,25 @@
     "createdAt": "2025-11-30T09:42:18.591Z"
   },
   {
-    "id": "test",
-    "name": "test",
+    "id": "praktis_id",
+    "name": "ООО \"Сетл Практис ИД\"",
     "createdAt": "2025-12-02T13:13:43.346Z"
   },
   {
     "id": "Tst1",
     "name": "ООО \"Примьера\"",
     "createdAt": "2025-12-03T09:55:28.899Z"
+  },
+  {
+    "id": "test",
+    "name": "test",
+    "createdAt": "2025-12-05T18:37:01.152Z",
+    "archived": true,
+    "archivedAt": "2025-12-05T18:37:37.836Z"
+  },
+  {
+    "id": "test1",
+    "name": "test",
+    "createdAt": "2025-12-05T18:45:09.422Z"
   }
 ]

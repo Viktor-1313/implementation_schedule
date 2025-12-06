@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Админ-панель — Управление пользователями</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    
+    <!-- Open Graph метатеги для превью ссылок -->
+    <meta property="og:title" content="Админ-панель — График внедрения ICONA">
+    <meta property="og:description" content="Административная панель для управления пользователями и настройки графиков внедрения ICONA">
+    <meta property="og:image" content="logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
     <style>
         * {
             margin: 0;
@@ -210,20 +217,18 @@
             margin-bottom: 10px;
             font-size: 0.95rem;
             position: relative;
-            padding-left: 25px;
+            padding-left: 20px;
         }
 
         .form-group label::before {
-            content: '';
+            content: '•';
             position: absolute;
             left: 0;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            border: 2px solid #42a5f5;
-            border-radius: 4px;
-            background: rgba(66, 165, 245, 0.1);
+            color: #42a5f5;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
 
         .form-group input,
@@ -301,6 +306,166 @@
         .btn-danger:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(239, 83, 80, 0.4);
+        }
+
+        /* Кастомная кнопка удаления для скелетонов в стиле Windows */
+        .skeleton-row {
+            position: relative;
+        }
+
+        #skeletonTable {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .skeleton-row {
+            position: relative;
+        }
+
+        .skeleton-row td:last-child {
+            position: relative;
+            padding: 0 !important;
+            width: 30px;
+        }
+
+        .skeleton-delete-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 300;
+            transition: all 0.15s ease;
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            padding: 0;
+            margin: 0;
+            z-index: 100;
+        }
+
+        .skeleton-delete-btn:hover {
+            background: #e81123;
+            color: white;
+        }
+
+        .skeleton-delete-btn:active {
+            background: #c50e1f;
+        }
+
+        .skeleton-delete-btn-icon {
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+            font-family: 'Segoe UI', 'Segoe UI Symbol', Arial, sans-serif;
+            font-weight: 300;
+        }
+
+        /* Показываем кнопку только при наведении на строку */
+        .skeleton-row .skeleton-delete-btn {
+            opacity: 0.3;
+            transition: opacity 0.2s ease;
+        }
+
+        .skeleton-row:hover .skeleton-delete-btn {
+            opacity: 1;
+        }
+
+        /* Кнопка удаления типа графика в стиле Windows */
+        .skeleton-type-delete-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 300;
+            transition: all 0.15s ease;
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+            align-self: flex-start;
+            margin-top: -12px;
+        }
+
+        .skeleton-type-delete-btn:hover {
+            background: #e81123;
+            color: white;
+            border-radius: 4px;
+        }
+
+        .skeleton-type-delete-btn:active {
+            background: #c50e1f;
+            border-radius: 4px;
+        }
+
+        /* Подсказки для кнопки удаления типа графика */
+        .skeleton-type-delete-btn[data-tooltip] {
+            position: relative;
+        }
+
+        .skeleton-type-delete-btn[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom center;
+            z-index: 9999;
+            margin-bottom: 5px;
+        }
+
+        .skeleton-type-delete-btn[data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translate(-50%, -6px);
+            transition-delay: 1s;
+        }
+
+        /* Подсказка для кнопки "Управление компаниями" */
+        .logout-admin-btn[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: top center;
+            z-index: 9999;
+            margin-top: 5px;
+        }
+
+        .logout-admin-btn[data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translate(-50%, 6px);
+            transition-delay: 1s;
         }
 
         .btn-secondary {
@@ -982,13 +1147,42 @@
                 font-size: 1.1rem;
             }
         }
+
+        /* Футтер */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(100, 181, 246, 0.3);
+            padding: 15px 20px;
+            text-align: center;
+            color: #64b5f6;
+            font-size: 0.85rem;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(33, 150, 243, 0.1);
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                font-size: 0.75rem;
+                padding: 12px 15px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <button class="logout-admin-btn" onclick="logoutFromAdmin()" title="Выход в выбор компаний">
-                Выход
+            <button class="logout-admin-btn" onclick="logoutFromAdmin()" data-tooltip="Управление компаниями">
+                Управление компаниями
             </button>
             <div class="header-content">
                 <div class="header-icon"></div>
@@ -998,22 +1192,6 @@
         </div>
 
         <div id="message" class="message"></div>
-
-        <!-- Выбор компании -->
-        <div class="panel-section" style="margin-bottom: 30px;">
-            <h2>Выбор компании</h2>
-            <div class="form-group">
-                <label for="companySelect">Компания</label>
-                <select id="companySelect" name="companySelect" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
-                    <option value="">Все компании</option>
-                </select>
-            </div>
-            <div style="margin-top: 15px;">
-                <a href="companies.html" class="btn btn-primary" style="text-decoration: none; display: inline-block; width: auto; padding: 12px 24px;">
-                    Управление компаниями
-                </a>
-            </div>
-        </div>
 
         <div class="admin-panel">
             <!-- Форма регистрации -->
@@ -1046,6 +1224,12 @@
             <!-- Список пользователей -->
             <div class="panel-section">
                 <h2>Список пользователей</h2>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="companySelectUsers">Компания</label>
+                    <select id="companySelectUsers" name="companySelectUsers" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
+                        <option value="">Все компании</option>
+                    </select>
+                </div>
                 <div id="usersList" class="users-list">
                     <div class="empty-state">
                         <div class="empty-state-icon"></div>
@@ -1292,16 +1476,18 @@
             try {
                 const response = await fetch('/api/companies');
                 allCompanies = await response.json() || [];
-                const companySelect = document.getElementById('companySelect');
+                const companySelectUsers = document.getElementById('companySelectUsers');
                 
                 // Очищаем и заполняем список компаний
-                companySelect.innerHTML = '<option value="">Все компании</option>';
-                allCompanies.forEach(company => {
-                    const option = document.createElement('option');
-                    option.value = company.id;
-                    option.textContent = `${company.name} (${company.id})`;
-                    companySelect.appendChild(option);
-                });
+                if (companySelectUsers) {
+                    companySelectUsers.innerHTML = '<option value="">Все компании</option>';
+                    allCompanies.forEach(company => {
+                        const option = document.createElement('option');
+                        option.value = company.id;
+                        option.textContent = `${company.name} (${company.id})`;
+                        companySelectUsers.appendChild(option);
+                    });
+                }
             } catch (error) {
                 console.error('Ошибка загрузки компаний:', error);
             }
@@ -1310,21 +1496,24 @@
         // Загрузить список пользователей
         async function loadUsers() {
             try {
-                const url = currentCompanyId ? `/api/users?company=${currentCompanyId}` : '/api/users';
-                const response = await fetch(url);
+                const response = await fetch('/api/users');
                 allUsers = await response.json() || [];
                 
                 // Фильтруем пользователей по выбранной компании
                 let filteredUsers = allUsers;
                 if (currentCompanyId) {
+                    // При выборе конкретной компании показываем только пользователей этой компании (админы НЕ показываются)
                     filteredUsers = allUsers.filter(user => {
-                        // Администраторы имеют доступ ко всем компаниям
+                        // Администраторы не показываются при выборе конкретной компании
                         if (user.role === 'admin') {
-                            return true;
+                            return false;
                         }
                         // Для обычных пользователей проверяем наличие компании в списке
                         return user.companies && Array.isArray(user.companies) && user.companies.includes(currentCompanyId);
                     });
+                } else {
+                    // При выборе "Все компании" показываем всех пользователей, включая админов
+                    filteredUsers = allUsers;
                 }
                 
                 renderUsers(filteredUsers);
@@ -1718,10 +1907,13 @@
         }
 
         // Обработчик изменения выбранной компании
-        document.getElementById('companySelect').addEventListener('change', function(e) {
-            currentCompanyId = e.target.value;
-            loadUsers();
-        });
+        const companySelectUsers = document.getElementById('companySelectUsers');
+        if (companySelectUsers) {
+            companySelectUsers.addEventListener('change', function(e) {
+                currentCompanyId = e.target.value;
+                loadUsers();
+            });
+        }
 
         // Закрытие модального окна редактирования при клике вне его
         document.getElementById('editUserModal').addEventListener('click', function(e) {
@@ -1880,15 +2072,15 @@
                 // Экранируем кавычки в названии для безопасного использования в HTML
                 const safeChartTypeName = (chartType.chartTypeName || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 return `
-                    <div style="display: flex; align-items: center; gap: 5px; margin-right: 10px; margin-bottom: 5px;">
+                    <div style="display: flex; align-items: flex-start; gap: 5px; margin-right: 10px; margin-bottom: 5px; position: relative;">
                         <button class="btn ${btnClass}" style="width: auto; padding: 12px 24px;" 
                                 onclick="openSkeletonEditor('${chartType.id}')">
                             ${chartType.chartTypeName}
                         </button>
-                        <button class="btn btn-danger" style="width: auto; padding: 8px 12px; min-width: 40px; font-size: 18px; line-height: 1;" 
+                        <button class="skeleton-type-delete-btn" 
                                 onclick="deleteSkeletonType('${chartType.id}', '${safeChartTypeName}')" 
-                                title="Удалить тип графика">
-                            ×
+                                data-tooltip="Удалить тип графика">
+                            <span class="skeleton-delete-btn-icon">×</span>
                         </button>
                     </div>
                 `;
@@ -2013,8 +2205,8 @@
                 }).join('');
 
                 return `
-                    <tr class="skeleton-row" data-index="${safeIndex}" style="${rowStyle}" 
-                        onclick="if(event.target.tagName !== 'INPUT' && event.target.tagName !== 'BUTTON') selectSkeletonRow(${safeIndex})"
+                    <tr class="skeleton-row" data-index="${safeIndex}" style="${rowStyle} position: relative;" 
+                        onclick="if(event.target.tagName !== 'INPUT' && event.target.tagName !== 'BUTTON' && !event.target.closest('.skeleton-delete-btn')) selectSkeletonRow(${safeIndex})"
                         onmouseover="if(${safeIndex} !== selectedSkeletonRowIndex) this.style.backgroundColor='#f5f5f5'"
                         onmouseout="if(${safeIndex} !== selectedSkeletonRowIndex) this.style.backgroundColor=''">
                         <td style="padding: 10px; text-align: center; width: 50px;">${index + 1}</td>
@@ -2031,8 +2223,10 @@
                                    onmouseup="event.stopPropagation();"
                                    onselectstart="event.stopPropagation();">
                         </td>
-                        <td style="padding: 10px; text-align: center;">
-                            <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteSkeletonTask(${safeIndex});" style="width: auto; padding: 6px 12px;">Удалить</button>
+                        <td style="padding: 0; width: 0; position: relative; overflow: visible;">
+                            <button class="skeleton-delete-btn" onclick="event.stopPropagation(); deleteSkeletonTask(${safeIndex});" title="Удалить задачу">
+                                <span class="skeleton-delete-btn-icon">×</span>
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -2669,5 +2863,9 @@
             loadChartTypes();
         });
     </script>
+    
+    <footer class="footer">
+        <p>&copy; 2025 SetlTech. Все права защищены.</p>
+    </footer>
 </body>
 </html>

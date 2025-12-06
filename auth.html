@@ -291,6 +291,27 @@
             -webkit-backdrop-filter: blur(10px);
         }
 
+        /* Футтер */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(100, 180, 255, 0.2);
+            padding: 15px 20px;
+            text-align: center;
+            color: rgba(100, 150, 200, 0.8);
+            font-size: 0.85rem;
+            z-index: 100;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
         /* Адаптивность для планшетов и мобильных */
         @media (max-width: 1024px) {
             .auth-body {
@@ -1233,6 +1254,10 @@
             checkViewModeButtonVisibility();
         });
     </script>
+    
+    <footer class="footer">
+        <p>&copy; 2025 SetlTech. Все права защищены.</p>
+    </footer>
 </body>
 </html>
 

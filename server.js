@@ -42,7 +42,9 @@ app.get('/api/companies', (req, res) => {
     }
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
     const companies = JSON.parse(raw);
-    res.json(companies);
+    // Фильтруем архивированные компании - они не должны показываться в основном списке
+    const activeCompanies = companies.filter(c => !c.archived);
+    res.json(activeCompanies);
   } catch (e) {
     console.error('Ошибка загрузки компаний:', e);
     res.status(500).json({ ok: false, error: 'load_failed' });
@@ -223,6 +225,98 @@ app.delete('/api/companies/:id', (req, res) => {
   } catch (e) {
     console.error('Ошибка удаления компании:', e);
     res.status(500).json({ ok: false, error: 'delete_failed' });
+  }
+});
+
+// Архивировать компанию
+app.post('/api/companies/:id/archive', (req, res) => {
+  try {
+    const companyId = decodeURIComponent(req.params.id);
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    const companyIndex = companies.findIndex(c => c.id === companyId);
+    if (companyIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    // Помечаем компанию как архивированную
+    companies[companyIndex].archived = true;
+    companies[companyIndex].archivedAt = new Date().toISOString();
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка архивирования компании:', e);
+    res.status(500).json({ ok: false, error: 'archive_failed' });
+  }
+});
+
+// Восстановить компанию из архива
+app.post('/api/companies/:id/restore', (req, res) => {
+  try {
+    const companyId = decodeURIComponent(req.params.id);
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    const companyIndex = companies.findIndex(c => c.id === companyId);
+    if (companyIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    // Убираем флаг архивирования
+    companies[companyIndex].archived = false;
+    delete companies[companyIndex].archivedAt;
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка восстановления компании:', e);
+    res.status(500).json({ ok: false, error: 'restore_failed' });
+  }
+});
+
+// Получить архивированные компании
+app.get('/api/companies/archived', (req, res) => {
+  try {
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.json({ ok: true, companies: [] });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    const companies = JSON.parse(raw);
+
+    // Фильтруем только архивированные компании
+    const archivedCompanies = companies.filter(c => c.archived === true);
+
+    // Загружаем информацию о компаниях (логотипы)
+    const companiesWithInfo = archivedCompanies.map(company => {
+      const infoFile = getCompanyInfoFile(company.id);
+      if (fs.existsSync(infoFile)) {
+        try {
+          const infoData = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
+          return { ...company, logoData: infoData.logoData || null };
+        } catch (e) {
+          return company;
+        }
+      }
+      return company;
+    });
+
+    res.json({ ok: true, companies: companiesWithInfo });
+  } catch (e) {
+    console.error('Ошибка загрузки архива:', e);
+    res.status(500).json({ ok: false, error: 'load_archive_failed' });
   }
 });
 

@@ -42,7 +42,9 @@ app.get('/api/companies', (req, res) => {
     }
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
     const companies = JSON.parse(raw);
-    res.json(companies);
+    // Фильтруем архивированные компании - они не должны показываться в основном списке
+    const activeCompanies = companies.filter(c => !c.archived);
+    res.json(activeCompanies);
   } catch (e) {
     console.error('Ошибка загрузки компаний:', e);
     res.status(500).json({ ok: false, error: 'load_failed' });
@@ -226,6 +228,98 @@ app.delete('/api/companies/:id', (req, res) => {
   }
 });
 
+// Архивировать компанию
+app.post('/api/companies/:id/archive', (req, res) => {
+  try {
+    const companyId = decodeURIComponent(req.params.id);
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    const companyIndex = companies.findIndex(c => c.id === companyId);
+    if (companyIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    // Помечаем компанию как архивированную
+    companies[companyIndex].archived = true;
+    companies[companyIndex].archivedAt = new Date().toISOString();
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка архивирования компании:', e);
+    res.status(500).json({ ok: false, error: 'archive_failed' });
+  }
+});
+
+// Восстановить компанию из архива
+app.post('/api/companies/:id/restore', (req, res) => {
+  try {
+    const companyId = decodeURIComponent(req.params.id);
+
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    let companies = JSON.parse(raw);
+
+    const companyIndex = companies.findIndex(c => c.id === companyId);
+    if (companyIndex === -1) {
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+
+    // Убираем флаг архивирования
+    companies[companyIndex].archived = false;
+    delete companies[companyIndex].archivedAt;
+
+    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка восстановления компании:', e);
+    res.status(500).json({ ok: false, error: 'restore_failed' });
+  }
+});
+
+// Получить архивированные компании
+app.get('/api/companies/archived', (req, res) => {
+  try {
+    if (!fs.existsSync(COMPANIES_FILE)) {
+      return res.json({ ok: true, companies: [] });
+    }
+
+    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+    const companies = JSON.parse(raw);
+
+    // Фильтруем только архивированные компании
+    const archivedCompanies = companies.filter(c => c.archived === true);
+
+    // Загружаем информацию о компаниях (логотипы)
+    const companiesWithInfo = archivedCompanies.map(company => {
+      const infoFile = getCompanyInfoFile(company.id);
+      if (fs.existsSync(infoFile)) {
+        try {
+          const infoData = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
+          return { ...company, logoData: infoData.logoData || null };
+        } catch (e) {
+          return company;
+        }
+      }
+      return company;
+    });
+
+    res.json({ ok: true, companies: companiesWithInfo });
+  } catch (e) {
+    console.error('Ошибка загрузки архива:', e);
+    res.status(500).json({ ok: false, error: 'load_archive_failed' });
+  }
+});
+
 // ========== API ДЛЯ РАБОТЫ С ГРАФИКОМ ГАНТА ==========
 
 // получить сохранённое состояние графика
@@ -397,16 +491,35 @@ app.get('/api/chart-types', (req, res) => {
         { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
         { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
       ];
+      // ВАЖНО: Не перезаписываем файл, если он уже существует в репозитории
+      // Файл chart-types.json должен быть закоммичен в репозиторий для сохранения всех контейнеров
+      console.log('⚠️ Файл chart-types.json не найден. Создаю дефолтные типы. Убедитесь, что файл chart-types.json закоммичен в репозиторий!');
       fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(defaultTypes, null, 2), 'utf8');
       return res.json(defaultTypes);
     }
     
     const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
     const chartTypes = JSON.parse(raw);
+    
+    // Проверяем, что файл не пустой и содержит валидные данные
+    if (!Array.isArray(chartTypes) || chartTypes.length === 0) {
+      console.warn('⚠️ Файл chart-types.json пустой или содержит невалидные данные. Используем дефолтные типы.');
+      const defaultTypes = [
+        { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      ];
+      return res.json(defaultTypes);
+    }
+    
     res.json(chartTypes);
   } catch (e) {
     console.error('Ошибка загрузки типов графиков:', e);
-    res.status(500).json({ ok: false, error: 'load_failed' });
+    // В случае ошибки возвращаем дефолтные типы
+    const defaultTypes = [
+      { id: 'icona', containerName: 'Icona', chartTypeName: 'Внедрение Icona', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ];
+    res.json(defaultTypes);
   }
 });
 
@@ -896,6 +1009,35 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Глобальный обработчик ошибок для необработанных исключений
+process.on('uncaughtException', (error) => {
+  console.error('❌ Необработанное исключение:', error);
+  console.error('   Стек:', error.stack);
+  // Не завершаем процесс, чтобы сервер продолжал работать
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Необработанное отклонение промиса:', reason);
+  console.error('   Промис:', promise);
+  // Не завершаем процесс, чтобы сервер продолжал работать
+});
+
+// Обработчик ошибок для Express
+app.use((err, req, res, next) => {
+  console.error('❌ Ошибка Express:', err);
+  console.error('   URL:', req.url);
+  console.error('   Метод:', req.method);
+  console.error('   Стек:', err.stack);
+  
+  if (!res.headersSent) {
+    res.status(500).json({ 
+      ok: false, 
+      error: 'internal_server_error',
+      message: process.env.NODE_ENV === 'production' ? 'Внутренняя ошибка сервера' : err.message
+    });
+  }
+});
+
 // ========== СТАТИЧЕСКИЕ ФАЙЛЫ (после всех API маршрутов) ==========
 // Редирект с корня на страницу авторизации
 app.get('/', (req, res) => {
@@ -977,36 +1119,59 @@ async function initializeMainAdmin() {
 }
 
 // Инициализируем главного админа перед запуском сервера
-initializeMainAdmin().then(() => {
-  // Проверяем наличие основных файлов
-  const requiredFiles = ['auth.html', 'companies.html', 'admin.html', 'implementation_schedule.html'];
-  const missingFiles = requiredFiles.filter(file => !fs.existsSync(path.join(__dirname, file)));
-  
-  if (missingFiles.length > 0) {
-    console.warn(`⚠️  Предупреждение: не найдены файлы: ${missingFiles.join(', ')}`);
-    console.log(`📁 Текущая директория: ${__dirname}`);
-    console.log(`📁 Содержимое директории:`, fs.readdirSync(__dirname).join(', '));
-  }
-  
-  // Обработка ошибок при запуске
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Сервер диаграммы Ганта запущен на порту ${PORT}`);
-    console.log(`📁 Данные сохраняются в: ${__dirname}`);
-    console.log(`📁 Содержимое директории:`, fs.readdirSync(__dirname).filter(f => !f.startsWith('.') && f !== 'node_modules').join(', '));
-    console.log(`\n📋 Доступные страницы:`);
-    console.log(`   • Авторизация: http://localhost:${PORT}/auth.html`);
-    console.log(`   • Админ-панель: http://localhost:${PORT}/admin.html`);
-    console.log(`   • График Ганта: http://localhost:${PORT}/implementation_schedule.html`);
-    console.log(`\n💡 После деплоя замените localhost на ваш домен`);
-    console.log(`\n🔐 Главный администратор: Driga_VA`);
-    console.log(`   Пароль по умолчанию: Admin2024!`);
-    console.log(`   Для изменения используйте переменную окружения MAIN_ADMIN_PASSWORD`);
-  }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`❌ Порт ${PORT} уже занят. Используйте другой порт или остановите процесс, занимающий этот порт.`);
-    } else {
-      console.error('❌ Ошибка сервера:', err);
+initializeMainAdmin()
+  .then(() => {
+    // Проверяем наличие основных файлов
+    const requiredFiles = ['auth.html', 'companies.html', 'admin.html', 'implementation_schedule.html'];
+    const missingFiles = requiredFiles.filter(file => !fs.existsSync(path.join(__dirname, file)));
+    
+    if (missingFiles.length > 0) {
+      console.warn(`⚠️  Предупреждение: не найдены файлы: ${missingFiles.join(', ')}`);
+      console.log(`📁 Текущая директория: ${__dirname}`);
+      try {
+        const dirContents = fs.readdirSync(__dirname);
+        console.log(`📁 Содержимое директории:`, dirContents.join(', '));
+      } catch (e) {
+        console.error('❌ Ошибка чтения директории:', e);
+      }
     }
-    process.exit(1);
+    
+    // Обработка ошибок при запуске
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Сервер диаграммы Ганта запущен на порту ${PORT}`);
+      console.log(`📁 Данные сохраняются в: ${__dirname}`);
+      try {
+        const dirContents = fs.readdirSync(__dirname).filter(f => !f.startsWith('.') && f !== 'node_modules');
+        console.log(`📁 Содержимое директории:`, dirContents.join(', '));
+      } catch (e) {
+        console.warn('⚠️  Не удалось прочитать содержимое директории:', e.message);
+      }
+      console.log(`\n📋 Доступные страницы:`);
+      console.log(`   • Авторизация: http://localhost:${PORT}/auth.html`);
+      console.log(`   • Админ-панель: http://localhost:${PORT}/admin.html`);
+      console.log(`   • График Ганта: http://localhost:${PORT}/implementation_schedule.html`);
+      console.log(`\n💡 После деплоя замените localhost на ваш домен`);
+      console.log(`\n🔐 Главный администратор: Driga_VA`);
+      console.log(`   Пароль по умолчанию: Admin2024!`);
+      console.log(`   Для изменения используйте переменную окружения MAIN_ADMIN_PASSWORD`);
+    }).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Порт ${PORT} уже занят. Используйте другой порт или остановите процесс, занимающий этот порт.`);
+      } else {
+        console.error('❌ Ошибка сервера:', err);
+      }
+      process.exit(1);
+    });
+  })
+  .catch((error) => {
+    console.error('❌ Критическая ошибка при инициализации сервера:', error);
+    console.error('   Стек ошибки:', error.stack);
+    // Пытаемся запустить сервер даже при ошибке инициализации админа
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`⚠️  Сервер запущен с ошибкой инициализации на порту ${PORT}`);
+      console.log(`   Проверьте логи выше для диагностики проблемы`);
+    }).on('error', (err) => {
+      console.error('❌ Не удалось запустить сервер:', err);
+      process.exit(1);
+    });
   });
-});

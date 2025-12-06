@@ -25,8 +25,15 @@
     "createdAt": "2025-12-03T09:55:28.899Z"
   },
   {
-    "id": "praktis_ID_1",
-    "name": "ООО \"Сетл Практис ИД\"",
-    "createdAt": "2025-12-04T14:21:30.507Z"
+    "id": "test",
+    "name": "test",
+    "createdAt": "2025-12-05T18:37:01.152Z",
+    "archived": true,
+    "archivedAt": "2025-12-05T18:37:37.836Z"
+  },
+  {
+    "id": "test1",
+    "name": "test",
+    "createdAt": "2025-12-05T18:45:09.422Z"
   }
 ]
