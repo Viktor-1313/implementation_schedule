@@ -2692,6 +2692,11 @@
             z-index: 10002 !important;
         }
 
+        /* Модальное окно приветствия - поверх всего */
+        #welcomeModal {
+            z-index: 10003 !important;
+        }
+
         .modal-content {
             background-color: var(--color-surface);
             margin: auto;
@@ -3349,11 +3354,11 @@
                 top: 25px;
             }
 
-            .companies-bottom-btn {
+            .logout-btn {
                 top: 77px; /* 25px (top первой) + 40px (высота первой) + 12px (отступ) = 77px */
             }
 
-            .logout-btn {
+            .companies-bottom-btn {
                 top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
             }
         }
@@ -3444,11 +3449,11 @@
                 top: 15px;
             }
 
-            .companies-bottom-btn {
+            .logout-btn {
                 top: 65px; /* 15px (top первой) + 38px (высота первой) + 12px (отступ) = 65px */
             }
 
-            .logout-btn {
+            .companies-bottom-btn {
                 top: 115px; /* 65px (top второй) + 38px (высота второй) + 12px (отступ) = 115px */
             }
 
@@ -4097,6 +4102,342 @@
                 padding: 12px 15px;
             }
         }
+
+        /* ========== СИСТЕМА ПОДСКАЗОК ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ========== */
+        
+        /* Кнопка справки */
+        .help-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            border: 2px solid #2c2c2c;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .help-btn:hover {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 6px 20px rgba(66, 165, 245, 0.6);
+        }
+
+        .help-btn::after {
+            content: '?';
+        }
+
+        /* Индикатор новых функций */
+        .new-feature-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background: #f44336;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        /* Overlay для туров */
+        .tour-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tour-overlay.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Подсветка элемента в туре */
+        .tour-highlight {
+            position: relative;
+            z-index: 10001;
+            box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.8),
+                        0 0 20px rgba(66, 165, 245, 0.6),
+                        0 0 40px rgba(66, 165, 245, 0.4);
+            border-radius: 8px;
+            animation: highlightPulse 2s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% {
+        box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.8),
+                    0 0 20px rgba(66, 165, 245, 0.6),
+                    0 0 40px rgba(66, 165, 245, 0.4);
+            }
+            50% {
+        box-shadow: 0 0 0 6px rgba(66, 165, 245, 1),
+                    0 0 30px rgba(66, 165, 245, 0.8),
+                    0 0 60px rgba(66, 165, 245, 0.6);
+            }
+        }
+
+        /* Подсказка тура */
+        .tour-tooltip {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10002;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tour-tooltip h3 {
+            margin: 0 0 10px 0;
+            color: #2196f3;
+            font-size: 1.2rem;
+        }
+
+        .tour-tooltip p {
+            margin: 0 0 15px 0;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .tour-tooltip .tour-progress {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .tour-tooltip .tour-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .tour-tooltip button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .tour-tooltip .tour-btn-skip {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .tour-tooltip .tour-btn-skip:hover {
+            background: #d0d0d0;
+        }
+
+        .tour-tooltip .tour-btn-next {
+            background: #2196f3;
+            color: white;
+        }
+
+        .tour-tooltip .tour-btn-next:hover {
+            background: #1976d2;
+        }
+
+        .tour-tooltip .tour-btn-finish {
+            background: #4caf50;
+            color: white;
+        }
+
+        .tour-tooltip .tour-btn-finish:hover {
+            background: #45a049;
+        }
+
+        /* Модальное окно справки */
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10003;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .help-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .help-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .help-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .help-modal-header h2 {
+            margin: 0;
+            color: #2196f3;
+            font-size: 1.5rem;
+        }
+
+        .help-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .help-modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .help-section {
+            margin-bottom: 25px;
+        }
+
+        .help-section h3 {
+            color: #2196f3;
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .help-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .help-section li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .help-key {
+            display: inline-block;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin: 0 2px;
+        }
+
+        /* Всплывающие подсказки для новых функций */
+        .feature-tooltip {
+            position: fixed;
+            background: #2196f3;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10004;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+            pointer-events: none;
+        }
+
+        .feature-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2196f3;
+        }
+
+        @media (max-width: 768px) {
+            .help-btn {
+                bottom: 70px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+
+            .tour-tooltip {
+                max-width: 90%;
+                padding: 15px;
+            }
+
+            .help-modal-content {
+                max-width: 90%;
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -4117,6 +4458,10 @@
             <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="goToCompanies()">
                 <span class="companies-bottom-icon"></span>
                 <span class="companies-bottom-tooltip">Компании</span>
+            </button>
+            <!-- Кнопка справки -->
+            <button class="help-btn" id="helpBtn" title="Справка по горячим клавишам" style="display: none;">
+                <span class="new-feature-badge" id="helpBadge" style="display: none;">!</span>
             </button>
             <h1>
                 <span class="header-icon"></span>
@@ -4186,10 +4531,39 @@
                 <span class="btn-icon btn-icon-excel"></span>
                 <span>Выгрузить в Excel</span>
             </button>
-            <button class="btn btn-secondary" id="searchBtn" onclick="openSearchModal()" data-tooltip="Поиск по задачам (Ctrl+F)">
-                <span class="btn-icon btn-icon-search">🔍</span>
-                <span>Поиск</span>
-            </button>
+            <div class="search-input-container" style="position: relative; display: inline-block;">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Поиск по задачам..."
+                    style="
+                        padding: 8px 40px 8px 12px;
+                        font-size: 14px;
+                        border: 2px solid #e0e0e0;
+                        border-radius: 8px;
+                        width: 250px;
+                        box-sizing: border-box;
+                        transition: border-color 0.3s ease;
+                    "
+                    autocomplete="off"
+                    data-tooltip="Поиск по задачам (Ctrl+F)"
+                >
+                <span class="search-icon" style="
+                    position: absolute;
+                    right: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 18px;
+                    height: 18px;
+                    pointer-events: none;
+                    opacity: 0.6;
+                ">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </span>
+            </div>
 
             <div class="zoom-controls">
                 <span class="zoom-label">Масштаб по времени:</span>
@@ -4362,6 +4736,29 @@
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn btn-primary" onclick="confirmStatusComment()">Сохранить</button>
                 <button class="btn btn-secondary" onclick="cancelStatusComment()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно приветствия для новых пользователей -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Добро пожаловать!</h2>
+                <span class="close" onclick="closeWelcomeModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <p style="margin-bottom: 15px; line-height: 1.6; color: var(--color-text);">
+                    Добро пожаловать в систему планирования внедрения ICONA! 
+                    Мы подготовили для вас краткий тур по интерфейсу, который поможет быстро освоиться.
+                </p>
+                <p style="margin-bottom: 20px; line-height: 1.6; color: var(--color-text-secondary);">
+                    Хотите пройти краткий тур по интерфейсу?
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeWelcomeModal()">Пропустить</button>
+                <button class="btn btn-primary" onclick="startTourFromWelcome()">Начать тур</button>
             </div>
         </div>
     </div>
@@ -4618,55 +5015,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно поиска -->
-    <div id="searchModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>Поиск по задачам</h2>
-                <span class="close" onclick="closeSearchModal()">&times;</span>
-            </div>
-            <div style="padding: 20px;">
-                <div style="margin-bottom: 15px;">
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        placeholder="Введите текст для поиска (название задачи, этап, ответственный)..."
-                        style="width: 100%; padding: 12px; font-size: 14px; border: 2px solid #2196f3; border-radius: 8px; box-sizing: border-box;"
-                        autocomplete="off"
-                    >
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div id="searchResultsCount" style="color: #666; font-size: 13px;">
-                        Введите текст для поиска
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button 
-                            class="btn btn-secondary" 
-                            id="searchPrevBtn" 
-                            onclick="navigateSearchResults(-1)"
-                            disabled
-                            style="padding: 6px 12px; font-size: 12px;"
-                        >
-                            ← Назад
-                        </button>
-                        <button 
-                            class="btn btn-secondary" 
-                            id="searchNextBtn" 
-                            onclick="navigateSearchResults(1)"
-                            disabled
-                            style="padding: 6px 12px; font-size: 12px;"
-                        >
-                            Вперёд →
-                        </button>
-                    </div>
-                </div>
-                <div id="searchResultsList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; background: #f9f9f9;">
-                    <div style="text-align: center; color: #999; padding: 20px;">
-                        Результаты поиска появятся здесь
-                    </div>
-                </div>
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666;">
-                    <strong>Горячие клавиши:</strong><br>
                     Enter / Shift+Enter — навигация по результатам<br>
                     Esc — закрыть поиск
                 </div>
@@ -5954,6 +6302,11 @@
             }
 
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
 	    // лок начало: автосохранение
 	    autoSaveGanttState();
 	    // энд конец
@@ -6890,6 +7243,11 @@
                 renderGantt();
                 renderTable();
                 updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
                 renderStageTabs();
                 
                 // Проверяем, что данные успешно восстановлены
@@ -7326,6 +7684,11 @@
 
                     // Перерисовываем график и таблицу
                     updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
                     renderGantt();
                     renderTable();
                     renderStageTabs();
@@ -8934,6 +9297,11 @@
 
                     draggingTaskId = null;
                     updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
                     renderGantt();
                     renderTable();
                 });
@@ -9132,41 +9500,6 @@
                     // Обновляем видимость вертикального скролла
                     updateVerticalScrollVisibility();
                 }, 150);
-            }
-
-            // Функция для вычисления данных этапа (даты начала, окончания, рабочих дней)
-            function calculateStageData(stageTasks) {
-                if (!stageTasks || stageTasks.length === 0) {
-                    return { startDate: null, endDate: null, workdays: 0 };
-                }
-                
-                // Находим минимальную дату начала и максимальную дату окончания
-                let minStartDate = null;
-                let maxEndDate = null;
-                
-                stageTasks.forEach(({ task }) => {
-                    if (task.startDate) {
-                        const startDate = task.startDate instanceof Date ? task.startDate : new Date(task.startDate);
-                        if (!minStartDate || startDate < minStartDate) {
-                            minStartDate = startDate;
-                        }
-                    }
-                    if (task.endDate) {
-                        const endDate = task.endDate instanceof Date ? task.endDate : new Date(task.endDate);
-                        if (!maxEndDate || endDate > maxEndDate) {
-                            maxEndDate = endDate;
-                        }
-                    }
-                });
-                
-                // Вычисляем количество рабочих дней между датами
-                let workdays = 0;
-                if (minStartDate && maxEndDate) {
-                    const workdaysArray = getWorkdaysBetween(minStartDate, maxEndDate);
-                    workdays = workdaysArray.length;
-                }
-                
-                return { startDate: minStartDate, endDate: maxEndDate, workdays };
             }
 
             // Функция для создания строки этапа (свернутое состояние)
@@ -9396,112 +9729,6 @@
                         });
                     }, 50);
                 }
-            }
-            
-            // Функция для создания строки этапа в таблице задач
-            function createStageTableRow(stageName, stageTasks) {
-                const stageData = calculateStageData(stageTasks);
-                const stageMatch = stageName.match(/^(Этап\s+\d+)/);
-                const stageNumber = stageMatch ? stageMatch[1] : stageName;
-                
-                // Используем метаданные столбцов, если они есть, иначе дефолтные
-                const columns = skeletonColumns || [
-                    { id: 'stage', name: 'Этап', field: 'stage', order: 0 },
-                    { id: 'control', name: 'Вид контроля', field: 'control', order: 1 },
-                    { id: 'task', name: 'Мероприятие', field: 'task', order: 2 }
-                ];
-                const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
-                
-                const row = document.createElement('tr');
-                row.className = 'stage-row-collapsed';
-                row.dataset.stageName = stageName;
-                row.dataset.isStageRow = 'true';
-                
-                // Ячейка с номером (пустая для строки этапа)
-                const numCell = document.createElement('td');
-                numCell.textContent = '';
-                row.appendChild(numCell);
-                
-                // Ячейка "Выбор этапа" (пустая для строки этапа)
-                const stageSelectCell = document.createElement('td');
-                stageSelectCell.textContent = '';
-                row.appendChild(stageSelectCell);
-                
-                // Ячейки для настраиваемых столбцов - первая с названием этапа, остальные пустые
-                sortedColumns.forEach((col, colIndex) => {
-                    const cell = document.createElement('td');
-                    if (colIndex === 0 && col.field === 'stage') {
-                        // Первая колонка (обычно "Этап") - показываем название этапа
-                        const nameSpan = document.createElement('span');
-                        nameSpan.textContent = stageNumber;
-                        nameSpan.style.fontWeight = '600';
-                        nameSpan.style.color = 'var(--color-primary)';
-                        cell.appendChild(nameSpan);
-                    } else {
-                        // Остальные колонки - пустые
-                        cell.textContent = '';
-                    }
-                    row.appendChild(cell);
-                });
-                
-                // Ячейка с датой начала
-                const startCell = document.createElement('td');
-                const startInput = document.createElement('input');
-                startInput.type = 'date';
-                startInput.className = 'tasks-table-input';
-                startInput.value = stageData.startDate ? formatDateForInput(stageData.startDate) : '';
-                startInput.setAttribute('readonly', 'readonly');
-                startInput.setAttribute('disabled', 'disabled');
-                startCell.appendChild(startInput);
-                row.appendChild(startCell);
-                
-                // Ячейка с датой окончания
-                const endCell = document.createElement('td');
-                const endInput = document.createElement('input');
-                endInput.type = 'date';
-                endInput.className = 'tasks-table-input';
-                endInput.value = stageData.endDate ? formatDateForInput(stageData.endDate) : '';
-                endInput.setAttribute('readonly', 'readonly');
-                endInput.setAttribute('disabled', 'disabled');
-                endCell.appendChild(endInput);
-                row.appendChild(endCell);
-                
-                // Ячейка с рабочими днями
-                const daysCell = document.createElement('td');
-                const daysInput = document.createElement('input');
-                daysInput.type = 'number';
-                daysInput.className = 'tasks-table-input';
-                daysInput.min = '0';
-                daysInput.value = stageData.workdays;
-                daysInput.setAttribute('readonly', 'readonly');
-                daysInput.setAttribute('disabled', 'disabled');
-                daysCell.appendChild(daysInput);
-                row.appendChild(daysCell);
-                
-                // Ячейка "Связь" (пустая для строки этапа)
-                const linkCell = document.createElement('td');
-                linkCell.className = 'table-col-link';
-                linkCell.textContent = '';
-                row.appendChild(linkCell);
-                
-                // Ячейка "Ответственный" (пустая для строки этапа)
-                const respCell = document.createElement('td');
-                respCell.className = 'table-col-responsible';
-                respCell.textContent = '';
-                row.appendChild(respCell);
-                
-                // Ячейка "Статус" (пустая для строки этапа)
-                const statusCell = document.createElement('td');
-                statusCell.textContent = '';
-                row.appendChild(statusCell);
-                
-                // Добавляем обработчик клика для разворачивания этапа
-                row.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleStageCollapse(stageName);
-                });
-                
-                return row;
             }
 
             // Функция для обновления метки этапа
@@ -9765,6 +9992,155 @@
             setTimeout(() => {
                 updateVerticalScrollVisibility();
             }, 100);
+        }
+
+        // Функция для вычисления данных этапа (даты начала, окончания, рабочих дней)
+        function calculateStageData(stageTasks) {
+            if (!stageTasks || stageTasks.length === 0) {
+                return { startDate: null, endDate: null, workdays: 0 };
+            }
+            
+            // Находим минимальную дату начала и максимальную дату окончания
+            let minStartDate = null;
+            let maxEndDate = null;
+            
+            stageTasks.forEach(({ task }) => {
+                if (task.startDate) {
+                    const startDate = task.startDate instanceof Date ? task.startDate : new Date(task.startDate);
+                    if (!minStartDate || startDate < minStartDate) {
+                        minStartDate = startDate;
+                    }
+                }
+                if (task.endDate) {
+                    const endDate = task.endDate instanceof Date ? task.endDate : new Date(task.endDate);
+                    if (!maxEndDate || endDate > maxEndDate) {
+                        maxEndDate = endDate;
+                    }
+                }
+            });
+            
+            // Вычисляем количество рабочих дней между датами
+            let workdays = 0;
+            if (minStartDate && maxEndDate) {
+                const workdaysArray = getWorkdaysBetween(minStartDate, maxEndDate);
+                workdays = workdaysArray.length;
+            }
+            
+            return { startDate: minStartDate, endDate: maxEndDate, workdays };
+        }
+
+        // Функция для создания строки этапа в таблице задач
+        function createStageTableRow(stageName, stageTasks) {
+            const stageData = calculateStageData(stageTasks);
+            const stageMatch = stageName.match(/^(Этап\s+\d+)/);
+            const stageNumber = stageMatch ? stageMatch[1] : stageName;
+            
+            // Используем метаданные столбцов, если они есть, иначе дефолтные
+            const columns = skeletonColumns || [
+                { id: 'stage', name: 'Этап', field: 'stage', order: 0 },
+                { id: 'control', name: 'Вид контроля', field: 'control', order: 1 },
+                { id: 'task', name: 'Мероприятие', field: 'task', order: 2 }
+            ];
+            const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
+            
+            const row = document.createElement('tr');
+            row.className = 'stage-row-collapsed';
+            row.dataset.stageName = stageName;
+            row.dataset.isStageRow = 'true';
+            
+            // Ячейка с номером (пустая для строки этапа)
+            const numCell = document.createElement('td');
+            numCell.textContent = '';
+            row.appendChild(numCell);
+            
+            // Ячейка "Выбор этапа" (пустая для строки этапа)
+            const stageSelectCell = document.createElement('td');
+            stageSelectCell.textContent = '';
+            row.appendChild(stageSelectCell);
+            
+            // Ячейки для настраиваемых столбцов - первая с названием этапа, остальные пустые
+            sortedColumns.forEach((col, colIndex) => {
+                const cell = document.createElement('td');
+                if (colIndex === 0 && col.field === 'stage') {
+                    // Первая колонка (обычно "Этап") - показываем название этапа
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = stageNumber;
+                    nameSpan.style.fontWeight = '600';
+                    nameSpan.style.color = 'var(--color-primary)';
+                    cell.appendChild(nameSpan);
+                } else {
+                    // Остальные колонки - пустые
+                    cell.textContent = '';
+                }
+                row.appendChild(cell);
+            });
+            
+            // Ячейка с датой начала
+            const startCell = document.createElement('td');
+            const startInput = document.createElement('input');
+            startInput.type = 'date';
+            startInput.className = 'tasks-table-input';
+            startInput.value = stageData.startDate ? formatDateForInput(stageData.startDate) : '';
+            startInput.setAttribute('readonly', 'readonly');
+            startInput.setAttribute('disabled', 'disabled');
+            startCell.appendChild(startInput);
+            row.appendChild(startCell);
+            
+            // Ячейка с датой окончания
+            const endCell = document.createElement('td');
+            const endInput = document.createElement('input');
+            endInput.type = 'date';
+            endInput.className = 'tasks-table-input';
+            endInput.value = stageData.endDate ? formatDateForInput(stageData.endDate) : '';
+            endInput.setAttribute('readonly', 'readonly');
+            endInput.setAttribute('disabled', 'disabled');
+            endCell.appendChild(endInput);
+            row.appendChild(endCell);
+            
+            // Ячейка с рабочими днями
+            const daysCell = document.createElement('td');
+            const daysInput = document.createElement('input');
+            daysInput.type = 'number';
+            daysInput.className = 'tasks-table-input';
+            daysInput.min = '0';
+            daysInput.value = stageData.workdays;
+            daysInput.setAttribute('readonly', 'readonly');
+            daysInput.setAttribute('disabled', 'disabled');
+            daysCell.appendChild(daysInput);
+            row.appendChild(daysCell);
+            
+            // Ячейка "Связь" (пустая для строки этапа)
+            const linkCell = document.createElement('td');
+            linkCell.className = 'table-col-link';
+            linkCell.textContent = '';
+            row.appendChild(linkCell);
+            
+            // Ячейка "Ответственный" (пустая для строки этапа)
+            const respCell = document.createElement('td');
+            respCell.className = 'table-col-responsible';
+            respCell.textContent = '';
+            row.appendChild(respCell);
+            
+            // Ячейка "Статус" (пустая для строки этапа)
+            const statusCell = document.createElement('td');
+            statusCell.textContent = '';
+            row.appendChild(statusCell);
+            
+            // Добавляем обработчик клика для разворачивания этапа
+            row.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Переключаем состояние этапа и перерисовываем
+                const isCollapsed = collapsedStages.has(stageName);
+                if (isCollapsed) {
+                    collapsedStages.delete(stageName);
+                } else {
+                    collapsedStages.add(stageName);
+                }
+                renderGantt();
+                renderTable();
+            });
+            
+            return row;
         }
 
         // Обновить заголовок таблицы на основе метаданных столбцов
@@ -10119,6 +10495,11 @@
 
                     draggingTaskId = null;
                     updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
                     renderGantt();
                     renderTable();
                 });
@@ -10426,6 +10807,11 @@
                     openStatusMenu(x, y, task.id, dateStrs);
                 });
             });
+            
+            // Восстанавливаем подсветку поиска после перерисовки таблицы
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
         }
 
         // Обработка изменения полей в детальной таблице
@@ -10882,6 +11268,11 @@
             }
 
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             // Всегда обновляем диаграмму Ганта, чтобы обновить input поля в ней
             renderGantt();
             renderTable();
@@ -11192,6 +11583,11 @@
             }
 
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             renderGantt();
             renderTable();
 
@@ -11288,6 +11684,11 @@
             if (!tasks.length) {
                 // Если задач не осталось — просто перерисовываем без пересчёта
                 updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
                 renderGantt();
                 renderTable();
                 return;
@@ -11311,6 +11712,11 @@
             }
 
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             renderGantt();
             renderTable();
 
@@ -12537,44 +12943,20 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         let searchHighlightedTasks = new Set();
 
         function openSearchModal() {
-            const modal = document.getElementById('searchModal');
-            if (modal) {
-                modal.style.display = 'block';
-                
-                // На мобильных устройствах и планшетах позиционируем модальное окно рядом с кнопкой
-                const isMobile = window.innerWidth <= 1024;
-                if (isMobile) {
-                    const searchBtn = document.getElementById('searchBtn');
-                    if (searchBtn) {
-                        const btnRect = searchBtn.getBoundingClientRect();
-                        const modalContent = modal.querySelector('.modal-content');
-                        if (modalContent) {
-                            modalContent.style.position = 'fixed';
-                            modalContent.style.top = `${btnRect.bottom + 10}px`;
-                            modalContent.style.left = '50%';
-                            modalContent.style.transform = 'translateX(-50%)';
-                            modalContent.style.maxWidth = '90%';
-                        }
-                    }
-                }
-                
-                // Фокус на поле ввода
-                setTimeout(() => {
-                    const searchInput = document.getElementById('searchInput');
-                    if (searchInput) {
-                        searchInput.focus();
-                        searchInput.select();
-                    }
-                }, 100);
+            // Функция больше не нужна, но оставляем для совместимости
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
             }
         }
 
         function closeSearchModal() {
-            const modal = document.getElementById('searchModal');
-            if (modal) {
-                modal.style.display = 'none';
+            // Очищаем поиск при закрытии
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
             }
-            // Убираем подсветку
             clearSearchHighlight();
             searchResults = [];
             currentSearchIndex = -1;
@@ -12588,6 +12970,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             
             if (!query) {
                 clearSearchResults();
+                clearSearchHighlight();
                 return;
             }
 
@@ -12603,74 +12986,39 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             });
 
             currentSearchIndex = -1;
-            displaySearchResults();
-            highlightSearchResults();
-            updateSearchNavigation();
+            
+            // Раскрываем все этапы, где есть найденные задачи
+            const stagesWithResults = new Set();
+            searchResults.forEach(task => {
+                const taskStage = task.stage || 'Без этапа';
+                stagesWithResults.add(taskStage);
+            });
+            
+            // Раскрываем этапы
+            let needsRerender = false;
+            stagesWithResults.forEach(stageName => {
+                if (collapsedStages.has(stageName)) {
+                    collapsedStages.delete(stageName);
+                    needsRerender = true;
+                }
+            });
+            
+            if (needsRerender) {
+                renderGantt();
+                renderTable();
+                // После перерисовки снова подсвечиваем результаты
+                setTimeout(() => {
+                    highlightSearchResults();
+                }, 100);
+            } else {
+                highlightSearchResults();
+            }
         }
 
         function clearSearchResults() {
             searchResults = [];
             currentSearchIndex = -1;
-            const resultsList = document.getElementById('searchResultsList');
-            const resultsCount = document.getElementById('searchResultsCount');
-            
-            if (resultsList) {
-                resultsList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Введите текст для поиска</div>';
-            }
-            if (resultsCount) {
-                resultsCount.textContent = 'Введите текст для поиска';
-            }
-            
             clearSearchHighlight();
-            updateSearchNavigation();
-        }
-
-        function displaySearchResults() {
-            const resultsList = document.getElementById('searchResultsList');
-            const resultsCount = document.getElementById('searchResultsCount');
-            
-            if (!resultsList || !resultsCount) return;
-
-            if (searchResults.length === 0) {
-                resultsList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Ничего не найдено</div>';
-                resultsCount.textContent = 'Ничего не найдено';
-                return;
-            }
-
-            resultsCount.textContent = `Найдено: ${searchResults.length} ${getPluralForm(searchResults.length, 'задача', 'задачи', 'задач')}`;
-
-            resultsList.innerHTML = searchResults.map((task, index) => {
-                const taskName = task.task || task.name || 'Без названия';
-                const stage = task.stage || 'Без этапа';
-                const responsible = task.responsible || 'Не назначен';
-                const isSelected = index === currentSearchIndex;
-                
-                return `
-                    <div 
-                        class="search-result-item" 
-                        data-task-id="${task.id}"
-                        data-result-index="${index}"
-                        onclick="selectSearchResult(${index})"
-                        style="
-                            padding: 10px;
-                            margin-bottom: 8px;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            background: ${isSelected ? '#e3f2fd' : '#fff'};
-                            border: 2px solid ${isSelected ? '#2196f3' : '#e0e0e0'};
-                            transition: all 0.2s ease;
-                        "
-                        onmouseover="this.style.background='#f5f5f5'"
-                        onmouseout="this.style.background='${isSelected ? '#e3f2fd' : '#fff'}'"
-                    >
-                        <div style="font-weight: 600; color: #2196f3; margin-bottom: 4px;">${escapeHtml(taskName)}</div>
-                        <div style="font-size: 12px; color: #666;">
-                            <span style="color: #999;">Этап:</span> ${escapeHtml(stage)} | 
-                            <span style="color: #999;">Ответственный:</span> ${escapeHtml(responsible)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
 
         function getPluralForm(count, one, few, many) {
@@ -12696,21 +13044,21 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 searchHighlightedTasks.add(task.id);
             });
 
-            // Подсветка в таблице
+            // Подсветка в таблице (голубоватый цвет)
             document.querySelectorAll('#tasksTableBody tr').forEach(tr => {
                 const taskId = parseInt(tr.dataset.taskId);
                 if (searchHighlightedTasks.has(taskId)) {
-                    tr.style.backgroundColor = '#fff9c4';
-                    tr.style.borderLeft = '4px solid #ffc107';
+                    tr.style.backgroundColor = '#e3f2fd';
+                    tr.style.borderLeft = '4px solid #2196f3';
                 }
             });
 
-            // Подсветка в диаграмме Ганта
+            // Подсветка в диаграмме Ганта (голубоватый цвет)
             document.querySelectorAll('.gantt-row').forEach(row => {
                 const taskId = parseInt(row.dataset.taskId);
                 if (searchHighlightedTasks.has(taskId)) {
-                    row.style.backgroundColor = '#fff9c4';
-                    row.style.borderLeft = '4px solid #ffc107';
+                    row.style.backgroundColor = '#e3f2fd';
+                    row.style.borderLeft = '4px solid #2196f3';
                 }
             });
         }
@@ -12737,22 +13085,34 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             currentSearchIndex = index;
             const task = searchResults[index];
             
+            // Раскрываем этап, если он свернут
+            const taskStage = task.stage || 'Без этапа';
+            if (collapsedStages.has(taskStage)) {
+                collapsedStages.delete(taskStage);
+                renderGantt();
+                renderTable();
+            }
+            
             // Выделяем задачу
             selectTask(task.id, { range: false });
             
             // Прокручиваем к задаче
-            const row = document.querySelector(`.gantt-row[data-task-id="${task.id}"]`);
-            if (row) {
-                row.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            }
-            
-            const tableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${task.id}"]`);
-            if (tableRow) {
-                tableRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            }
-            
-            displaySearchResults();
-            updateSearchNavigation();
+            setTimeout(() => {
+                const row = document.querySelector(`.gantt-row[data-task-id="${task.id}"]`);
+                if (row) {
+                    row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }
+                
+                const tableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${task.id}"]`);
+                if (tableRow) {
+                    tableRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }
+            }, 100);
+        }
+
+        function navigateToFirstResult() {
+            if (searchResults.length === 0) return;
+            selectSearchResult(0);
         }
 
         function navigateSearchResults(direction) {
@@ -12769,20 +13129,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             selectSearchResult(currentSearchIndex);
         }
 
-        function updateSearchNavigation() {
-            const prevBtn = document.getElementById('searchPrevBtn');
-            const nextBtn = document.getElementById('searchNextBtn');
-            
-            const hasResults = searchResults.length > 0;
-            
-            if (prevBtn) {
-                prevBtn.disabled = !hasResults;
-            }
-            if (nextBtn) {
-                nextBtn.disabled = !hasResults;
-            }
-        }
-
         // Инициализация поиска
         function initSearch() {
             const searchInput = document.getElementById('searchInput');
@@ -12796,31 +13142,40 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     }, 300);
                 });
 
-                // Обработка Enter/Shift+Enter для навигации
+                // Обработка Enter для перехода к первой найденной задаче
                 searchInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        if (e.shiftKey) {
-                            navigateSearchResults(-1); // Shift+Enter - назад
-                        } else {
-                            navigateSearchResults(1); // Enter - вперёд
+                        if (searchResults.length > 0) {
+                            navigateToFirstResult();
                         }
                     } else if (e.key === 'Escape') {
                         e.preventDefault();
                         closeSearchModal();
                     }
                 });
-            }
 
-            // Закрытие модального окна при клике вне его
-            const searchModal = document.getElementById('searchModal');
-            if (searchModal) {
-                searchModal.addEventListener('click', function(e) {
-                    if (e.target === searchModal) {
-                        closeSearchModal();
-                    }
+                // Стили при фокусе
+                searchInput.addEventListener('focus', () => {
+                    searchInput.style.borderColor = '#2196f3';
+                });
+
+                searchInput.addEventListener('blur', () => {
+                    searchInput.style.borderColor = '#e0e0e0';
                 });
             }
+
+            // Обработка Ctrl+F для фокуса на поиск
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+            });
         }
 
         function openPDFExportModal() {
@@ -13226,6 +13581,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             
             // Обновляем отображение
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             if (currentView === 'gantt') {
                 renderGantt();
             }
@@ -13277,6 +13637,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             renderGantt();
             renderTable();
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             autoSaveGanttState(); // Автоматическое сохранение после сброса
             cancelResetPlan(); // Закрываем модальное окно
         }
@@ -15025,6 +15390,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             }
 
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             if (currentView === 'gantt') {
                 renderGantt();
             }
@@ -15209,6 +15579,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             }
 
             updateStatistics();
+            
+            // Восстанавливаем подсветку поиска после перерисовки
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
             if (currentView === 'gantt') {
                 renderGantt();
             }
@@ -15431,6 +15806,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             
             // В режиме просмотра не загружаем пользователя и не показываем кнопки
             if (isViewMode) {
+                // Скрываем кнопку справки в режиме просмотра
+                const helpBtn = document.getElementById('helpBtn');
+                if (helpBtn) {
+                    helpBtn.style.display = 'none';
+                }
                 return;
             }
             
@@ -15439,6 +15819,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     currentUser = JSON.parse(userStr);
                     // Показываем кнопки профиля, выбора компаний и выхода только для авторизованных пользователей
                     showAuthButtons();
+                    
+                    // Показываем кнопку справки для авторизованных пользователей
+                    const helpBtn = document.getElementById('helpBtn');
+                    if (helpBtn) {
+                        helpBtn.style.display = 'flex';
+                    }
                     
                     // Дополнительная проверка через небольшую задержку
                     setTimeout(() => {
@@ -15459,17 +15845,64 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 } catch (e) {
                     console.error('Ошибка загрузки данных пользователя:', e);
                 }
+            } else {
+                // Скрываем кнопку справки, если пользователь не авторизован
+                const helpBtn = document.getElementById('helpBtn');
+                if (helpBtn) {
+                    helpBtn.style.display = 'none';
+                }
             }
         }
 
 
+        // Закрытие всех модальных окон и overlay
+        function closeAllModalsAndOverlays() {
+            // Закрываем модальное окно приветствия
+            closeWelcomeModal();
+            
+            // Закрываем тур, если он активен
+            if (tourActive) {
+                endTour();
+            }
+            
+            // Закрываем все модальные окна
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Убираем overlay тура (принудительно)
+            const tourOverlay = document.getElementById('tourOverlay');
+            if (tourOverlay) {
+                tourOverlay.classList.remove('active');
+                tourOverlay.style.display = 'none';
+            }
+            
+            // Удаляем все созданные элементы тура
+            if (window.currentTourHighlight) {
+                window.currentTourHighlight.remove();
+                window.currentTourHighlight = null;
+            }
+            if (window.currentTourTooltip) {
+                window.currentTourTooltip.remove();
+                window.currentTourTooltip = null;
+            }
+        }
+
         // Переход на страницу выбора компаний
         function goToCompanies() {
+            // Закрываем все модальные окна и overlay перед переходом
+            closeAllModalsAndOverlays();
             window.location.href = 'companies.html';
         }
 
         // Выход из системы
         function logout() {
+            // Закрываем все модальные окна и overlay перед выходом
+            closeAllModalsAndOverlays();
+            
             // Очищаем данные авторизации из localStorage
             localStorage.removeItem('gantt-user');
             localStorage.removeItem('gantt-mode');
@@ -16069,12 +16502,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     }
                 }
 
-                // Если открыто модальное окно поиска — закрываем по Escape
-                const searchModal = document.getElementById('searchModal');
-                if (searchModal && searchModal.style.display === 'block') {
+                // Если фокус на поле поиска — закрываем по Escape
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && document.activeElement === searchInput) {
                     if (event.key === 'Escape') {
                         event.preventDefault();
                         closeSearchModal();
+                        searchInput.blur();
                         return;
                     }
                 }
@@ -16358,7 +16792,669 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 }, { passive: false });
             }
         });
+
+        // ========== СИСТЕМА ПОДСКАЗОК ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ==========
+        
+        // Определение первого входа пользователя
+        function isFirstLogin() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (!userStr) {
+                console.log('🔍 isFirstLogin: Пользователь не авторизован');
+                return false;
+            }
+            
+            try {
+                const user = JSON.parse(userStr);
+                const login = user.login || user.Login;
+                if (!login) {
+                    console.log('🔍 isFirstLogin: Логин не найден в данных пользователя');
+                    return false;
+                }
+                
+                const firstLoginKey = `firstLogin-${login}`;
+                const hasLoggedIn = localStorage.getItem(firstLoginKey);
+                
+                console.log('🔍 isFirstLogin:', { login, firstLoginKey, hasLoggedIn });
+                
+                if (!hasLoggedIn) {
+                    // Помечаем, что пользователь уже заходил
+                    localStorage.setItem(firstLoginKey, 'true');
+                    console.log('✅ isFirstLogin: Первый вход для пользователя', login);
+                    return true;
+                }
+                
+                console.log('ℹ️ isFirstLogin: Пользователь', login, 'уже заходил ранее');
+                return false;
+            } catch (e) {
+                console.error('❌ Ошибка проверки первого входа:', e);
+                return false;
+            }
+        }
+
+        // Данные для тура
+        const tourSteps = [
+            {
+                element: 'header',
+                title: 'Добро пожаловать!',
+                text: 'Это главная страница графика внедрения DeadLinePro. Здесь вы можете управлять задачами, датами и статусами проекта.',
+                position: 'bottom'
+            },
+            {
+                element: '.stats',
+                title: 'Статистика проекта',
+                text: 'В этом блоке отображается общая статистика: количество этапов, задач, рабочих дней и дата завершения проекта.',
+                position: 'bottom'
+            },
+            {
+                element: '.controls',
+                title: 'Панель управления',
+                text: 'Здесь находятся основные кнопки управления: сброс плана, сохранение, переключение вида, экспорт в PDF и Excel. Кнопка "Сбросить план" позволяет сбросить все даты, статусы и комментарии до значений по умолчанию.',
+                position: 'bottom'
+            },
+            {
+                element: '.reset-plan-btn',
+                title: 'Сброс плана',
+                text: 'Эта кнопка позволяет сбросить все даты, статусы и комментарии до значений по умолчанию. При нажатии появится окно подтверждения для предотвращения случайного сброса.',
+                position: 'bottom'
+            },
+            {
+                element: '#helpBtn',
+                title: 'Справка',
+                text: 'Нажмите на эту кнопку, чтобы открыть справку по горячим клавишам и функциям системы.',
+                position: 'left'
+            },
+            {
+                element: '#profileBtn',
+                title: 'Профиль',
+                text: 'Здесь вы можете редактировать свой профиль: изменить логин и пароль.',
+                position: 'left'
+            },
+            {
+                element: '#logoutBtn',
+                title: 'Выход',
+                text: 'Эта кнопка позволяет выйти из системы и вернуться на страницу авторизации.',
+                position: 'left'
+            },
+            {
+                element: '#companiesBottomBtn',
+                title: 'Компании',
+                text: 'Кнопка для возврата к списку компаний из архива.',
+                position: 'left',
+                temporaryShow: true
+            },
+            {
+                element: '.gantt-chart',
+                title: 'Диаграмма Ганта',
+                text: 'Основная рабочая область. Здесь отображается график задач с возможностью редактирования дат, статусов и связей между задачами. Для приближения/отдаления используйте клавишу Z + колесо мыши над диаграммой.',
+                position: 'top'
+            },
+            {
+                element: '.stage-settings-btn',
+                title: 'Редакция этапов',
+                text: 'Эта кнопка открывает окно редактирования этапов. Вы можете изменить названия этапов, добавить или удалить этапы, изменить их порядок.',
+                position: 'bottom'
+            },
+            {
+                element: '.gantt-stage-label',
+                title: 'Сворачивание этапов',
+                text: 'Нажмите на метку этапа слева от диаграммы, чтобы свернуть или развернуть все задачи этого этапа. Свернутый этап отображается одной строкой с агрегированными данными.',
+                position: 'right',
+                selector: 'first'
+            },
+            {
+                element: '.link-toggle-btn',
+                title: 'Столбец "Связь"',
+                text: 'Эта кнопка показывает/скрывает столбец "Связь". В столбце можно выбрать тип связи между задачами: О_Н (окончание-начало), Н_Н (начало-начало), О_О (окончание-окончание). При изменении связи даты задачи автоматически пересчитываются.',
+                position: 'bottom'
+            },
+            {
+                element: '.responsible-toggle-btn',
+                title: 'Столбец "Ответственный"',
+                text: 'Эта кнопка показывает/скрывает столбец "Ответственный". В этом столбце можно назначить ответственного за выполнение задачи.',
+                position: 'bottom'
+            },
+            {
+                element: '.baseline-toggle-btn',
+                title: 'Директивный план',
+                text: 'Эта кнопка позволяет задать базовый план (F2) и скрыть/показать директивный план (F3). Базовый план сохраняет текущее состояние графика для сравнения с фактическим выполнением.',
+                position: 'bottom'
+            }
+        ];
+
+        let currentTourStep = 0;
+        let tourActive = false;
+
+        // Запуск тура
+        function startTour() {
+            if (tourActive) return;
+            
+            tourActive = true;
+            currentTourStep = 0;
+            showTourStep(0);
+        }
+
+        // Показать шаг тура
+        function showTourStep(stepIndex) {
+            if (stepIndex >= tourSteps.length) {
+                endTour();
+                return;
+            }
+
+            const step = tourSteps[stepIndex];
+            let element;
+            
+            // Если указан селектор 'first', берем первый элемент
+            if (step.selector === 'first') {
+                const elements = document.querySelectorAll(step.element);
+                element = elements.length > 0 ? elements[0] : null;
+            } else {
+                element = document.querySelector(step.element);
+            }
+            
+            // Сохраняем исходное состояние элемента (если он скрыт)
+            let originalDisplay = null;
+            let wasHidden = false;
+            
+            if (!element) {
+                // Если элемент не найден, пропускаем шаг
+                setTimeout(() => showTourStep(stepIndex + 1), 500);
+                return;
+            }
+
+            // Если элемент скрыт и нужно временно показать
+            if (step.temporaryShow) {
+                const computedStyle = window.getComputedStyle(element);
+                if (computedStyle.display === 'none') {
+                    originalDisplay = 'none';
+                    wasHidden = true;
+                    element.style.display = 'flex'; // Временно показываем
+                    console.log('✅ Временно показана скрытая кнопка:', step.element);
+                }
+            }
+
+            // Показываем overlay
+            const overlay = document.getElementById('tourOverlay');
+            if (!overlay) {
+                console.error('❌ Overlay не найден!');
+                setTimeout(() => showTourStep(stepIndex + 1), 500);
+                return;
+            }
+            overlay.classList.add('active');
+
+            // Подсвечиваем элемент
+            const rect = element.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                console.warn('⚠️ Элемент имеет нулевой размер:', step.element);
+            }
+            
+            const highlight = document.createElement('div');
+            highlight.className = 'tour-highlight';
+            highlight.style.position = 'fixed';
+            highlight.style.left = rect.left + 'px';
+            highlight.style.top = rect.top + 'px';
+            highlight.style.width = Math.max(rect.width, 40) + 'px';
+            highlight.style.height = Math.max(rect.height, 40) + 'px';
+            highlight.style.pointerEvents = 'none';
+            highlight.style.zIndex = '10001';
+            document.body.appendChild(highlight);
+
+            // Показываем подсказку
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tour-tooltip';
+            tooltip.style.zIndex = '10002';
+            tooltip.innerHTML = `
+                <h3>${step.title}</h3>
+                <p>${step.text}</p>
+                <div class="tour-progress">Шаг ${stepIndex + 1} из ${tourSteps.length}</div>
+                <div class="tour-buttons">
+                    <button class="tour-btn-skip" onclick="endTour()">Пропустить</button>
+                    ${stepIndex < tourSteps.length - 1 
+                        ? `<button class="tour-btn-next" onclick="nextTourStep()">Далее</button>`
+                        : `<button class="tour-btn-finish" onclick="endTour()">Завершить</button>`
+                    }
+                </div>
+            `;
+            document.body.appendChild(tooltip);
+
+            // Позиционируем подсказку
+            positionTooltip(tooltip, rect, step.position);
+
+            // Сохраняем ссылки для очистки
+            window.currentTourHighlight = highlight;
+            window.currentTourTooltip = tooltip;
+            window.currentTourElement = element;
+            window.currentTourOriginalDisplay = originalDisplay;
+            window.currentTourWasHidden = wasHidden;
+        }
+
+        // Позиционирование подсказки
+        function positionTooltip(tooltip, rect, position) {
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const padding = 20;
+            let left, top;
+
+            switch (position) {
+                case 'top':
+                    left = rect.left + (rect.width - tooltipRect.width) / 2;
+                    top = rect.top - tooltipRect.height - padding;
+                    break;
+                case 'bottom':
+                    left = rect.left + (rect.width - tooltipRect.width) / 2;
+                    top = rect.bottom + padding;
+                    break;
+                case 'left':
+                    left = rect.left - tooltipRect.width - padding;
+                    top = rect.top + (rect.height - tooltipRect.height) / 2;
+                    break;
+                case 'right':
+                    left = rect.right + padding;
+                    top = rect.top + (rect.height - tooltipRect.height) / 2;
+                    break;
+                default:
+                    left = rect.left + (rect.width - tooltipRect.width) / 2;
+                    top = rect.bottom + padding;
+            }
+
+            // Корректировка, если выходит за границы экрана
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            if (left < padding) left = padding;
+            if (left + tooltipRect.width > viewportWidth - padding) {
+                left = viewportWidth - tooltipRect.width - padding;
+            }
+            if (top < padding) top = padding;
+            if (top + tooltipRect.height > viewportHeight - padding) {
+                top = viewportHeight - tooltipRect.height - padding;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        // Следующий шаг тура
+        function nextTourStep() {
+            // Восстанавливаем исходное состояние элемента, если он был временно показан
+            if (window.currentTourWasHidden && window.currentTourElement && window.currentTourOriginalDisplay !== null) {
+                window.currentTourElement.style.display = window.currentTourOriginalDisplay;
+                console.log('✅ Восстановлено исходное состояние кнопки');
+            }
+            
+            if (window.currentTourHighlight) {
+                window.currentTourHighlight.remove();
+            }
+            if (window.currentTourTooltip) {
+                window.currentTourTooltip.remove();
+            }
+            
+            // Очищаем сохраненные данные
+            window.currentTourElement = null;
+            window.currentTourOriginalDisplay = null;
+            window.currentTourWasHidden = false;
+            
+            currentTourStep++;
+            showTourStep(currentTourStep);
+        }
+
+        // Завершение тура
+        function endTour() {
+            tourActive = false;
+            const overlay = document.getElementById('tourOverlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+            
+            // Восстанавливаем исходное состояние элемента, если он был временно показан
+            if (window.currentTourWasHidden && window.currentTourElement && window.currentTourOriginalDisplay !== null) {
+                window.currentTourElement.style.display = window.currentTourOriginalDisplay;
+                console.log('✅ Восстановлено исходное состояние кнопки при завершении тура');
+            }
+            
+            if (window.currentTourHighlight) {
+                window.currentTourHighlight.remove();
+            }
+            if (window.currentTourTooltip) {
+                window.currentTourTooltip.remove();
+            }
+            
+            // Очищаем сохраненные данные
+            window.currentTourElement = null;
+            window.currentTourOriginalDisplay = null;
+            window.currentTourWasHidden = false;
+        }
+
+        // Открытие модального окна приветствия
+        function openWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                console.log('✅ Модальное окно приветствия открыто (display: flex)');
+            } else {
+                console.error('❌ Модальное окно welcomeModal не найдено в DOM!');
+            }
+        }
+
+        // Закрытие модального окна приветствия
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Запуск тура из модального окна приветствия
+        function startTourFromWelcome() {
+            closeWelcomeModal();
+            setTimeout(() => {
+                startTour();
+            }, 300);
+        }
+
+        // Открытие модального окна справки
+        function openHelpModal() {
+            const modal = document.getElementById('helpModal');
+            modal.classList.add('active');
+            
+            // Скрываем бейдж после первого открытия
+            const badge = document.getElementById('helpBadge');
+            if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Закрытие модального окна справки
+        function closeHelpModal() {
+            const modal = document.getElementById('helpModal');
+            modal.classList.remove('active');
+        }
+
+        // Показать всплывающую подсказку для нового элемента
+        function showFeatureTooltip(element, text, position = 'top') {
+            // Удаляем предыдущую подсказку, если есть
+            const existingTooltip = document.querySelector('.feature-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
+            }
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'feature-tooltip';
+            tooltip.textContent = text;
+            document.body.appendChild(tooltip);
+
+            const rect = element.getBoundingClientRect();
+            let left, top;
+
+            switch (position) {
+                case 'top':
+                    left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+                    top = rect.top - tooltip.offsetHeight - 10;
+                    break;
+                case 'bottom':
+                    left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+                    top = rect.bottom + 10;
+                    break;
+                case 'left':
+                    left = rect.left - tooltip.offsetWidth - 10;
+                    top = rect.top + (rect.height / 2) - (tooltip.offsetHeight / 2);
+                    break;
+                case 'right':
+                    left = rect.right + 10;
+                    top = rect.top + (rect.height / 2) - (tooltip.offsetHeight / 2);
+                    break;
+                default:
+                    left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+                    top = rect.top - tooltip.offsetHeight - 10;
+            }
+
+            // Корректировка позиции
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            if (left < 10) left = 10;
+            if (left + tooltip.offsetWidth > viewportWidth - 10) {
+                left = viewportWidth - tooltip.offsetWidth - 10;
+            }
+            if (top < 10) top = 10;
+            if (top + tooltip.offsetHeight > viewportHeight - 10) {
+                top = viewportHeight - tooltip.offsetHeight - 10;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+
+            // Удаляем подсказку через 5 секунд или при уходе мыши
+            const removeTooltip = () => {
+                if (tooltip.parentNode) {
+                    tooltip.remove();
+                }
+            };
+
+            setTimeout(removeTooltip, 5000);
+            element.addEventListener('mouseleave', removeTooltip, { once: true });
+        }
+
+        // Добавить индикатор новой функции к элементу
+        function addNewFeatureBadge(element) {
+            if (!element) return;
+            
+            const badge = document.createElement('span');
+            badge.className = 'new-feature-badge';
+            badge.textContent = '!';
+            badge.title = 'Новая функция';
+            element.style.position = 'relative';
+            element.appendChild(badge);
+
+            // Удаляем бейдж при первом клике
+            const removeBadge = () => {
+                badge.remove();
+                element.removeEventListener('click', removeBadge);
+            };
+            element.addEventListener('click', removeBadge, { once: true });
+        }
+
+        // Инициализация системы подсказок
+        function initUserHelpSystem() {
+            console.log('🚀 initUserHelpSystem: Инициализация системы подсказок');
+            
+            // Проверяем первый вход
+            const isFirst = isFirstLogin();
+            console.log('🔍 initUserHelpSystem: isFirst =', isFirst);
+            
+            if (isFirst) {
+                console.log('✅ initUserHelpSystem: Показываем приветствие для нового пользователя');
+                
+                // Показываем индикатор на кнопке справки
+                const badge = document.getElementById('helpBadge');
+                if (badge) {
+                    badge.style.display = 'flex';
+                    console.log('✅ Индикатор на кнопке справки показан');
+                } else {
+                    console.warn('⚠️ Кнопка helpBadge не найдена');
+                }
+                
+                // Показываем кастомное модальное окно приветствия через небольшую задержку
+                setTimeout(() => {
+                    console.log('📢 Открываем модальное окно приветствия');
+                    const modal = document.getElementById('welcomeModal');
+                    if (modal) {
+                        openWelcomeModal();
+                        console.log('✅ Модальное окно приветствия открыто');
+                    } else {
+                        console.error('❌ Модальное окно welcomeModal не найдено!');
+                    }
+                }, 1000);
+            } else {
+                console.log('ℹ️ initUserHelpSystem: Пользователь уже заходил ранее, приветствие не показываем');
+            }
+
+            // Обработчики для кнопки справки
+            const helpBtn = document.getElementById('helpBtn');
+            if (helpBtn) {
+                helpBtn.addEventListener('click', openHelpModal);
+                
+                // Показываем подсказку при первом входе
+                if (isFirst) {
+                    setTimeout(() => {
+                        const showTooltip = () => {
+                            showFeatureTooltip(helpBtn, 'Нажмите, чтобы открыть справку по горячим клавишам', 'left');
+                            helpBtn.removeEventListener('mouseenter', showTooltip);
+                        };
+                        helpBtn.addEventListener('mouseenter', showTooltip, { once: true });
+                    }, 2000);
+                }
+            }
+
+            const helpModalClose = document.getElementById('helpModalClose');
+            if (helpModalClose) {
+                helpModalClose.addEventListener('click', closeHelpModal);
+            }
+
+            // Закрытие по клику вне модального окна
+            const helpModal = document.getElementById('helpModal');
+            if (helpModal) {
+                helpModal.addEventListener('click', (e) => {
+                    if (e.target === helpModal) {
+                        closeHelpModal();
+                    }
+                });
+            }
+
+            // Закрытие по Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (helpModal && helpModal.classList.contains('active')) {
+                        closeHelpModal();
+                    }
+                    // Закрытие модального окна приветствия
+                    const welcomeModal = document.getElementById('welcomeModal');
+                    if (welcomeModal && welcomeModal.style.display === 'flex') {
+                        closeWelcomeModal();
+                    }
+                }
+            });
+
+            // Закрытие модального окна приветствия по клику вне его
+            const welcomeModal = document.getElementById('welcomeModal');
+            if (welcomeModal) {
+                welcomeModal.addEventListener('click', (e) => {
+                    if (e.target === welcomeModal) {
+                        closeWelcomeModal();
+                    }
+                });
+            }
+
+            // Добавляем индикаторы новых функций для первого входа
+            if (isFirst) {
+                setTimeout(() => {
+                    // Индикатор на кнопке профиля
+                    const profileBtn = document.getElementById('profileBtn');
+                    if (profileBtn && profileBtn.style.display !== 'none') {
+                        addNewFeatureBadge(profileBtn);
+                    }
+
+                    // Индикатор на кнопке компаний
+                    const companiesBtn = document.getElementById('companiesBottomBtn');
+                    if (companiesBtn && companiesBtn.style.display !== 'none') {
+                        addNewFeatureBadge(companiesBtn);
+                    }
+                }, 3000);
+            }
+        }
+
+        // Функция для сброса флага первого входа (для тестирования)
+        // Можно вызвать из консоли: resetFirstLogin()
+        function resetFirstLogin() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const login = user.login || user.Login;
+                    if (login) {
+                        const firstLoginKey = `firstLogin-${login}`;
+                        localStorage.removeItem(firstLoginKey);
+                        console.log('✅ Флаг первого входа сброшен для пользователя:', login);
+                        console.log('🔄 Перезагрузите страницу, чтобы увидеть приветствие');
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Ошибка сброса флага первого входа:', e);
+                }
+            } else {
+                console.warn('⚠️ Пользователь не авторизован');
+            }
+            return false;
+        }
+        
+        // Делаем функцию доступной глобально для вызова из консоли
+        window.resetFirstLogin = resetFirstLogin;
+
+        // Вызываем инициализацию после загрузки страницы
+        function initPage() {
+            loadCurrentUser();
+            // Инициализируем систему подсказок только для авторизованных пользователей
+            const userStr = localStorage.getItem('gantt-user');
+            const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
+            if (userStr && ganttMode !== 'view') {
+                console.log('🚀 initPage: Инициализация системы подсказок');
+                initUserHelpSystem();
+            } else {
+                console.log('ℹ️ initPage: Пользователь не авторизован или режим просмотра');
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(initPage, 500);
+            });
+        } else {
+            setTimeout(initPage, 500);
+        }
     </script>
+    
+    <!-- Overlay для туров -->
+    <div class="tour-overlay" id="tourOverlay"></div>
+    
+    <!-- Модальное окно справки -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-modal-content">
+            <div class="help-modal-header">
+                <h2>Справка по горячим клавишам</h2>
+                <button class="help-modal-close" id="helpModalClose">&times;</button>
+            </div>
+            <div class="help-section">
+                <h3>Основные действия</h3>
+                <ul>
+                    <li><span class="help-key">Insert</span> — Добавить новую задачу под выделенной</li>
+                    <li><span class="help-key">Delete</span> — Удалить выделенную задачу</li>
+                    <li><span class="help-key">↑</span> / <span class="help-key">↓</span> — Навигация по задачам</li>
+                    <li><span class="help-key">F2</span> — Задать базовый план</li>
+                    <li><span class="help-key">F3</span> — Переключить отображение директивного графика</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>Управление диаграммой</h3>
+                <ul>
+                    <li><span class="help-key">Z</span> + <span class="help-key">Колесо мыши</span> — Зум (приближение/отдаление)</li>
+                    <li><span class="help-key">Shift</span> + <span class="help-key">Колесо мыши</span> — Горизонтальный скролл</li>
+                    <li><span class="help-key">Двойной клик</span> — Редактирование названия задачи</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>Редактирование</h3>
+                <ul>
+                    <li><span class="help-key">Ctrl</span> + <span class="help-key">Z</span> — Отменить последнее действие (до 10 действий)</li>
+                    <li><span class="help-key">Enter</span> — Сохранить изменения в поле</li>
+                    <li><span class="help-key">Escape</span> — Отменить редактирование / Закрыть модальное окно</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>Экспорт</h3>
+                <ul>
+                    <li>Кнопка <strong>"Выгрузить в PDF"</strong> — Экспорт графика в PDF</li>
+                    <li>Кнопка <strong>"Выгрузить в Excel"</strong> — Экспорт в Excel/CSV</li>
+                </ul>
+            </div>
+        </div>
+    </div>
     
     <footer class="footer">
         <p>&copy; 2025 SetlTech. Все права защищены.</p>

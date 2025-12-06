@@ -111,5 +111,17 @@
     "role": "admin",
     "companies": [],
     "createdAt": "2025-12-02T13:28:42.500Z"
+  },
+  {
+    "id": "1765046488085",
+    "name": "admin155561555236631112",
+    "login": "admin155561555236631112",
+    "password": "$2b$10$8z/ZkdNZ287cgrZjPar5quLz0wSwBRPgiH/ZO9sSpcKwQEyh41XNi",
+    "role": "user",
+    "companies": [
+      "Sminex",
+      "SetlTech"
+    ],
+    "createdAt": "2025-12-06T18:41:28.085Z"
   }
 ]

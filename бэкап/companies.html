@@ -29,8 +29,7 @@
             padding: 20px;
             position: relative;
             overflow-x: hidden;
-            opacity: 0;
-            animation: fadeInFromFog 1.5s ease-out forwards;
+            opacity: 1;
         }
 
 
@@ -73,37 +72,7 @@
             }
         }
 
-        /* Эффект тумана при появлении */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 50% 50%, rgba(200, 230, 255, 0.4) 0%, transparent 60%),
-                radial-gradient(circle at 30% 30%, rgba(173, 216, 230, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 70% 70%, rgba(135, 206, 250, 0.3) 0%, transparent 50%);
-            animation: fogDissolve 1.5s ease-out forwards;
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        @keyframes fogDissolve {
-            0% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(1.1);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(1);
-            }
-        }
+        /* Эффект тумана при появлении - убран, чтобы не затемнять экран при перезагрузке */
 
         /* Статичный фон (без анимации для производительности) */
         body::before {
@@ -125,73 +94,18 @@
             margin: 0 auto;
             position: relative;
             z-index: 10;
-            animation: containerAppear 1.5s ease-out 0.3s both;
+            opacity: 1;
         }
 
-        @keyframes containerAppear {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Анимация растворения при переходе на график */
+        /* Анимация растворения при переходе на график - УДАЛЕНА, чтобы не затемнять экран */
         .container.fade-out {
-            animation: fadeOutDissolve 1.2s ease-in-out forwards;
+            /* Убрана анимация затемнения */
         }
 
-        @keyframes fadeOutDissolve {
-            0% {
-                opacity: 1;
-                filter: blur(0px);
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.5;
-                filter: blur(10px);
-                transform: scale(1.05);
-            }
-            100% {
-                opacity: 0;
-                filter: blur(20px);
-                transform: scale(1.1);
-            }
-        }
-
-        /* Эффект тумана при растворении */
+        /* Эффект тумана при растворении - УДАЛЕН, чтобы не затемнять экран */
         .container.fade-out::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 50% 50%, rgba(200, 230, 255, 0.6) 0%, transparent 70%),
-                radial-gradient(circle at 30% 30%, rgba(173, 216, 230, 0.5) 0%, transparent 60%),
-                radial-gradient(circle at 70% 70%, rgba(135, 206, 250, 0.5) 0%, transparent 60%);
-            animation: fogAppear 1.2s ease-in-out forwards;
-            z-index: 9998;
-            pointer-events: none;
-        }
-
-        @keyframes fogAppear {
-            0% {
-                opacity: 0;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.7;
-                transform: scale(1.1);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
+            display: none !important;
+            content: none !important;
         }
 
         .header {
@@ -481,7 +395,7 @@
         .companies-bottom-btn {
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 80px;
-            right: 80px;
+            right: 30px;
         }
 
         .companies-bottom-btn:hover {
@@ -1029,46 +943,64 @@
         }
 
         .modal {
-            display: none;
+            display: none !important;
             position: fixed;
-            z-index: 10000;
+            z-index: -1;
             left: 0;
             top: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            background-color: transparent;
+            backdrop-filter: none;
             align-items: center;
             justify-content: center;
             overflow-y: auto;
             padding: 20px;
             box-sizing: border-box;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .modal.show {
             display: flex;
+            z-index: 10000;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         /* Модальное окно удаления компании */
         .delete-modal {
-            display: none;
+            display: none !important;
             position: fixed;
-            z-index: 10001;
+            z-index: -1;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            background-color: transparent;
+            backdrop-filter: none;
             align-items: center;
             justify-content: center;
             overflow-y: auto;
             padding: 20px;
             box-sizing: border-box;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .delete-modal.show {
             display: flex;
+            z-index: 10001;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .delete-modal-content {
@@ -1855,23 +1787,32 @@
 
         /* Модальное окно редактирования профиля */
         .profile-modal {
-            display: none;
+            display: none !important;
             position: fixed;
-            z-index: 10002;
+            z-index: -1;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s ease;
+            background-color: transparent;
+            backdrop-filter: none;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .profile-modal.show {
             display: flex;
+            z-index: 10002;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
             align-items: flex-start;
             justify-content: center;
             padding-top: 10vh;
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         @media (max-width: 768px) {
@@ -2214,6 +2155,132 @@
             margin: 0;
             line-height: 1.6;
         }
+
+        /* Система подсказок для первого входа */
+        .first-visit-tooltip {
+            position: fixed;
+            background: #000000;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            max-width: 300px;
+            z-index: -1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            display: none;
+            transform: scale(0.9);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .first-visit-tooltip.show {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 100000;
+            visibility: visible;
+            display: block;
+        }
+
+        .first-visit-tooltip::before {
+            content: '?';
+            position: absolute;
+            top: -8px;
+            left: 12px;
+            width: 24px;
+            height: 24px;
+            background: #2196f3;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+        }
+
+        .first-visit-tooltip .tooltip-close {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+
+        .first-visit-tooltip .tooltip-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .first-visit-tooltip .tooltip-next {
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background 0.2s;
+        }
+
+        .first-visit-tooltip .tooltip-next:hover {
+            background: #1976d2;
+        }
+
+        /* Затемнение экрана во время подсказок */
+        .first-visit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .first-visit-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        
+        .first-visit-highlight {
+            position: fixed;
+            border: 3px solid #2196f3;
+            border-radius: 8px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(33, 150, 243, 0.8);
+            z-index: 99999;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            display: none;
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .first-visit-highlight.active {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
@@ -2231,6 +2298,15 @@
     <div class="firefly" id="companies-firefly-10"></div>
     <div class="firefly" id="companies-firefly-11"></div>
     <div class="firefly" id="companies-firefly-12"></div>
+    
+    <!-- Элемент для подсказок первого входа -->
+    <div id="firstVisitOverlay" class="first-visit-overlay"></div>
+    <div id="firstVisitTooltip" class="first-visit-tooltip">
+        <button class="tooltip-close" onclick="skipFirstVisitTour()">&times;</button>
+        <div class="tooltip-content"></div>
+        <button class="tooltip-next" onclick="nextFirstVisitStep()">Далее</button>
+    </div>
+    <div id="firstVisitHighlight" class="first-visit-highlight"></div>
     
     <div class="container">
         <div class="header">
@@ -2491,6 +2567,65 @@
     </div>
 
     <script>
+        // НЕМЕДЛЕННО убираем все затемнения при загрузке скрипта
+        (function() {
+            function forceRemoveDarkening() {
+                // Убираем класс fade-out
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.classList.remove('fade-out');
+                }
+                
+                // Принудительно закрываем все модальные окна
+                const modals = document.querySelectorAll('.modal, .delete-modal, .profile-modal');
+                modals.forEach(modal => {
+                    modal.classList.remove('show');
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                    modal.style.opacity = '0';
+                    modal.style.zIndex = '-1';
+                    modal.style.pointerEvents = 'none';
+                });
+                
+                // Убираем подсказки первого входа
+                const tooltip = document.getElementById('firstVisitTooltip');
+                if (tooltip) {
+                    tooltip.classList.remove('show');
+                    tooltip.style.display = 'none';
+                    tooltip.style.zIndex = '-1';
+                    tooltip.style.opacity = '0';
+                    tooltip.style.visibility = 'hidden';
+                }
+                
+                // Убираем highlight первого входа
+                const highlight = document.getElementById('firstVisitHighlight');
+                if (highlight) {
+                    highlight.classList.remove('active');
+                    highlight.style.display = 'none';
+                    highlight.style.zIndex = '-1';
+                    highlight.style.opacity = '0';
+                    highlight.style.visibility = 'hidden';
+                    highlight.style.boxShadow = 'none';
+                }
+            }
+            
+            // Выполняем сразу
+            forceRemoveDarkening();
+            
+            // Выполняем при разных событиях
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', forceRemoveDarkening);
+            } else {
+                forceRemoveDarkening();
+            }
+            
+            // Выполняем с задержками на случай поздней загрузки
+            setTimeout(forceRemoveDarkening, 0);
+            setTimeout(forceRemoveDarkening, 50);
+            setTimeout(forceRemoveDarkening, 100);
+            setTimeout(forceRemoveDarkening, 500);
+        })();
+        
         let currentUser = null;
         let isAdmin = false;
 
@@ -3224,20 +3359,8 @@
             // Сохраняем выбранную компанию
             localStorage.setItem('gantt-company', companyId);
             
-            // Получаем контейнер для анимации растворения
-            const container = document.querySelector('.container');
-            if (container) {
-                // Запускаем анимацию растворения
-                container.classList.add('fade-out');
-                
-                // Переходим на страницу графика после завершения анимации
-                setTimeout(function() {
-                    window.location.href = `implementation_schedule.html?company=${companyId}`;
-                }, 1200); // Время анимации
-            } else {
-                // Если контейнер не найден, переходим сразу
-                window.location.href = `implementation_schedule.html?company=${companyId}`;
-            }
+            // Переходим на страницу графика без анимации затемнения
+            window.location.href = `implementation_schedule.html?company=${companyId}`;
         }
 
         // Копировать ссылку на компанию в буфер обмена
@@ -4369,7 +4492,548 @@
 
         // Функция setupTooltips удалена - теперь используется простой CSS для подсказок
 
+        // ========== СИСТЕМА ПОДСКАЗОК ДЛЯ ПЕРВОГО ВХОДА ==========
+        
+        // Определение первого входа пользователя
+        function isFirstLogin() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (!userStr) return false;
+            
+            try {
+                const user = JSON.parse(userStr);
+                const login = user.login || user.Login;
+                if (!login) return false;
+                
+                const firstLoginKey = `firstLogin-companies-${login}`;
+                const hasLoggedIn = localStorage.getItem(firstLoginKey);
+                
+                // Не устанавливаем флаг здесь - установим только после показа первой подсказки
+                return !hasLoggedIn;
+            } catch (e) {
+                console.error('Ошибка проверки первого входа:', e);
+                return false;
+            }
+        }
+        
+        // Установить флаг первого входа (вызывается после показа первой подсказки)
+        function setFirstLoginFlag() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (!userStr) return;
+            
+            try {
+                const user = JSON.parse(userStr);
+                const login = user.login || user.Login;
+                if (!login) return;
+                
+                const firstLoginKey = `firstLogin-companies-${login}`;
+                localStorage.setItem(firstLoginKey, 'true');
+            } catch (e) {
+                console.error('Ошибка установки флага первого входа:', e);
+            }
+        }
+
+        // Шаги подсказок для первого входа
+        const firstVisitSteps = [
+            {
+                element: '#profileBtn',
+                text: 'Для редактирования профиля нажмите сюда',
+                position: 'left'
+            },
+            {
+                element: '#logoutBtn',
+                text: 'Для выхода из системы жмём сюда',
+                position: 'left'
+            },
+            {
+                element: '#companiesBottomBtn',
+                text: 'Кнопка для возврата к списку компаний из архива',
+                position: 'left'
+            },
+            {
+                element: '.company-card',
+                text: 'Чтобы войти в график нажмите на плитку или "Открыть график"',
+                position: 'bottom',
+                selector: 'first'
+            },
+            {
+                element: '.btn-copy-link',
+                text: 'Поделитесь графиком, если пользователь не зарегистрирован, то он сможет войти только в режиме просмотра',
+                position: 'top',
+                selector: 'first'
+            },
+            {
+                element: '.statistics-company-btn',
+                text: 'Это статистика сроков внедрения',
+                position: 'right',
+                selector: 'first'
+            }
+        ];
+
+        let currentFirstVisitStep = 0;
+        let firstVisitActive = false;
+
+        // Показать подсказку для текущего шага
+        function showFirstVisitStep(stepIndex) {
+            if (stepIndex >= firstVisitSteps.length) {
+                endFirstVisitTour();
+                return;
+            }
+
+            const step = firstVisitSteps[stepIndex];
+            console.log(`📌 Шаг ${stepIndex + 1}/${firstVisitSteps.length}:`, step.element, step.text);
+            let element = null;
+
+            // Пытаемся найти элемент с несколькими попытками для динамических элементов
+            const isDynamicElement = step.element.includes('company-card') || step.element.includes('btn-') || step.element.includes('copy-link') || step.element.includes('statistics-company');
+            
+            if (isDynamicElement) {
+                // Для динамических элементов ждем их загрузки
+                const maxAttempts = 10;
+                let attempts = 0;
+                const findElement = () => {
+                    if (step.element.startsWith('.')) {
+                        const elements = document.querySelectorAll(step.element);
+                        if (step.selector === 'first') {
+                            element = elements.length > 0 ? elements[0] : null;
+                        } else {
+                            element = elements.length > 0 ? elements[0] : null;
+                        }
+                    } else {
+                        element = document.querySelector(step.element);
+                    }
+                    
+                    if (!element && attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(findElement, 300);
+                        return;
+                    }
+                    
+                    if (!element) {
+                        // Если элемент не найден после всех попыток, пропускаем шаг
+                        setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                        return;
+                    }
+                    
+                    showStepTooltip(stepIndex, step, element);
+                };
+                findElement();
+                return;
+            } else {
+                // Для статических элементов (кнопки профиля, выхода)
+                if (step.element.startsWith('.')) {
+                    const elements = document.querySelectorAll(step.element);
+                    element = elements.length > 0 ? elements[0] : null;
+                } else {
+                    element = document.querySelector(step.element);
+                }
+
+                if (!element) {
+                    // Если элемент не найден, пропускаем шаг
+                    console.log(`⚠️ Элемент ${step.element} не найден, пропускаем шаг`);
+                    setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                    return;
+                }
+                
+                // Проверяем видимость элемента (для кнопки компаний, которая может быть скрыта)
+                const style = window.getComputedStyle(element);
+                const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+                
+                // Для кнопки компаний временно показываем её, если она скрыта
+                if (step.element === '#companiesBottomBtn' && !isVisible) {
+                    console.log('👁️ Временно показываем кнопку компаний для подсказки');
+                    element.style.display = 'flex';
+                    // Сохраняем исходное состояние, чтобы вернуть его после подсказки
+                    element.dataset.originalDisplay = 'none';
+                }
+                
+                if (!isVisible && step.element !== '#companiesBottomBtn') {
+                    // Если элемент скрыт (и это не кнопка компаний), пропускаем шаг
+                    console.log(`⚠️ Элемент ${step.element} скрыт, пропускаем шаг`);
+                    setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                    return;
+                }
+                
+                showStepTooltip(stepIndex, step, element);
+            }
+        }
+
+        // Показать подсказку для найденного элемента
+        function showStepTooltip(stepIndex, step, element) {
+            console.log(`✅ Показываем подсказку для шага ${stepIndex + 1}:`, step.element, element);
+
+            firstVisitActive = true;
+            
+            // Устанавливаем флаг первого входа при показе первой подсказки
+            if (stepIndex === 0) {
+                console.log('🏁 Устанавливаем флаг первого входа');
+                setFirstLoginFlag();
+            }
+            
+            const tooltip = document.getElementById('firstVisitTooltip');
+            const highlight = document.getElementById('firstVisitHighlight');
+            const overlay = document.getElementById('firstVisitOverlay');
+            
+            // Проверяем наличие элементов
+            if (!tooltip) {
+                console.error('❌ Tooltip не найден!');
+                return;
+            }
+            
+            const content = tooltip.querySelector('.tooltip-content');
+            const nextBtn = tooltip.querySelector('.tooltip-next');
+            
+            if (!content || !nextBtn) {
+                console.error('❌ Элементы tooltip не найдены!', { content: !!content, nextBtn: !!nextBtn });
+                return;
+            }
+
+            console.log('📝 Устанавливаем текст подсказки:', step.text);
+            
+            // Устанавливаем текст
+            content.textContent = step.text;
+
+            // Показываем кнопку "Далее" или "Завершить"
+            if (stepIndex === firstVisitSteps.length - 1) {
+                nextBtn.textContent = 'Завершить';
+            } else {
+                nextBtn.textContent = 'Далее';
+            }
+
+            // Показываем затемнение экрана
+            if (overlay) {
+                overlay.classList.add('show');
+                console.log('🌑 Затемнение экрана показано');
+            }
+
+            // Подсвечиваем элемент
+            if (highlight && element) {
+                const rect = element.getBoundingClientRect();
+                
+                // Проверяем, что элемент видим и имеет размеры
+                if (rect.width > 0 && rect.height > 0) {
+                    highlight.style.left = (rect.left - 3) + 'px';
+                    highlight.style.top = (rect.top - 3) + 'px';
+                    highlight.style.width = (rect.width + 6) + 'px';
+                    highlight.style.height = (rect.height + 6) + 'px';
+                    highlight.style.display = 'block';
+                    highlight.style.opacity = '1';
+                    highlight.style.visibility = 'visible';
+                    highlight.style.zIndex = '99999';
+                    highlight.classList.add('active');
+                    console.log('✨ Highlight активирован:', {
+                        left: rect.left,
+                        top: rect.top,
+                        width: rect.width,
+                        height: rect.height,
+                        element: step.element
+                    });
+                } else {
+                    console.warn('⚠️ Элемент имеет нулевой размер:', step.element, rect);
+                }
+            } else {
+                console.warn('⚠️ Highlight или element не найден:', { highlight: !!highlight, element: !!element });
+            }
+
+            // Позиционируем подсказку
+            const rect = element.getBoundingClientRect();
+            const spacing = 15;
+            
+            // Временно показываем tooltip для расчета размеров
+            tooltip.style.display = 'block';
+            tooltip.style.visibility = 'visible';
+            tooltip.style.opacity = '0';
+            tooltip.style.left = '-9999px';
+            tooltip.style.top = '-9999px';
+            tooltip.classList.add('show');
+            
+            // Ждем следующего кадра для правильного расчета размеров
+            setTimeout(() => {
+                const tooltipRect = tooltip.getBoundingClientRect();
+                let tooltipLeft, tooltipTop;
+
+                console.log('📐 Размеры tooltip:', tooltipRect.width, tooltipRect.height);
+                console.log('📐 Позиция элемента:', rect);
+
+                switch (step.position) {
+                    case 'left':
+                        tooltipLeft = rect.left - tooltipRect.width - spacing;
+                        tooltipTop = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                        break;
+                    case 'right':
+                        tooltipLeft = rect.right + spacing;
+                        tooltipTop = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                        break;
+                    case 'top':
+                        tooltipLeft = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                        tooltipTop = rect.top - tooltipRect.height - spacing;
+                        break;
+                    case 'bottom':
+                    default:
+                        tooltipLeft = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                        tooltipTop = rect.bottom + spacing;
+                        break;
+                }
+
+                // Проверяем границы экрана
+                if (tooltipLeft < 10) tooltipLeft = 10;
+                if (tooltipLeft + tooltipRect.width > window.innerWidth - 10) {
+                    tooltipLeft = window.innerWidth - tooltipRect.width - 10;
+                }
+                if (tooltipTop < 10) tooltipTop = 10;
+                if (tooltipTop + tooltipRect.height > window.innerHeight - 10) {
+                    tooltipTop = window.innerHeight - tooltipRect.height - 10;
+                }
+
+                tooltip.style.left = tooltipLeft + 'px';
+                tooltip.style.top = tooltipTop + 'px';
+                tooltip.style.opacity = '1';
+                tooltip.style.zIndex = '100000';
+                tooltip.style.display = 'block';
+                tooltip.style.visibility = 'visible';
+                tooltip.classList.add('show');
+                
+                console.log('📍 Tooltip позиционирован:', tooltipLeft, tooltipTop);
+                console.log('✅ Tooltip должен быть виден');
+                console.log('🔍 Проверка tooltip:', {
+                    display: tooltip.style.display,
+                    visibility: tooltip.style.visibility,
+                    opacity: tooltip.style.opacity,
+                    zIndex: tooltip.style.zIndex,
+                    hasShow: tooltip.classList.contains('show'),
+                    left: tooltip.style.left,
+                    top: tooltip.style.top
+                });
+
+                // Прокручиваем элемент в зону видимости
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 50);
+        }
+
+        // Следующий шаг
+        function nextFirstVisitStep() {
+            // Проверяем, является ли текущий шаг последним
+            if (currentFirstVisitStep >= firstVisitSteps.length - 1) {
+                // Это последний шаг, завершаем тур
+                endFirstVisitTour();
+                return;
+            }
+            
+            // Восстанавливаем исходное состояние кнопки компаний, если она была временно показана
+            const companiesBtn = document.getElementById('companiesBottomBtn');
+            if (companiesBtn && companiesBtn.dataset.originalDisplay) {
+                companiesBtn.style.display = companiesBtn.dataset.originalDisplay;
+                delete companiesBtn.dataset.originalDisplay;
+            }
+            
+            currentFirstVisitStep++;
+            const tooltip = document.getElementById('firstVisitTooltip');
+            const highlight = document.getElementById('firstVisitHighlight');
+            const overlay = document.getElementById('firstVisitOverlay');
+            
+            // Скрываем текущие элементы тура
+            if (tooltip) {
+                tooltip.classList.remove('show');
+                tooltip.style.display = 'none';
+                tooltip.style.opacity = '0';
+                tooltip.style.visibility = 'hidden';
+            }
+            if (highlight) {
+                highlight.classList.remove('active');
+                highlight.style.display = 'none';
+            }
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+            
+            setTimeout(() => {
+                showFirstVisitStep(currentFirstVisitStep);
+            }, 300);
+        }
+
+        // Пропустить тур
+        function skipFirstVisitTour() {
+            endFirstVisitTour();
+        }
+
+        // Завершить тур
+        function endFirstVisitTour() {
+            firstVisitActive = false;
+            currentFirstVisitStep = 0;
+            
+            // Восстанавливаем исходное состояние кнопки компаний, если она была временно показана
+            const companiesBtn = document.getElementById('companiesBottomBtn');
+            if (companiesBtn && companiesBtn.dataset.originalDisplay) {
+                companiesBtn.style.display = companiesBtn.dataset.originalDisplay;
+                delete companiesBtn.dataset.originalDisplay;
+            }
+            
+            const tooltip = document.getElementById('firstVisitTooltip');
+            const highlight = document.getElementById('firstVisitHighlight');
+            const overlay = document.getElementById('firstVisitOverlay');
+            
+            // Полностью скрываем все элементы тура
+            if (tooltip) {
+                tooltip.classList.remove('show');
+                tooltip.style.display = 'none';
+                tooltip.style.opacity = '0';
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.zIndex = '-1';
+            }
+            if (highlight) {
+                highlight.classList.remove('active');
+                highlight.style.display = 'none';
+                highlight.style.opacity = '0';
+                highlight.style.visibility = 'hidden';
+                highlight.style.zIndex = '-1';
+                highlight.style.boxShadow = 'none';
+            }
+            if (overlay) {
+                overlay.classList.remove('show');
+                overlay.style.opacity = '0';
+                overlay.style.visibility = 'hidden';
+            }
+            
+            console.log('✅ Тур завершен, все элементы скрыты');
+        }
+
+        // Инициализация системы подсказок
+        function initFirstVisitTour() {
+            const isFirst = isFirstLogin();
+            
+            console.log('🔍 Проверка первого входа:', isFirst);
+            console.log('🔍 Текущий пользователь:', localStorage.getItem('gantt-user'));
+            
+            if (isFirst) {
+                console.log('✅ Это первый вход, запускаем подсказки');
+                
+                // Ждем загрузки компаний и всех элементов перед показом подсказок
+                // Проверяем наличие основных элементов перед показом
+                let checkAttempts = 0;
+                const maxCheckAttempts = 30; // Максимум 9 секунд (30 * 300ms)
+                
+                const checkElements = () => {
+                    checkAttempts++;
+                    const profileBtn = document.getElementById('profileBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    const companyCards = document.querySelectorAll('.company-card');
+                    
+                    console.log('🔍 Проверка элементов (попытка ' + checkAttempts + '):', {
+                        profileBtn: !!profileBtn,
+                        logoutBtn: !!logoutBtn,
+                        companyCards: companyCards.length
+                    });
+                    
+                    // Проверяем наличие основных элементов (кнопки профиля и выхода)
+                    // Для первых двух шагов компании не нужны
+                    const basicElementsReady = profileBtn && logoutBtn;
+                    
+                    if (basicElementsReady) {
+                        // Основные элементы найдены, показываем подсказки
+                        console.log('✅ Элементы найдены, запускаем подсказки через 500ms');
+                        setTimeout(() => {
+                            console.log('🚀 Запускаем первый шаг подсказок');
+                            showFirstVisitStep(0);
+                        }, 500);
+                    } else if (checkAttempts < maxCheckAttempts) {
+                        // Элементы еще не загружены, ждем еще
+                        setTimeout(checkElements, 300);
+                    } else {
+                        console.warn('⚠️ Элементы не найдены после всех попыток, но пытаемся показать подсказки');
+                        // Пытаемся показать подсказки даже если элементы не найдены
+                        setTimeout(() => {
+                            showFirstVisitStep(0);
+                        }, 500);
+                    }
+                };
+                
+                // Начинаем проверку через небольшую задержку
+                setTimeout(checkElements, 500);
+            } else {
+                console.log('❌ Это не первый вход, подсказки не показываются');
+            }
+        }
+
+        // Функция для сброса флага первого входа (для тестирования)
+        window.resetFirstLoginCompanies = function() {
+            const userStr = localStorage.getItem('gantt-user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const login = user.login || user.Login;
+                    if (login) {
+                        const firstLoginKey = `firstLogin-companies-${login}`;
+                        localStorage.removeItem(firstLoginKey);
+                        console.log('✅ Флаг первого входа сброшен для пользователя:', login);
+                        console.log('🔄 Перезагрузите страницу, чтобы увидеть подсказки');
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Ошибка сброса флага первого входа:', e);
+                }
+            }
+            return false;
+        };
+        
+        // Функция для принудительного запуска подсказок (для тестирования)
+        window.forceShowFirstVisitTour = function() {
+            console.log('🚀 Принудительный запуск подсказок');
+            currentFirstVisitStep = 0;
+            firstVisitActive = false;
+            showFirstVisitStep(0);
+        };
+
+        // Убираем класс fade-out и закрываем все модальные окна сразу при загрузке скрипта (до DOMContentLoaded)
+        (function() {
+            function removeDarkening() {
+                // Убираем класс fade-out
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.classList.remove('fade-out');
+                }
+                // Закрываем все модальные окна принудительно
+                const modals = document.querySelectorAll('.modal, .delete-modal, .profile-modal');
+                modals.forEach(modal => {
+                    modal.classList.remove('show');
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                    modal.style.opacity = '0';
+                    modal.style.zIndex = '-1';
+                });
+            }
+            
+            // Выполняем сразу
+            removeDarkening();
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', removeDarkening);
+            } else {
+                removeDarkening();
+            }
+            
+            // Также выполняем после небольшой задержки на случай, если что-то открывается позже
+            setTimeout(removeDarkening, 100);
+            setTimeout(removeDarkening, 500);
+        })();
+
         window.addEventListener('DOMContentLoaded', async function() {
+            // Убираем класс fade-out при загрузке страницы (на случай возврата назад)
+            const container = document.querySelector('.container');
+            if (container) {
+                container.classList.remove('fade-out');
+            }
+            
+            // Закрываем все модальные окна при загрузке страницы принудительно
+            const modals = document.querySelectorAll('.modal, .delete-modal, .profile-modal');
+            modals.forEach(modal => {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.style.zIndex = '-1';
+            });
+            
             loadCurrentUser();
             
             // Загружаем типы графиков перед загрузкой компаний
@@ -4387,6 +5051,31 @@
             // Инициализируем эффекты
             initFireflies();
             // Подсказки теперь работают через простой CSS, без JavaScript
+            
+            // Инициализируем систему подсказок для первого входа
+            // Ждем загрузки компаний перед показом подсказок
+            setTimeout(() => {
+                initFirstVisitTour();
+            }, 2000);
+        });
+
+        // Убираем класс fade-out при возврате назад (кнопка браузера)
+        window.addEventListener('pageshow', function(event) {
+            // event.persisted = true означает, что страница загружена из кэша (back/forward)
+            const container = document.querySelector('.container');
+            if (container) {
+                container.classList.remove('fade-out');
+            }
+            
+            // Закрываем все модальные окна при возврате назад
+            const modals = document.querySelectorAll('.modal, .delete-modal, .profile-modal');
+            modals.forEach(modal => {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.style.zIndex = '-1';
+            });
         });
 
         // ========== ФУНКЦИИ ДЛЯ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ==========

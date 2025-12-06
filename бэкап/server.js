@@ -1042,7 +1042,33 @@ app.post('/api/users', async (req, res) => {
 // Удалить пользователя
 app.delete('/api/users/:login', (req, res) => {
   try {
-    const login = req.params.login;
+    let login = req.params.login;
+    
+    // Декодируем логин из URL
+    try {
+      login = decodeURIComponent(login);
+    } catch (e) {
+      console.error('Ошибка декодирования логина:', e);
+    }
+    
+    // Валидация логина
+    if (!login || typeof login !== 'string' || login.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат логина' });
+    }
+    
+    login = login.trim();
+    
+    // Удаляем возможные артефакты в конце логина (например, :1, :2 и т.д.)
+    // Это может быть из-за проблем с кодированием или индексацией
+    if (login.includes(':')) {
+      const parts = login.split(':');
+      if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+        // Если последняя часть - это число, удаляем её
+        login = parts.slice(0, -1).join(':');
+        console.warn(`⚠️ Обнаружен артефакт в логине, исправлено: ${req.params.login} → ${login}`);
+      }
+    }
+    
     const MAIN_ADMIN_LOGIN = 'Driga_VA';
 
     // Защита от удаления главного администратора
@@ -1054,8 +1080,21 @@ app.delete('/api/users/:login', (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
-    const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let raw, users;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    } catch (e) {
+      console.error('Ошибка чтения файла users.json:', e);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
+    }
+
+    // Получаем информацию об удаляемом пользователе для лога ДО удаления
+    const deletedUser = users.find(u => u.login === login);
+    
+    if (!deletedUser) {
+      return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
+    }
 
     const initialLength = users.length;
     users = users.filter(u => u.login !== login);
@@ -1063,22 +1102,22 @@ app.delete('/api/users/:login', (req, res) => {
     if (users.length === initialLength) {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
-
-    // Получаем информацию об удаляемом пользователе для лога
-    const deletedUser = users.find(u => u.login === login);
     
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
     
     // Логируем удаление пользователя
     const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
-    if (deletedUser) {
-      addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
-    }
+    addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
     
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка удаления пользователя:', e);
-    res.status(500).json({ ok: false, error: 'delete_failed' });
+    console.error('Детали ошибки:', {
+      message: e.message,
+      stack: e.stack,
+      login: req.params.login
+    });
+    res.status(500).json({ ok: false, error: 'delete_failed', details: e.message });
   }
 });
 
@@ -1143,7 +1182,33 @@ app.put('/api/users/update', async (req, res) => {
 // Обновить доступ пользователя к компаниям
 app.put('/api/users/:login/companies', (req, res) => {
   try {
-    const { login } = req.params;
+    let { login } = req.params;
+    
+    // Декодируем логин из URL
+    try {
+      login = decodeURIComponent(login);
+    } catch (e) {
+      console.error('Ошибка декодирования логина:', e);
+    }
+    
+    // Валидация логина
+    if (!login || typeof login !== 'string' || login.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат логина' });
+    }
+    
+    login = login.trim();
+    
+    // Удаляем возможные артефакты в конце логина (например, :1, :2 и т.д.)
+    // Это может быть из-за проблем с кодированием или индексацией
+    if (login.includes(':')) {
+      const parts = login.split(':');
+      if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+        // Если последняя часть - это число, удаляем её
+        login = parts.slice(0, -1).join(':');
+        console.warn(`⚠️ Обнаружен артефакт в логине, исправлено: ${req.params.login} → ${login}`);
+      }
+    }
+    
     const { companies } = req.body;
 
     if (!Array.isArray(companies)) {
@@ -1154,8 +1219,14 @@ app.put('/api/users/:login/companies', (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
-    const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let raw, users;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    } catch (e) {
+      console.error('Ошибка чтения файла users.json:', e);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
+    }
 
     const userIndex = users.findIndex(u => u.login === login);
     if (userIndex === -1) {
@@ -1179,14 +1250,46 @@ app.put('/api/users/:login/companies', (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления доступа к компаниям:', e);
-    res.status(500).json({ ok: false, error: 'update_failed' });
+    console.error('Детали ошибки:', {
+      message: e.message,
+      stack: e.stack,
+      login: req.params.login,
+      companies: req.body.companies
+    });
+    res.status(500).json({ ok: false, error: 'update_failed', details: e.message });
   }
 });
 
 // Обновление пользователя админом (имя, роль, компании, пароль)
 app.put('/api/users/:login', async (req, res) => {
   try {
-    const { login } = req.params;
+    let { login } = req.params;
+    
+    // Декодируем логин из URL
+    try {
+      login = decodeURIComponent(login);
+    } catch (e) {
+      console.error('Ошибка декодирования логина:', e);
+    }
+    
+    // Валидация логина
+    if (!login || typeof login !== 'string' || login.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат логина' });
+    }
+    
+    login = login.trim();
+    
+    // Удаляем возможные артефакты в конце логина (например, :1, :2 и т.д.)
+    // Это может быть из-за проблем с кодированием или индексацией
+    if (login.includes(':')) {
+      const parts = login.split(':');
+      if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+        // Если последняя часть - это число, удаляем её
+        login = parts.slice(0, -1).join(':');
+        console.warn(`⚠️ Обнаружен артефакт в логине, исправлено: ${req.params.login} → ${login}`);
+      }
+    }
+    
     const { name, role, companies, password } = req.body;
     const MAIN_ADMIN_LOGIN = 'Driga_VA';
 
@@ -1194,8 +1297,14 @@ app.put('/api/users/:login', async (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
-    const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let raw, users;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+      users = JSON.parse(raw);
+    } catch (e) {
+      console.error('Ошибка чтения файла users.json:', e);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
+    }
 
     const userIndex = users.findIndex(u => u.login === login);
     
@@ -1276,7 +1385,13 @@ app.put('/api/users/:login', async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления пользователя:', e);
-    res.status(500).json({ ok: false, error: 'update_failed' });
+    console.error('Детали ошибки:', {
+      message: e.message,
+      stack: e.stack,
+      login: req.params.login,
+      body: req.body
+    });
+    res.status(500).json({ ok: false, error: 'update_failed', details: e.message });
   }
 });
 

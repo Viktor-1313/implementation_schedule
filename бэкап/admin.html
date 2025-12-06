@@ -1221,6 +1221,13 @@
                             <option value="admin">Администратор</option>
                         </select>
                     </div>
+                    <div class="form-group" id="userCompaniesGroup" style="display: none;">
+                        <label for="userCompanies">Доступ к компаниям *</label>
+                        <div id="userCompaniesList" style="max-height: 200px; overflow-y: auto; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; padding: 10px; background: rgba(255, 255, 255, 0.9);">
+                            <p style="color: #999; font-size: 0.9rem;">Загрузка списка компаний...</p>
+                        </div>
+                        <small>Выберите компании, к которым у пользователя будет доступ (для администраторов доступ ко всем компаниям)</small>
+                    </div>
                     <button type="submit" class="btn btn-primary">Добавить пользователя</button>
                 </form>
             </div>
@@ -1622,17 +1629,92 @@
             }).join('');
         }
 
+        // Загрузить компании для формы добавления пользователя
+        async function loadCompaniesForAdd() {
+            const companiesList = document.getElementById('userCompaniesList');
+            if (!companiesList) return;
+
+            try {
+                const response = await fetch('/api/companies');
+                const companies = await response.json() || [];
+                
+                if (companies.length === 0) {
+                    companiesList.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Компании не найдены</p>';
+                    return;
+                }
+
+                companiesList.innerHTML = companies.map(company => {
+                    return `
+                        <div class="company-checkbox">
+                            <input type="checkbox" id="add_company_${company.id}" value="${company.id}">
+                            <label for="add_company_${company.id}">${company.name} (${company.id})</label>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки компаний:', error);
+                companiesList.innerHTML = '<p style="color: #ef5350; font-size: 0.9rem;">Ошибка загрузки компаний</p>';
+            }
+        }
+
+        // Обработка изменения роли в форме добавления
+        document.getElementById('userRole').addEventListener('change', function(e) {
+            const role = e.target.value;
+            const companiesGroup = document.getElementById('userCompaniesGroup');
+            const companiesList = document.getElementById('userCompaniesList');
+            
+            if (role === 'admin') {
+                // Если роль администратор, скрываем поле компаний
+                if (companiesGroup) {
+                    companiesGroup.style.display = 'none';
+                }
+                // Снимаем все галочки
+                if (companiesList) {
+                    const checkboxes = companiesList.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = false;
+                    });
+                }
+            } else {
+                // Если роль пользователь, показываем поле компаний
+                if (companiesGroup) {
+                    companiesGroup.style.display = 'block';
+                }
+                // Загружаем компании, если еще не загружены или список пуст
+                if (companiesList) {
+                    const hasCompanies = companiesList.querySelectorAll('.company-checkbox').length > 0;
+                    if (!hasCompanies || companiesList.innerHTML.includes('Загрузка')) {
+                        loadCompaniesForAdd();
+                    }
+                }
+            }
+        });
+
         // Добавить пользователя
         document.getElementById('addUserForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const role = document.getElementById('userRole').value;
+            
+            // Собираем выбранные компании
+            let selectedCompanies = [];
+            if (role === 'user') {
+                const checkboxes = document.querySelectorAll('#userCompaniesList input[type="checkbox"]:checked');
+                selectedCompanies = Array.from(checkboxes).map(cb => cb.value);
+                
+                // Проверяем, что выбрана хотя бы одна компания
+                if (selectedCompanies.length === 0) {
+                    showMessage('Для обычного пользователя необходимо выбрать хотя бы одну компанию', 'error');
+                    return;
+                }
+            }
+            
             const formData = {
                 name: document.getElementById('userName').value.trim(),
                 login: document.getElementById('userLogin').value.trim(),
                 password: document.getElementById('userPassword').value,
                 role: role,
-                companies: role === 'admin' ? [] : (currentCompanyId ? [currentCompanyId] : [])
+                companies: selectedCompanies
             };
 
             try {
@@ -1649,6 +1731,16 @@
                 if (result.ok) {
                     showMessage('Пользователь успешно добавлен', 'success');
                     document.getElementById('addUserForm').reset();
+                    // Скрываем поле компаний после сброса формы
+                    const companiesGroup = document.getElementById('userCompaniesGroup');
+                    if (companiesGroup) {
+                        companiesGroup.style.display = 'none';
+                    }
+                    // Сбрасываем выбор компаний
+                    const checkboxes = document.querySelectorAll('#userCompaniesList input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = false;
+                    });
                     loadUsers();
                 } else {
                     showMessage(result.error || 'Ошибка добавления пользователя', 'error');
@@ -2035,8 +2127,24 @@
             }
         }
 
+        // Закрытие всех модальных окон
+        function closeAllModals() {
+            // Закрываем все модальные окна
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (modal) {
+                    // Удаляем класс show
+                    modal.classList.remove('show');
+                    // Принудительно устанавливаем display: none
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
         // Выход из админ-панели (переход на страницу выбора компаний)
         function logoutFromAdmin() {
+            // Закрываем все модальные окна перед переходом
+            closeAllModals();
             window.location.href = 'companies.html';
         }
 
@@ -3469,6 +3577,16 @@
             // Затем загружаем типы графиков
             loadCompanies().then(() => {
                 updateLogCompanyFilter();
+                // Загружаем компании для формы добавления пользователя
+                loadCompaniesForAdd();
+                // Проверяем выбранную роль и показываем/скрываем поле компаний
+                const userRole = document.getElementById('userRole');
+                if (userRole && userRole.value === 'user') {
+                    const companiesGroup = document.getElementById('userCompaniesGroup');
+                    if (companiesGroup) {
+                        companiesGroup.style.display = 'block';
+                    }
+                }
             });
             loadUsers();
             loadChartTypes();

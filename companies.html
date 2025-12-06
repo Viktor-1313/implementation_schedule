@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -13,6 +13,44 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="">
     <style>
+        :root {
+            --color-primary: #2196f3;
+            --color-primary-hover: #42a5f5;
+            --color-bg: #f5f5f5;
+            --color-surface: #ffffff;
+            --color-text: #212121;
+            --color-text-secondary: #757575;
+            --color-border: #e0e0e0;
+            --color-success: #4caf50;
+            --color-warning: #ff9800;
+            --color-error: #f44336;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Темная тема */
+        [data-theme="dark"] {
+            --color-primary: #42a5f5;
+            --color-primary-hover: #64b5f6;
+            --color-bg: #121212;
+            --color-surface: #1e1e1e;
+            --color-text: #e0e0e0;
+            --color-text-secondary: #b0b0b0;
+            --color-border: #333333;
+            --color-success: #66bb6a;
+            --color-warning: #ffa726;
+            --color-error: #ef5350;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="dark"] body {
+            background: 
+                linear-gradient(135deg, rgba(30, 30, 50, 0.4) 0%, rgba(20, 20, 40, 0.5) 50%, rgba(25, 25, 45, 0.4) 100%),
+                radial-gradient(circle at 30% 50%, rgba(40, 40, 60, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(35, 35, 55, 0.2) 0%, transparent 50%);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -30,6 +68,8 @@
             position: relative;
             overflow-x: hidden;
             opacity: 1;
+            color: var(--color-text);
+            background-color: var(--color-bg);
         }
 
 
@@ -120,6 +160,24 @@
             overflow: visible;
         }
 
+        [data-theme="dark"] .header {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .company-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+        }
+
+        [data-theme="dark"] h1,
+        [data-theme="dark"] p,
+        [data-theme="dark"] .company-name,
+        [data-theme="dark"] .company-id {
+            color: var(--color-text);
+        }
+
         /* Кнопка перехода в админ-панель */
         .archive-btn {
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
@@ -175,8 +233,80 @@
             overflow: visible;
             background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
             top: 30px;
-            left: 30px;
+            left: 80px;
             text-decoration: none;
+        }
+
+        /* Кнопка переключения темы */
+        .theme-toggle-btn {
+            position: absolute !important;
+            top: 30px !important;
+            left: 30px !important;
+            right: auto !important;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            border: 2px solid var(--color-border);
+            cursor: pointer;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1001 !important;
+            overflow: visible;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+        }
+
+        .theme-toggle-btn::before {
+            content: '🌙';
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-toggle-btn::before {
+            content: '☀️';
+        }
+
+        .theme-toggle-btn:hover .theme-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition-delay: 1s;
+        }
+
+        .theme-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1001;
+        }
+
+        .theme-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #000000;
         }
 
         /* Золотая точка, вращающаяся по кругу при наведении */
@@ -393,9 +523,9 @@
         }
 
         .companies-bottom-btn {
-            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
             top: 80px;
-            right: 30px;
+            right: 80px;
         }
 
         .companies-bottom-btn:hover {
@@ -1468,9 +1598,14 @@
                 height: 40px;
             }
 
+            .theme-toggle-btn {
+                top: 25px !important;
+                left: 25px !important;
+            }
+
             .admin-btn {
                 top: 25px;
-                left: 25px !important;
+                left: 75px !important;
             }
 
             .profile-btn {
@@ -1489,7 +1624,7 @@
             }
 
             .companies-bottom-btn {
-                top: 181px; /* 129px (top выхода) + 40px (высота выхода) + 12px (отступ) = 181px */
+                top: 77px; /* 25px (top профиля) + 40px (высота профиля) + 12px (отступ) = 77px */
                 right: 25px !important;
             }
         }
@@ -1593,9 +1728,14 @@
                 height: 38px;
             }
 
+            .theme-toggle-btn {
+                top: 15px !important;
+                left: 15px !important;
+            }
+
             .admin-btn {
                 top: 15px;
-                left: 15px !important;
+                left: 65px !important;
             }
 
             .profile-btn {
@@ -1614,7 +1754,7 @@
             }
 
             .companies-bottom-btn {
-                top: 165px; /* 115px (top выхода) + 38px (высота выхода) + 12px (отступ) = 165px */
+                top: 65px; /* 15px (top профиля) + 38px (высота профиля) + 12px (отступ) = 65px */
                 right: 15px !important;
             }
         }
@@ -1710,9 +1850,14 @@
                 height: 35px;
             }
 
+            .theme-toggle-btn {
+                top: 12px !important;
+                left: 12px !important;
+            }
+
             .admin-btn {
                 top: 12px;
-                left: 12px !important;
+                left: 57px !important;
             }
 
             .profile-btn {
@@ -1731,7 +1876,7 @@
             }
 
             .companies-bottom-btn {
-                top: 153px; /* 106px (top выхода) + 35px (высота выхода) + 12px (отступ) = 153px */
+                top: 59px; /* 12px (top профиля) + 35px (высота профиля) + 12px (отступ) = 59px */
                 right: 12px !important;
             }
 
@@ -2331,6 +2476,10 @@
                 <span class="archive-tooltip">Архив</span>
             </button>
             
+            <!-- Кнопка переключения темы -->
+            <button class="theme-toggle-btn" id="themeToggleBtn" data-tooltip="Переключить тему" onclick="toggleTheme()">
+                <span class="theme-tooltip">Переключить тему</span>
+            </button>
             <a href="admin.html" class="admin-btn" id="adminPanelLink" data-tooltip="Админ-панель">
                 <span class="admin-icon">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -2567,6 +2716,59 @@
     </div>
 
     <script>
+        // ========== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ==========
+        // Функция переключения темы
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('gantt-theme', newTheme);
+            
+            console.log(`✅ Тема переключена на: ${newTheme}`);
+        }
+
+        // Инициализация темы при загрузке страницы
+        function initTheme() {
+            // Проверяем сохраненную тему или системные настройки
+            const savedTheme = localStorage.getItem('gantt-theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme || systemTheme;
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            console.log(`✅ Тема инициализирована: ${theme}`);
+        }
+
+        // Инициализируем тему сразу
+        initTheme();
+
+        // Слушаем изменения системной темы
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('gantt-theme')) {
+                const theme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        });
+
+        // Гарантируем видимость кнопки темы
+        function ensureThemeToggleVisible() {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                themeToggleBtn.style.display = 'flex';
+                themeToggleBtn.style.visibility = 'visible';
+                themeToggleBtn.style.opacity = '1';
+            }
+        }
+
+        // Вызываем при загрузке
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ensureThemeToggleVisible);
+        } else {
+            ensureThemeToggleVisible();
+        }
+
         // НЕМЕДЛЕННО убираем все затемнения при загрузке скрипта
         (function() {
             function forceRemoveDarkening() {

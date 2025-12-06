@@ -32,6 +32,22 @@
             --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        /* Темная тема */
+        [data-theme="dark"] {
+            --color-primary: #42a5f5;
+            --color-primary-hover: #64b5f6;
+            --color-bg: #121212;
+            --color-surface: #1e1e1e;
+            --color-text: #e0e0e0;
+            --color-text-secondary: #b0b0b0;
+            --color-border: #333333;
+            --color-success: #66bb6a;
+            --color-warning: #ffa726;
+            --color-error: #ef5350;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -83,6 +99,13 @@
             pointer-events: none;
         }
 
+        [data-theme="dark"] body::before {
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(30, 30, 50, 0.6) 0%, transparent 60%),
+                radial-gradient(circle at 30% 30%, rgba(20, 20, 40, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(25, 25, 45, 0.5) 0%, transparent 50%);
+        }
+
         @keyframes fogDissolve {
             0% {
                 opacity: 1;
@@ -126,6 +149,140 @@
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
             position: relative;
+        }
+
+        /* Кнопка переключения темы */
+        .theme-toggle-btn {
+            position: absolute !important;
+            top: 30px !important;
+            right: 80px !important;
+            left: auto !important;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            border: 2px solid var(--color-border);
+            cursor: pointer;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1001 !important;
+            overflow: visible;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .theme-toggle-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1002;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .theme-toggle-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+        }
+
+        .theme-toggle-btn::before {
+            content: '🌙';
+            font-size: 20px;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease;
+            display: inline-block;
+            z-index: 1003;
+            position: relative;
+        }
+
+        [data-theme="dark"] .theme-toggle-btn::before {
+            content: '☀️';
+        }
+
+        /* Анимация переключения темы */
+        .theme-toggle-btn.animating {
+            animation: themeTogglePulse 1.2s ease-in-out;
+        }
+
+        .theme-toggle-btn.animating::before {
+            animation: themeIconRotate 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes themeTogglePulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes themeIconRotate {
+            0% {
+                transform: rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: rotate(180deg) scale(0.5);
+                opacity: 0.3;
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .theme-toggle-btn:hover .theme-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition-delay: 1s;
+        }
+
+        .theme-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1001;
+        }
+
+        .theme-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #000000;
         }
 
         /* Кнопка профиля в правом верхнем углу */
@@ -192,7 +349,7 @@
             position: absolute;
             width: 18px;
             height: 18px;
-            background: white;
+            background: var(--color-surface);
             border-radius: 50%;
             top: 8px;
             z-index: 1002;
@@ -588,7 +745,7 @@
         }
 
         .profile-modal-content {
-            background: white;
+            background: var(--color-surface);
             border-radius: 20px;
             padding: 40px;
             max-width: 500px;
@@ -670,19 +827,28 @@
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-            color: #1565c0;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .profile-form-group input {
+            border-color: rgba(100, 181, 246, 0.5);
+            background: var(--color-surface);
         }
 
         .profile-form-group input:focus {
             outline: none;
             border-color: #42a5f5;
             box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.15);
-            background: white;
+            background: var(--color-surface);
         }
 
         .profile-form-group input::placeholder {
-            color: #90caf9;
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .profile-form-group input::placeholder {
+            color: rgba(176, 176, 176, 0.7);
         }
 
         .profile-form-actions {
@@ -814,7 +980,7 @@
             border-radius: 8px;
             border: 1px solid var(--color-border);
             object-fit: contain;
-            background: #fafafa;
+            background: var(--color-bg);
             padding: 4px;
         }
 
@@ -3349,17 +3515,29 @@
                 height: 40px;
                 right: 25px !important;
             }
+            
+            .theme-toggle-btn {
+                width: 40px;
+                height: 40px;
+            }
 
             .profile-btn {
                 top: 25px;
             }
 
+            .theme-toggle-btn {
+                right: 70px !important;
+                left: auto !important;
+                top: 25px !important;
+                position: absolute !important;
+            }
+
             .logout-btn {
-                top: 77px; /* 25px (top первой) + 40px (высота первой) + 12px (отступ) = 77px */
+                top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
             }
 
             .companies-bottom-btn {
-                top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
+                top: 181px; /* 129px (top третьей) + 40px (высота третьей) + 12px (отступ) = 181px */
             }
         }
 
@@ -3781,17 +3959,29 @@
                 height: 35px;
                 right: 12px !important;
             }
+            
+            .theme-toggle-btn {
+                width: 35px;
+                height: 35px;
+            }
 
             .profile-btn {
                 top: 12px;
             }
 
+            .theme-toggle-btn {
+                right: 60px !important;
+                left: auto !important;
+                top: 15px !important;
+                position: absolute !important;
+            }
+
             .companies-bottom-btn {
-                top: 59px; /* 12px (top первой) + 35px (высота первой) + 12px (отступ) = 59px */
+                top: 106px; /* 59px (top второй) + 35px (высота второй) + 12px (отступ) = 106px */
             }
 
             .logout-btn {
-                top: 106px; /* 59px (top второй) + 35px (высота второй) + 12px (отступ) = 106px */
+                top: 153px; /* 106px (top третьей) + 35px (высота третьей) + 12px (отступ) = 153px */
             }
 
             .gantt-label {
@@ -4442,7 +4632,7 @@
 </head>
 <body>
     <!-- Надпись DeadLinePro в правом верхнем углу -->
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
+    <div id="deadlineProLabel" style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
     <div class="container">
         <header>
             <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" style="display: none;" onclick="logout()">
@@ -4455,9 +4645,14 @@
                 <span class="profile-icon-shoulders"></span>
                 <span class="profile-tooltip">Редактировать профиль</span>
             </button>
-            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="goToCompanies()">
+            <!-- Кнопка возврата к списку компаний (показывается для авторизованных пользователей, особенно при работе с архивом) -->
+            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Вернуться к компаниям" style="display: none;" onclick="goToCompanies()">
                 <span class="companies-bottom-icon"></span>
-                <span class="companies-bottom-tooltip">Компании</span>
+                <span class="companies-bottom-tooltip">Вернуться к компаниям</span>
+            </button>
+            <!-- Кнопка переключения темы -->
+            <button class="theme-toggle-btn" id="themeToggleBtn" data-tooltip="Переключить тему" onclick="toggleTheme()">
+                <span class="theme-tooltip">Переключить тему</span>
             </button>
             <!-- Кнопка справки -->
             <button class="help-btn" id="helpBtn" title="Справка по горячим клавишам" style="display: none;">
@@ -5111,13 +5306,19 @@
             
             if (profileBtn) {
                 profileBtn.style.display = 'flex';
+                profileBtn.style.visibility = 'visible';
+                profileBtn.style.opacity = '1';
             }
             if (companiesBottomBtn) {
                 companiesBottomBtn.style.display = 'flex';
+                companiesBottomBtn.style.visibility = 'visible';
+                companiesBottomBtn.style.opacity = '1';
                 console.log('✅ Нижняя кнопка компаний показана через showAuthButtons');
             }
             if (logoutBtn) {
                 logoutBtn.style.display = 'flex';
+                logoutBtn.style.visibility = 'visible';
+                logoutBtn.style.opacity = '1';
             }
         }
 
@@ -5143,6 +5344,7 @@
                         companiesBottomBtn.style.display = 'flex';
                         companiesBottomBtn.style.visibility = 'visible';
                         companiesBottomBtn.style.opacity = '1';
+                        console.log('✅ Кнопка компаний показана при загрузке страницы');
                     }
                     if (profileBtn) {
                         profileBtn.style.display = 'flex';
@@ -5195,6 +5397,84 @@
                 } catch (e) {
                     console.error('Ошибка сохранения при уходе:', e);
                 }
+            }
+        });
+
+        // ========== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ==========
+        // Функция переключения темы
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Добавляем класс анимации
+            if (themeToggleBtn) {
+                themeToggleBtn.classList.add('animating');
+                
+                // Удаляем класс анимации после завершения
+                setTimeout(() => {
+                    themeToggleBtn.classList.remove('animating');
+                }, 1200);
+            }
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('gantt-theme', newTheme);
+            
+            // Обновляем цвет надписи DeadLinePro
+            const label = document.getElementById('deadlineProLabel');
+            if (label) {
+                label.style.color = newTheme === 'dark' ? 'rgba(66, 165, 245, 0.3)' : 'rgba(33, 150, 243, 0.5)';
+            }
+            
+            console.log(`✅ Тема переключена на: ${newTheme}`);
+        }
+
+        // Инициализация темы при загрузке страницы
+        function initTheme() {
+            // Проверяем сохраненную тему или системные настройки
+            const savedTheme = localStorage.getItem('gantt-theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme || systemTheme;
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            // Обновляем цвет надписи DeadLinePro
+            const label = document.getElementById('deadlineProLabel');
+            if (label) {
+                label.style.color = theme === 'dark' ? 'rgba(66, 165, 245, 0.3)' : 'rgba(33, 150, 243, 0.5)';
+            }
+            
+            console.log(`✅ Тема инициализирована: ${theme}`);
+        }
+
+        // Инициализируем тему при загрузке
+        initTheme();
+
+        // Гарантируем, что кнопка переключения темы всегда видна
+        function ensureThemeToggleVisible() {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                themeToggleBtn.style.display = 'flex';
+                themeToggleBtn.style.visibility = 'visible';
+                themeToggleBtn.style.opacity = '1';
+                console.log('✅ Кнопка переключения темы сделана видимой');
+            }
+        }
+
+        // Применяем при загрузке DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ensureThemeToggleVisible);
+        } else {
+            ensureThemeToggleVisible();
+        }
+
+        // Слушаем изменения системной темы
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            // Если пользователь не выбрал тему вручную, следуем системной
+            if (!localStorage.getItem('gantt-theme')) {
+                const theme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
             }
         });
 
