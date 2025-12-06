@@ -1317,7 +1317,7 @@
                 right: 25px !important;
             }
 
-            .companies-bottom-btn {
+            .archive-btn {
                 top: 77px; /* 25px (top первой) + 40px (высота первой) + 12px (отступ) = 77px */
                 right: 25px !important;
             }
@@ -1327,7 +1327,7 @@
                 right: 25px !important;
             }
 
-            .archive-btn {
+            .companies-bottom-btn {
                 top: 181px; /* 129px (top выхода) + 40px (высота выхода) + 12px (отступ) = 181px */
                 right: 25px !important;
             }
@@ -3792,15 +3792,29 @@
             }
 
             try {
+                // Получаем информацию о пользователе
+                const userStr = localStorage.getItem('gantt-user');
+                let userName = 'Неизвестный пользователь';
+                if (userStr) {
+                    try {
+                        const user = JSON.parse(userStr);
+                        userName = user.name || user.login || 'Неизвестный пользователь';
+                    } catch (e) {
+                        console.warn('Ошибка парсинга пользователя:', e);
+                    }
+                }
+                
                 // Сначала создаем компанию
                 const response = await fetch('/api/companies', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-User-Name': userName
                     },
                     body: JSON.stringify({
                         id: companyId,
-                        name: companyName
+                        name: companyName,
+                        userName: userName
                     })
                 });
 

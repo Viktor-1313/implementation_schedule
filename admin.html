@@ -1278,6 +1278,45 @@
                 </div>
             </div>
         </div>
+
+        <!-- Логи активности -->
+        <div class="panel-section" style="margin-top: 30px;">
+            <h2>Логи активности</h2>
+            <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <div class="form-group" style="margin: 0; flex: 1; min-width: 200px;">
+                    <label for="logCompanyFilter">Компания</label>
+                    <select id="logCompanyFilter" name="logCompanyFilter" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
+                        <option value="">Все компании</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0; flex: 1; min-width: 200px;">
+                    <label for="logUserFilter">Пользователь</label>
+                    <input type="text" id="logUserFilter" name="logUserFilter" placeholder="Фильтр по имени пользователя" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <button class="btn btn-primary" onclick="loadActivityLogs()" style="width: auto; padding: 14px 24px;">Обновить</button>
+                    <button class="btn btn-secondary" onclick="clearActivityLogs()" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);">Очистить логи</button>
+                </div>
+            </div>
+            <div style="overflow-x: auto; max-height: 600px; overflow-y: auto; border-radius: 10px; border: 2px solid rgba(100, 181, 246, 0.3);">
+                <table id="activityLogsTable" style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%); color: white; position: sticky; top: 0; z-index: 10;">
+                            <th style="padding: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.3); min-width: 150px;">Пользователь</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.3); min-width: 150px;">Дата и время</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.3); min-width: 200px;">Действие</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.3); min-width: 150px;">Компания</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.3); min-width: 300px;">Детали</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityLogsTableBody">
+                        <tr>
+                            <td colspan="5" style="padding: 20px; text-align: center; color: #64b5f6;">Загрузка логов...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Модальное окно подтверждения удаления пользователя -->
@@ -2849,6 +2888,129 @@
             });
         }
 
+        // ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ЛОГАМИ ==========
+
+        // Загрузить логи активности
+        async function loadActivityLogs() {
+            try {
+                const companyFilter = document.getElementById('logCompanyFilter')?.value || '';
+                const userFilter = document.getElementById('logUserFilter')?.value || '';
+                
+                let url = '/api/activity-logs?limit=1000';
+                if (companyFilter) {
+                    url += `&companyId=${encodeURIComponent(companyFilter)}`;
+                }
+                if (userFilter) {
+                    url += `&userName=${encodeURIComponent(userFilter)}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.ok) {
+                    renderActivityLogs(result.logs || []);
+                } else {
+                    showMessage('Ошибка загрузки логов', 'error');
+                    renderActivityLogs([]);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки логов:', error);
+                showMessage('Ошибка загрузки логов', 'error');
+                renderActivityLogs([]);
+            }
+        }
+
+        // Отобразить логи в таблице
+        function renderActivityLogs(logs) {
+            const tbody = document.getElementById('activityLogsTableBody');
+            if (!tbody) return;
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #64b5f6;">Логи не найдены</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = logs.map(log => {
+                const userName = log.userName || 'Неизвестный пользователь';
+                const dateTime = log.dateTime || new Date(log.timestamp).toLocaleString('ru-RU');
+                const action = log.action || 'Неизвестное действие';
+                const companyId = log.companyId || '';
+                
+                // Извлекаем название компании из деталей, если есть
+                let companyName = companyId;
+                let details = log.details || '';
+                
+                // Пытаемся извлечь название компании из деталей (формат: "... | Компания: Название (ID)")
+                const companyMatch = details.match(/Компания:\s*([^(]+)\s*\(([^)]+)\)/);
+                if (companyMatch) {
+                    companyName = companyMatch[1].trim() || companyMatch[2];
+                    // Убираем информацию о компании из деталей, чтобы не дублировать
+                    details = details.replace(/\s*\|\s*Компания:[^|]*$/, '').trim();
+                }
+                
+                // Если компания не указана, показываем прочерк
+                const companyDisplay = companyName && companyName !== companyId 
+                    ? `${companyName} (${companyId})` 
+                    : companyId || '—';
+                
+                return `
+                    <tr style="border-bottom: 1px solid rgba(100, 181, 246, 0.2);">
+                        <td style="padding: 12px; color: #1565c0; font-weight: 600;">${escapeHtml(userName)}</td>
+                        <td style="padding: 12px; color: #64b5f6; white-space: nowrap;">${escapeHtml(dateTime)}</td>
+                        <td style="padding: 12px; color: #1976d2; font-weight: 500;">${escapeHtml(action)}</td>
+                        <td style="padding: 12px; color: #e91e63; font-weight: 500;">${escapeHtml(companyDisplay)}</td>
+                        <td style="padding: 12px; color: #424242; max-width: 400px; word-wrap: break-word;">${escapeHtml(details)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Очистить логи
+        async function clearActivityLogs() {
+            if (!confirm('Вы уверены, что хотите очистить все логи? Это действие нельзя отменить.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/activity-logs', {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    showMessage('Логи успешно очищены', 'success');
+                    loadActivityLogs();
+                } else {
+                    showMessage(result.error || 'Ошибка очистки логов', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка очистки логов:', error);
+                showMessage('Ошибка очистки логов', 'error');
+            }
+        }
+
+        // Функция для экранирования HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Обновить список компаний в фильтре логов
+        function updateLogCompanyFilter() {
+            const logCompanyFilter = document.getElementById('logCompanyFilter');
+            if (!logCompanyFilter || !allCompanies) return;
+            
+            logCompanyFilter.innerHTML = '<option value="">Все компании</option>';
+            allCompanies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company.id;
+                option.textContent = `${company.name} (${company.id})`;
+                logCompanyFilter.appendChild(option);
+            });
+        }
+
         // Загрузить компании и пользователей при загрузке страницы
         window.addEventListener('DOMContentLoaded', function() {
             // Проверяем авторизацию перед загрузкой данных
@@ -2858,9 +3020,27 @@
             // Сначала отображаем дефолтные кнопки
             renderSkeletonButtons();
             // Затем загружаем типы графиков
-            loadCompanies();
+            loadCompanies().then(() => {
+                updateLogCompanyFilter();
+            });
             loadUsers();
             loadChartTypes();
+            loadActivityLogs();
+            
+            // Обновление логов при изменении фильтров
+            const logCompanyFilter = document.getElementById('logCompanyFilter');
+            const logUserFilter = document.getElementById('logUserFilter');
+            
+            if (logCompanyFilter) {
+                logCompanyFilter.addEventListener('change', loadActivityLogs);
+            }
+            if (logUserFilter) {
+                let userFilterTimeout;
+                logUserFilter.addEventListener('input', function() {
+                    clearTimeout(userFilterTimeout);
+                    userFilterTimeout = setTimeout(loadActivityLogs, 500);
+                });
+            }
         });
     </script>
     

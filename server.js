@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3001; // порт для внутреннего
 const USERS_FILE = path.join(__dirname, 'users.json');
 const COMPANIES_FILE = path.join(__dirname, 'companies.json');
 const CHART_TYPES_FILE = path.join(__dirname, 'chart-types.json');
+const LOGS_FILE = path.join(__dirname, 'activity-logs.json');
 
 // Вспомогательные функции для работы с файлами компаний
 function getCompanyDataFile(companyId) {
@@ -22,6 +23,104 @@ function getCompanyInfoFile(companyId) {
 // Валидация ID компании (только латинские буквы, цифры, дефисы и подчеркивания)
 function isValidCompanyId(companyId) {
   return /^[a-zA-Z0-9_-]+$/.test(companyId);
+}
+
+// ========== СИСТЕМА ЛОГИРОВАНИЯ ==========
+
+// Чтение логов
+function readLogs() {
+  try {
+    if (!fs.existsSync(LOGS_FILE)) {
+      console.log('📝 Файл логов не существует, создаем пустой массив');
+      return [];
+    }
+    const raw = fs.readFileSync(LOGS_FILE, 'utf8');
+    if (!raw || raw.trim() === '') {
+      console.log('📝 Файл логов пустой');
+      return [];
+    }
+    const logs = JSON.parse(raw);
+    if (!Array.isArray(logs)) {
+      console.warn('⚠️ Файл логов содержит не массив, возвращаем пустой массив');
+      return [];
+    }
+    return logs;
+  } catch (e) {
+    console.error('❌ Ошибка чтения логов:', e);
+    console.error('   Стек ошибки:', e.stack);
+    return [];
+  }
+}
+
+// Запись логов
+function writeLogs(logs) {
+  try {
+    // Ограничиваем количество логов (храним последние 10000 записей)
+    const maxLogs = 10000;
+    if (logs.length > maxLogs) {
+      console.log(`📝 Логи превысили лимит (${logs.length} > ${maxLogs}), обрезаем до последних ${maxLogs}`);
+      logs = logs.slice(-maxLogs);
+    }
+    
+    // Убеждаемся, что директория существует
+    const dir = path.dirname(LOGS_FILE);
+    if (!fs.existsSync(dir)) {
+      console.log('📁 Создание директории для логов:', dir);
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    const jsonData = JSON.stringify(logs, null, 2);
+    fs.writeFileSync(LOGS_FILE, jsonData, 'utf8');
+    console.log('✅ Логи записаны в файл:', LOGS_FILE, 'размер:', jsonData.length, 'байт');
+  } catch (e) {
+    console.error('❌ Ошибка записи логов:', e);
+    console.error('   Путь к файлу:', LOGS_FILE);
+    console.error('   Стек ошибки:', e.stack);
+  }
+}
+
+// Добавление лога
+function addLog(userName, action, details, companyId = null) {
+  try {
+    console.log('📝 addLog вызвана:', { userName, action, details, companyId });
+    const logs = readLogs();
+    console.log('   Текущее количество логов:', logs.length);
+    
+    const logEntry = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      userName: userName || 'Неизвестный пользователь',
+      action: action,
+      details: details,
+      companyId: companyId,
+      timestamp: new Date().toISOString(),
+      dateTime: new Date().toLocaleString('ru-RU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    };
+    logs.push(logEntry);
+    console.log('   Новое количество логов:', logs.length);
+    
+    writeLogs(logs);
+    
+    // Проверяем, что файл создан/обновлен
+    if (fs.existsSync(LOGS_FILE)) {
+      const stats = fs.statSync(LOGS_FILE);
+      console.log('✅ Файл логов существует, размер:', stats.size, 'байт');
+    } else {
+      console.error('❌ Файл логов не создан!');
+    }
+    
+    return logEntry;
+  } catch (e) {
+    console.error('❌ Ошибка добавления лога:', e);
+    console.error('   Стек ошибки:', e.stack);
+    return null;
+  }
 }
 
 // парсим JSON и разрешаем запросы с файловой страницы
@@ -87,6 +186,11 @@ app.post('/api/companies', (req, res) => {
 
     // Сохраняем
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    
+    // Логируем создание компании
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    addLog(userName, 'Создал компанию', `Компания: ${name} (ID: ${id})`, id);
+    
     res.json({ ok: true, company: newCompany });
   } catch (e) {
     console.error('Ошибка создания компании:', e);
@@ -188,6 +292,18 @@ app.put('/api/companies/:id', (req, res) => {
     }
 
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    
+    // Логируем изменение компании
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    const changes = [];
+    if (newCompanyId && newCompanyId !== oldCompanyId) {
+      changes.push(`ID: ${oldCompanyId} → ${newCompanyId}`);
+    }
+    if (name) {
+      changes.push(`Название: ${name}`);
+    }
+    addLog(userName, 'Изменил компанию', changes.join(', ') || 'Изменения не указаны', newCompanyId || oldCompanyId);
+    
     res.json({ ok: true, company: companies[companyIndex] });
   } catch (e) {
     console.error('Ошибка обновления компании:', e);
@@ -221,6 +337,12 @@ app.delete('/api/companies/:id', (req, res) => {
     if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
 
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    
+    // Логируем удаление компании
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    const deletedCompany = companies.find(c => c.id === companyId) || { name: companyId };
+    addLog(userName, 'Удалил компанию', `Компания: ${deletedCompany.name || companyId} (ID: ${companyId})`, companyId);
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка удаления компании:', e);
@@ -250,6 +372,12 @@ app.post('/api/companies/:id/archive', (req, res) => {
     companies[companyIndex].archivedAt = new Date().toISOString();
 
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    
+    // Логируем архивирование компании
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    const company = companies[companyIndex];
+    addLog(userName, 'Архивировал компанию', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка архивирования компании:', e);
@@ -279,6 +407,12 @@ app.post('/api/companies/:id/restore', (req, res) => {
     delete companies[companyIndex].archivedAt;
 
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    
+    // Логируем восстановление компании
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    const company = companies[companyIndex];
+    addLog(userName, 'Восстановил компанию из архива', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка восстановления компании:', e);
@@ -383,6 +517,78 @@ app.post('/api/gantt-state', (req, res) => {
       throw new Error('Файл не был создан');
     }
     
+    // Логируем изменения графика с детальной информацией
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    const userLogin = req.body.userLogin || null; // Логин пользователя для дополнительной идентификации
+    const changeInfo = req.body.changeInfo; // Информация об изменениях от клиента
+    
+    console.log('📝 Логирование изменения графика:');
+    console.log('   userName из body:', req.body.userName);
+    console.log('   userName из header:', req.headers['x-user-name']);
+    console.log('   userLogin из body:', req.body.userLogin);
+    console.log('   Итоговый userName:', userName);
+    console.log('   Итоговый userLogin:', userLogin);
+    console.log('   companyId:', companyId);
+    console.log('   changeInfo:', changeInfo ? JSON.stringify(changeInfo, null, 2) : 'нет');
+    
+    // Если userName все еще "Неизвестный пользователь", но есть userLogin, используем его
+    if (userName === 'Неизвестный пользователь' && userLogin) {
+      console.warn('⚠️ userName не определен, но есть userLogin. Используем userLogin:', userLogin);
+      // Не перезаписываем userName здесь, так как это может быть намеренное значение
+      // Но логируем для отладки
+    }
+    
+    // Если и userName, и userLogin не определены, это проблема
+    if (userName === 'Неизвестный пользователь' && !userLogin) {
+      console.error('❌ КРИТИЧЕСКАЯ ПРОБЛЕМА: Пользователь не определен!');
+      console.error('   req.body:', JSON.stringify(req.body, null, 2).substring(0, 500));
+      console.error('   req.headers:', JSON.stringify(req.headers, null, 2).substring(0, 500));
+    }
+    
+    // Получаем название компании для лога
+    let companyName = companyId;
+    try {
+      const companiesFile = path.join(__dirname, 'companies.json');
+      if (fs.existsSync(companiesFile)) {
+        const companies = JSON.parse(fs.readFileSync(companiesFile, 'utf8'));
+        const company = companies.find(c => c.id === companyId);
+        if (company && company.name) {
+          companyName = company.name;
+        }
+      }
+    } catch (e) {
+      console.warn('Не удалось получить название компании:', e);
+    }
+    
+    // Всегда логируем изменения графика с деталями
+    let logEntry = null;
+    if (changeInfo && changeInfo.action) {
+      // Если есть детальная информация об изменениях
+      // Форматируем детали для лучшей читаемости
+      let formattedDetails = changeInfo.details || 'Изменения в графике';
+      
+      // Если детали содержат только число (например "28"), это некорректно
+      // В таком случае используем более информативное описание
+      if (/^\d+$/.test(formattedDetails.trim())) {
+        const taskCount = req.body.tasks ? req.body.tasks.length : 0;
+        formattedDetails = `Изменения в графике (задач: ${taskCount})`;
+      }
+      
+      const details = `${formattedDetails} | Компания: ${companyName} (${companyId})`;
+      logEntry = addLog(userName, changeInfo.action, details, companyId);
+    } else {
+      // Общее логирование изменений графика с информацией о компании
+      const taskCount = req.body.tasks ? req.body.tasks.length : 0;
+      const details = `Изменения в графике (задач: ${taskCount}) | Компания: ${companyName} (${companyId})`;
+      logEntry = addLog(userName, 'Изменил график', details, companyId);
+    }
+    
+    if (logEntry) {
+      console.log('✅ Лог успешно добавлен:', logEntry.id);
+    } else {
+      console.error('❌ Ошибка добавления лога!');
+    }
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('❌ Ошибка сохранения gantt-state:', e);
@@ -475,6 +681,10 @@ app.post('/api/gantt-skeleton', (req, res) => {
     fs.writeFileSync(skeletonFile, JSON.stringify(dataToSave, null, 2), 'utf8');
     console.log(`✅ Скелет для ${chartType} сохранён, задач:`, skeleton.length);
     
+    // Логируем сохранение скелета
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    addLog(userName, 'Сохранил скелет графика', `Тип: ${chartType}, задач: ${skeleton.length}`, null);
+    
     res.json({ ok: true, chartType, taskCount: skeleton.length });
   } catch (e) {
     console.error('Ошибка сохранения скелета:', e);
@@ -564,6 +774,10 @@ app.post('/api/chart-types', (req, res) => {
     chartTypes.push(newChartType);
     fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(chartTypes, null, 2), 'utf8');
     
+    // Логируем создание типа графика
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    addLog(userName, 'Создал тип графика', `Тип: ${chartTypeName} (${chartTypeId}), контейнер: ${containerName}`, null);
+    
     // Создаём пустой скелет для нового типа
     const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartTypeId}.json`);
     const emptySkeleton = {
@@ -607,6 +821,9 @@ app.delete('/api/chart-types/:id', (req, res) => {
     
     fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(chartTypes, null, 2), 'utf8');
     
+    // Получаем информацию об удаляемом типе для лога
+    const deletedType = chartTypes.find(ct => ct.id === chartTypeId);
+    
     // Удаляем файл скелета
     const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartTypeId}.json`);
     if (fs.existsSync(skeletonFile)) {
@@ -614,6 +831,13 @@ app.delete('/api/chart-types/:id', (req, res) => {
     }
     
     console.log(`✅ Тип графика ${chartTypeId} удалён`);
+    
+    // Логируем удаление типа графика
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    if (deletedType) {
+      addLog(userName, 'Удалил тип графика', `Тип: ${deletedType.chartTypeName || chartTypeId} (${chartTypeId})`, null);
+    }
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка удаления типа графика:', e);
@@ -651,7 +875,39 @@ app.post('/api/company-info', (req, res) => {
 
     // ожидаем объект вида { name: string, logoData: string | null }
     const infoFile = getCompanyInfoFile(companyId);
+    
+    // Загружаем старую информацию для сравнения
+    let oldInfo = null;
+    if (fs.existsSync(infoFile)) {
+      try {
+        oldInfo = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
+      } catch (e) {
+        // Игнорируем ошибку, если файл поврежден
+      }
+    }
+    
     fs.writeFileSync(infoFile, JSON.stringify(req.body, null, 2), 'utf8');
+    
+    // Логируем изменение информации о компании
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    const changes = [];
+    if (req.body.name && (!oldInfo || oldInfo.name !== req.body.name)) {
+      changes.push(`Название: ${oldInfo?.name || '(не было)'} → ${req.body.name}`);
+    }
+    if (req.body.logoData !== undefined && (!oldInfo || oldInfo.logoData !== req.body.logoData)) {
+      if (req.body.logoData) {
+        changes.push('Логотип обновлен');
+      } else {
+        changes.push('Логотип удален');
+      }
+    }
+    if (req.body.chartType && (!oldInfo || oldInfo.chartType !== req.body.chartType)) {
+      changes.push(`Тип графика: ${oldInfo?.chartType || '(не было)'} → ${req.body.chartType}`);
+    }
+    if (changes.length > 0) {
+      addLog(userName, 'Изменил информацию о компании', changes.join(', '), companyId);
+    }
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка сохранения company-info:', e);
@@ -745,6 +1001,12 @@ app.post('/api/users', async (req, res) => {
     // Сохраняем
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
     console.log(`✅ Пользователь "${login.trim()}" успешно создан с хешированным паролем`);
+    
+    // Логируем создание пользователя
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
+    const companyList = Array.isArray(companies) && companies.length > 0 ? companies.join(', ') : 'нет';
+    addLog(userName, 'Создал пользователя', `Пользователь: ${name} (${login}), роль: ${role || 'user'}, компании: ${companyList}`, null);
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка добавления пользователя:', e);
@@ -777,7 +1039,17 @@ app.delete('/api/users/:login', (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
+    // Получаем информацию об удаляемом пользователе для лога
+    const deletedUser = users.find(u => u.login === login);
+    
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    
+    // Логируем удаление пользователя
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
+    if (deletedUser) {
+      addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
+    }
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка удаления пользователя:', e);
@@ -822,6 +1094,20 @@ app.put('/api/users/update', async (req, res) => {
 
     // Сохраняем изменения
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    
+    // Логируем обновление профиля
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
+    const changes = [];
+    if (newLogin !== oldLogin) {
+      changes.push(`Логин: ${oldLogin} → ${newLogin}`);
+    }
+    if (password && password.trim()) {
+      changes.push('Пароль изменен');
+    }
+    if (changes.length > 0) {
+      addLog(userName, 'Изменил профиль', changes.join(', '), null);
+    }
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления профиля:', e);
@@ -851,10 +1137,20 @@ app.put('/api/users/:login/companies', (req, res) => {
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
+    // Сохраняем старый список компаний для лога
+    const oldCompanies = users[userIndex].companies || [];
+    
     // Обновляем список компаний
     users[userIndex].companies = companies;
 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    
+    // Логируем изменение доступа к компаниям
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
+    const oldList = oldCompanies.length > 0 ? oldCompanies.join(', ') : 'нет';
+    const newList = companies.length > 0 ? companies.join(', ') : 'нет';
+    addLog(userName, 'Изменил доступ к компаниям', `Пользователь: ${login}, компании: ${oldList} → ${newList}`, null);
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления доступа к компаниям:', e);
@@ -924,7 +1220,34 @@ app.put('/api/users/:login', async (req, res) => {
       console.log(`🔐 Пароль пользователя "${login}" обновлен`);
     }
 
+    // Сохраняем старые данные для лога
+    const oldUser = { ...users[userIndex] };
+    
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    
+    // Логируем обновление пользователя
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
+    const changes = [];
+    if (name !== undefined && name !== oldUser.name) {
+      changes.push(`Имя: ${oldUser.name} → ${name}`);
+    }
+    if (role !== undefined && role !== oldUser.role) {
+      changes.push(`Роль: ${oldUser.role} → ${role}`);
+    }
+    if (companies !== undefined) {
+      const oldList = (oldUser.companies || []).length > 0 ? oldUser.companies.join(', ') : 'нет';
+      const newList = companies.length > 0 ? companies.join(', ') : 'нет';
+      if (oldList !== newList) {
+        changes.push(`Компании: ${oldList} → ${newList}`);
+      }
+    }
+    if (password && password.trim()) {
+      changes.push('Пароль изменен');
+    }
+    if (changes.length > 0) {
+      addLog(userName, 'Изменил пользователя', `Пользователь: ${login}, изменения: ${changes.join(', ')}`, null);
+    }
+    
     res.json({ ok: true });
   } catch (e) {
     console.error('Ошибка обновления пользователя:', e);
@@ -978,6 +1301,9 @@ app.post('/api/auth', async (req, res) => {
     }
 
     console.log(`✅ Успешная авторизация пользователя "${trimmedLogin}"`);
+
+    // Логируем авторизацию
+    addLog(trimmedLogin, 'Авторизовался', `Вход в систему${company ? `, компания: ${company}` : ''}`, company || null);
 
     // Если указана компания, проверяем доступ пользователя к ней
     if (company) {
@@ -1035,6 +1361,55 @@ app.use((err, req, res, next) => {
       error: 'internal_server_error',
       message: process.env.NODE_ENV === 'production' ? 'Внутренняя ошибка сервера' : err.message
     });
+  }
+});
+
+// ========== API ДЛЯ РАБОТЫ С ЛОГАМИ ==========
+
+// Получить логи активности
+app.get('/api/activity-logs', (req, res) => {
+  try {
+    const { companyId, userName, limit = 1000, offset = 0 } = req.query;
+    let logs = readLogs();
+    
+    // Фильтрация по компании
+    if (companyId) {
+      logs = logs.filter(log => log.companyId === companyId);
+    }
+    
+    // Фильтрация по пользователю
+    if (userName) {
+      logs = logs.filter(log => log.userName.toLowerCase().includes(userName.toLowerCase()));
+    }
+    
+    // Сортировка по дате (новые сначала)
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Пагинация
+    const total = logs.length;
+    const paginatedLogs = logs.slice(parseInt(offset), parseInt(offset) + parseInt(limit));
+    
+    res.json({ 
+      ok: true, 
+      logs: paginatedLogs, 
+      total: total,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+  } catch (e) {
+    console.error('Ошибка получения логов:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
+  }
+});
+
+// Очистить логи (только для админов)
+app.delete('/api/activity-logs', (req, res) => {
+  try {
+    writeLogs([]);
+    res.json({ ok: true, message: 'Логи очищены' });
+  } catch (e) {
+    console.error('Ошибка очистки логов:', e);
+    res.status(500).json({ ok: false, error: 'clear_failed' });
   }
 });
 
