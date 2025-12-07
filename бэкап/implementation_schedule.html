@@ -32,6 +32,22 @@
             --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        /* Темная тема */
+        [data-theme="dark"] {
+            --color-primary: #42a5f5;
+            --color-primary-hover: #64b5f6;
+            --color-bg: #121212;
+            --color-surface: #1e1e1e;
+            --color-text: #e0e0e0;
+            --color-text-secondary: #b0b0b0;
+            --color-border: #333333;
+            --color-success: #66bb6a;
+            --color-warning: #ffa726;
+            --color-error: #ef5350;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -83,6 +99,13 @@
             pointer-events: none;
         }
 
+        [data-theme="dark"] body::before {
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(30, 30, 50, 0.6) 0%, transparent 60%),
+                radial-gradient(circle at 30% 30%, rgba(20, 20, 40, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(25, 25, 45, 0.5) 0%, transparent 50%);
+        }
+
         @keyframes fogDissolve {
             0% {
                 opacity: 1;
@@ -126,6 +149,140 @@
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
             position: relative;
+        }
+
+        /* Кнопка переключения темы */
+        .theme-toggle-btn {
+            position: absolute !important;
+            top: 30px !important;
+            right: 80px !important;
+            left: auto !important;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            border: 2px solid #2c2c2c;
+            cursor: pointer;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1001 !important;
+            overflow: visible;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .theme-toggle-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1002;
+            transition: opacity 0.3s ease;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .theme-toggle-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+        }
+
+        .theme-toggle-btn::before {
+            content: '🌙';
+            font-size: 20px;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease;
+            display: inline-block;
+            z-index: 1003;
+            position: relative;
+        }
+
+        [data-theme="dark"] .theme-toggle-btn::before {
+            content: '☀️';
+        }
+
+        /* Анимация переключения темы */
+        .theme-toggle-btn.animating {
+            animation: themeTogglePulse 1.2s ease-in-out;
+        }
+
+        .theme-toggle-btn.animating::before {
+            animation: themeIconRotate 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes themeTogglePulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes themeIconRotate {
+            0% {
+                transform: rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: rotate(180deg) scale(0.5);
+                opacity: 0.3;
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .theme-toggle-btn:hover .theme-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition-delay: 1s;
+        }
+
+        .theme-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1001;
+        }
+
+        .theme-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #000000;
         }
 
         /* Кнопка профиля в правом верхнем углу */
@@ -182,7 +339,7 @@
             animation: rotateDot 2s linear infinite;
         }
 
-        .profile-btn:hover {
+        .profile-btn:hover:not(.animating) {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
@@ -192,7 +349,7 @@
             position: absolute;
             width: 18px;
             height: 18px;
-            background: white;
+            background: var(--color-surface);
             border-radius: 50%;
             top: 8px;
             z-index: 1002;
@@ -417,7 +574,7 @@
             animation: rotateDot 2s linear infinite;
         }
 
-        .logout-btn:hover {
+        .logout-btn:hover:not(.animating) {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
@@ -497,7 +654,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .companies-bottom-btn:hover {
+        .companies-bottom-btn:hover:not(.animating) {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
@@ -588,7 +745,7 @@
         }
 
         .profile-modal-content {
-            background: white;
+            background: var(--color-surface);
             border-radius: 20px;
             padding: 40px;
             max-width: 500px;
@@ -670,19 +827,28 @@
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-            color: #1565c0;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .profile-form-group input {
+            border-color: rgba(100, 181, 246, 0.5);
+            background: var(--color-surface);
         }
 
         .profile-form-group input:focus {
             outline: none;
             border-color: #42a5f5;
             box-shadow: 0 0 0 4px rgba(66, 165, 245, 0.15);
-            background: white;
+            background: var(--color-surface);
         }
 
         .profile-form-group input::placeholder {
-            color: #90caf9;
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .profile-form-group input::placeholder {
+            color: rgba(176, 176, 176, 0.7);
         }
 
         .profile-form-actions {
@@ -814,7 +980,7 @@
             border-radius: 8px;
             border: 1px solid var(--color-border);
             object-fit: contain;
-            background: #fafafa;
+            background: var(--color-bg);
             padding: 4px;
         }
 
@@ -3349,17 +3515,41 @@
                 height: 40px;
                 right: 25px !important;
             }
+            
+            .theme-toggle-btn {
+                width: 40px;
+                height: 40px;
+            }
 
             .profile-btn {
                 top: 25px;
             }
 
+            .theme-toggle-btn {
+                right: 70px !important;
+                left: auto !important;
+                top: 25px !important;
+                position: absolute !important;
+            }
+
             .logout-btn {
-                top: 77px; /* 25px (top первой) + 40px (высота первой) + 12px (отступ) = 77px */
+                top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
             }
 
             .companies-bottom-btn {
-                top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
+                top: 181px; /* 129px (top кнопки выхода) + 40px (высота кнопки выхода) + 12px (отступ) = 181px */
+            }
+
+            /* Ховер эффекты для планшетов */
+            .profile-btn:hover:not(.animating),
+            .logout-btn:hover:not(.animating),
+            .companies-bottom-btn:hover:not(.animating) {
+                transform: translateY(-2px) scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
+            }
+
+            .help-btn {
+                top: 233px; /* 181px (top кнопки компаний) + 40px (высота кнопки компаний) + 12px (отступ) = 233px */
             }
         }
 
@@ -3454,7 +3644,15 @@
             }
 
             .companies-bottom-btn {
-                top: 115px; /* 65px (top второй) + 38px (высота второй) + 12px (отступ) = 115px */
+                top: 115px; /* 65px (top кнопки выхода) + 38px (высота кнопки выхода) + 12px (отступ) = 115px */
+            }
+
+            /* Ховер эффекты для мобильных */
+            .profile-btn:hover:not(.animating),
+            .logout-btn:hover:not(.animating),
+            .companies-bottom-btn:hover:not(.animating) {
+                transform: translateY(-2px) scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
             }
 
             .profile-btn::before {
@@ -3781,17 +3979,37 @@
                 height: 35px;
                 right: 12px !important;
             }
+            
+            .theme-toggle-btn {
+                width: 35px;
+                height: 35px;
+            }
 
             .profile-btn {
                 top: 12px;
             }
 
-            .companies-bottom-btn {
-                top: 59px; /* 12px (top первой) + 35px (высота первой) + 12px (отступ) = 59px */
+            .theme-toggle-btn {
+                right: 60px !important;
+                left: auto !important;
+                top: 15px !important;
+                position: absolute !important;
             }
 
             .logout-btn {
-                top: 106px; /* 59px (top второй) + 35px (высота второй) + 12px (отступ) = 106px */
+                top: 59px; /* 12px (top первой) + 35px (высота первой) + 12px (отступ) = 59px */
+            }
+
+            .companies-bottom-btn {
+                top: 106px; /* 59px (top кнопки выхода) + 35px (высота кнопки выхода) + 12px (отступ) = 106px */
+            }
+
+            /* Ховер эффекты для маленьких экранов */
+            .profile-btn:hover:not(.animating),
+            .logout-btn:hover:not(.animating),
+            .companies-bottom-btn:hover:not(.animating) {
+                transform: translateY(-2px) scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
             }
 
             .gantt-label {
@@ -4107,11 +4325,11 @@
         
         /* Кнопка справки */
         .help-btn {
-            position: fixed;
-            bottom: 80px;
+            position: absolute;
+            top: 180px;
             right: 30px;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             border: 2px solid #2c2c2c;
@@ -4119,13 +4337,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
-            z-index: 1001;
-            font-size: 24px;
+            z-index: 1000;
+            font-size: 20px;
             font-weight: bold;
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: visible;
         }
 
         .help-btn:hover {
@@ -4133,8 +4352,63 @@
             box-shadow: 0 6px 20px rgba(66, 165, 245, 0.6);
         }
 
-        .help-btn::after {
-            content: '?';
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .help-btn::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1003;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* При наведении показываем золотую точку и запускаем анимацию */
+        .help-btn:hover::before {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
+        }
+
+        /* Подсказка для кнопки справки в стиле редакции этапов */
+        .help-btn[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom center;
+            z-index: 9999;
+        }
+
+        .help-btn[data-tooltip]:hover::after {
+            opacity: 1 !important;
+            transform: translate(-50%, -6px);
+            transition-delay: 1s;
+        }
+
+        /* Символ ? внутри кнопки */
+        .help-btn .help-icon {
+            position: relative;
+            z-index: 1002;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
         }
 
         /* Индикатор новых функций */
@@ -4421,11 +4695,11 @@
 
         @media (max-width: 768px) {
             .help-btn {
-                bottom: 70px;
+                top: 153px; /* 106px (top кнопки компаний) + 35px (высота кнопки компаний) + 12px (отступ) = 153px */
                 right: 20px;
-                width: 45px;
-                height: 45px;
-                font-size: 20px;
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
             }
 
             .tour-tooltip {
@@ -4442,7 +4716,7 @@
 </head>
 <body>
     <!-- Надпись DeadLinePro в правом верхнем углу -->
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
+    <div id="deadlineProLabel" style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
     <div class="container">
         <header>
             <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" style="display: none;" onclick="logout()">
@@ -4455,12 +4729,18 @@
                 <span class="profile-icon-shoulders"></span>
                 <span class="profile-tooltip">Редактировать профиль</span>
             </button>
-            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="goToCompanies()">
+            <!-- Кнопка возврата к списку компаний (показывается для авторизованных пользователей, особенно при работе с архивом) -->
+            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Вернуться к компаниям" style="display: none;" onclick="goToCompanies()">
                 <span class="companies-bottom-icon"></span>
-                <span class="companies-bottom-tooltip">Компании</span>
+                <span class="companies-bottom-tooltip">Вернуться к компаниям</span>
+            </button>
+            <!-- Кнопка переключения темы -->
+            <button class="theme-toggle-btn" id="themeToggleBtn" data-tooltip="Переключить тему" onclick="toggleTheme()">
+                <span class="theme-tooltip">Переключить тему</span>
             </button>
             <!-- Кнопка справки -->
-            <button class="help-btn" id="helpBtn" title="Справка по горячим клавишам" style="display: none;">
+            <button class="help-btn" id="helpBtn" data-tooltip="Справка по горячим клавишам" style="display: none;">
+                <span class="help-icon">?</span>
                 <span class="new-feature-badge" id="helpBadge" style="display: none;">!</span>
             </button>
             <h1>
@@ -5111,13 +5391,19 @@
             
             if (profileBtn) {
                 profileBtn.style.display = 'flex';
+                profileBtn.style.visibility = 'visible';
+                profileBtn.style.opacity = '1';
             }
             if (companiesBottomBtn) {
                 companiesBottomBtn.style.display = 'flex';
+                companiesBottomBtn.style.visibility = 'visible';
+                companiesBottomBtn.style.opacity = '1';
                 console.log('✅ Нижняя кнопка компаний показана через showAuthButtons');
             }
             if (logoutBtn) {
                 logoutBtn.style.display = 'flex';
+                logoutBtn.style.visibility = 'visible';
+                logoutBtn.style.opacity = '1';
             }
         }
 
@@ -5143,6 +5429,7 @@
                         companiesBottomBtn.style.display = 'flex';
                         companiesBottomBtn.style.visibility = 'visible';
                         companiesBottomBtn.style.opacity = '1';
+                        console.log('✅ Кнопка компаний показана при загрузке страницы');
                     }
                     if (profileBtn) {
                         profileBtn.style.display = 'flex';
@@ -5195,6 +5482,84 @@
                 } catch (e) {
                     console.error('Ошибка сохранения при уходе:', e);
                 }
+            }
+        });
+
+        // ========== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ==========
+        // Функция переключения темы
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Добавляем класс анимации
+            if (themeToggleBtn) {
+                themeToggleBtn.classList.add('animating');
+                
+                // Удаляем класс анимации после завершения
+                setTimeout(() => {
+                    themeToggleBtn.classList.remove('animating');
+                }, 1200);
+            }
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('gantt-theme', newTheme);
+            
+            // Обновляем цвет надписи DeadLinePro
+            const label = document.getElementById('deadlineProLabel');
+            if (label) {
+                label.style.color = newTheme === 'dark' ? 'rgba(66, 165, 245, 0.3)' : 'rgba(33, 150, 243, 0.5)';
+            }
+            
+            console.log(`✅ Тема переключена на: ${newTheme}`);
+        }
+
+        // Инициализация темы при загрузке страницы
+        function initTheme() {
+            // Проверяем сохраненную тему или системные настройки
+            const savedTheme = localStorage.getItem('gantt-theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme || systemTheme;
+            
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            // Обновляем цвет надписи DeadLinePro
+            const label = document.getElementById('deadlineProLabel');
+            if (label) {
+                label.style.color = theme === 'dark' ? 'rgba(66, 165, 245, 0.3)' : 'rgba(33, 150, 243, 0.5)';
+            }
+            
+            console.log(`✅ Тема инициализирована: ${theme}`);
+        }
+
+        // Инициализируем тему при загрузке
+        initTheme();
+
+        // Гарантируем, что кнопка переключения темы всегда видна
+        function ensureThemeToggleVisible() {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                themeToggleBtn.style.display = 'flex';
+                themeToggleBtn.style.visibility = 'visible';
+                themeToggleBtn.style.opacity = '1';
+                console.log('✅ Кнопка переключения темы сделана видимой');
+            }
+        }
+
+        // Применяем при загрузке DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ensureThemeToggleVisible);
+        } else {
+            ensureThemeToggleVisible();
+        }
+
+        // Слушаем изменения системной темы
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            // Если пользователь не выбрал тему вручную, следуем системной
+            if (!localStorage.getItem('gantt-theme')) {
+                const theme = e.matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
             }
         });
 
@@ -5498,6 +5863,7 @@
         // Выделение задач (можно выделять несколько строк)
         let selectedTaskIds = new Set(); // множество id выделенных задач
         let lastSelectedTaskId = null;   // последняя "базовая" задача для Shift-выделения
+        let copiedTask = null; // скопированная задача для вставки
         // Флаг и ссылка на модал удаления
         let isDeleteConfirmOpen = false;
         // Текущий фильтр по этапу: 'all' | 'Этап 1' | 'Этап 2' | ...
@@ -11515,6 +11881,176 @@
             console.log('🔢 recalculateDatesFrom: Пересчет завершен\n');
         }
 
+        // Копирование задачи
+        function copyTask(taskId) {
+            const index = tasks.findIndex(t => t.id === taskId);
+            if (index === -1) return;
+            
+            const task = tasks[index];
+            // Создаем глубокую копию задачи
+            copiedTask = {
+                stage: task.stage,
+                control: task.control,
+                task: task.task,
+                days: task.days,
+                substage: task.substage || '',
+                status: task.status || 'pending',
+                dateStatuses: task.dateStatuses ? { ...task.dateStatuses } : {},
+                dateComments: task.dateComments ? { ...task.dateComments } : {},
+                link: task.link || '',
+                responsible: task.responsible || ''
+            };
+            
+            console.log('✅ Задача скопирована:', copiedTask);
+        }
+
+        // Вставка скопированной задачи
+        function pasteTask() {
+            if (!canEdit()) {
+                return; // Блокируем вставку в режиме просмотра
+            }
+            
+            if (copiedTask === null) return;
+            
+            // Сохраняем состояние в историю перед вставкой задачи
+            addToUndoHistory();
+            
+            // Определяем, после какой задачи вставлять
+            const baseId = getPrimarySelectedTaskId();
+            let insertIndex;
+            
+            if (baseId !== null) {
+                // Вставляем после выбранной задачи
+                const index = tasks.findIndex(t => t.id === baseId);
+                if (index === -1) return;
+                insertIndex = index + 1;
+                
+                const selectedTask = tasks[index];
+                if (!selectedTask.endDate) return;
+                
+                // Дата начала новой задачи: следующий рабочий день после конца выбранной
+                let newStart = new Date(selectedTask.endDate);
+                do {
+                    newStart.setDate(newStart.getDate() + 1);
+                } while (!isWorkday(newStart));
+                
+                const newDates = getTaskDates(newStart, copiedTask.days);
+                
+                const newTask = {
+                    id: nextTaskId++,
+                    stage: copiedTask.stage,
+                    control: copiedTask.control,
+                    task: copiedTask.task,
+                    days: copiedTask.days,
+                    substage: copiedTask.substage,
+                    startDate: newDates[0],
+                    endDate: newDates[newDates.length - 1],
+                    dates: newDates,
+                    status: copiedTask.status,
+                    dateStatuses: {},
+                    dateComments: {},
+                    link: copiedTask.link,
+                    responsible: copiedTask.responsible
+                };
+                
+                // Вставляем новую задачу после выбранной
+                tasks.splice(insertIndex, 0, newTask);
+                
+                // Пересчитываем все последующие задачи
+                recalculateFollowingTasks(insertIndex);
+            } else {
+                // Если нет выбранной задачи, вставляем в конец
+                const lastTask = tasks[tasks.length - 1];
+                if (!lastTask || !lastTask.endDate) return;
+                
+                let newStart = new Date(lastTask.endDate);
+                do {
+                    newStart.setDate(newStart.getDate() + 1);
+                } while (!isWorkday(newStart));
+                
+                const newDates = getTaskDates(newStart, copiedTask.days);
+                
+                const newTask = {
+                    id: nextTaskId++,
+                    stage: copiedTask.stage,
+                    control: copiedTask.control,
+                    task: copiedTask.task,
+                    days: copiedTask.days,
+                    substage: copiedTask.substage,
+                    startDate: newDates[0],
+                    endDate: newDates[newDates.length - 1],
+                    dates: newDates,
+                    status: copiedTask.status,
+                    dateStatuses: {},
+                    dateComments: {},
+                    link: copiedTask.link,
+                    responsible: copiedTask.responsible
+                };
+                
+                tasks.push(newTask);
+            }
+            
+            // Сохраняем текущую позицию прокрутки и активный элемент перед перерисовкой
+            const scrollY = window.scrollY || window.pageYOffset;
+            const scrollX = window.scrollX || window.pageXOffset;
+            
+            const chartContainer = document.getElementById('ganttChart');
+            const chartScrollTop = chartContainer ? chartContainer.scrollTop : 0;
+            const chartScrollLeft = chartContainer ? chartContainer.scrollLeft : 0;
+            
+            const activeElement = document.activeElement;
+            const activeElementInfo = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') 
+                ? { element: activeElement, selectionStart: activeElement.selectionStart, selectionEnd: activeElement.selectionEnd }
+                : null;
+            
+            if (activeElementInfo) {
+                activeElementInfo.element.blur();
+            }
+
+            updateStatistics();
+            
+            if (searchResults.length > 0) {
+                highlightSearchResults();
+            }
+            renderGantt();
+            renderTable();
+
+            window.scrollTo(scrollX, scrollY);
+            const newChartContainer = document.getElementById('ganttChart');
+            if (newChartContainer) {
+                newChartContainer.scrollTop = chartScrollTop;
+                newChartContainer.scrollLeft = chartScrollLeft;
+            }
+            
+            if (activeElementInfo && document.contains(activeElementInfo.element)) {
+                requestAnimationFrame(() => {
+                    try {
+                        activeElementInfo.element.focus({ preventScroll: true });
+                        if (activeElementInfo.element.setSelectionRange && 
+                            activeElementInfo.selectionStart !== null && 
+                            activeElementInfo.selectionEnd !== null) {
+                            activeElementInfo.element.setSelectionRange(
+                                activeElementInfo.selectionStart, 
+                                activeElementInfo.selectionEnd
+                            );
+                        }
+                    } catch (e) {
+                        // Игнорируем ошибки при восстановлении фокуса
+                    }
+                });
+            }
+            
+            // Выделяем вставленную задачу
+            if (insertIndex !== undefined && tasks[insertIndex]) {
+                selectedTaskIds.clear();
+                selectedTaskIds.add(tasks[insertIndex].id);
+                lastSelectedTaskId = tasks[insertIndex].id;
+                highlightSelectedTasks();
+            }
+            
+            console.log('✅ Задача вставлена');
+        }
+
         // Вставка новой задачи под выбранной (Insert)
         function insertTaskBelowSelected() {
             if (!canEdit()) {
@@ -16235,6 +16771,21 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             // Множественные попытки показать кнопки с разными задержками
             forceShowAuthButtons();
             setTimeout(forceShowAuthButtons, 100);
+            setTimeout(forceShowAuthButtons, 500);
+            setTimeout(forceShowAuthButtons, 1000);
+            
+            // Дополнительная проверка для планшетов и мобильных устройств
+            if (window.innerWidth <= 1024) {
+                setTimeout(() => {
+                    const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                    if (companiesBottomBtn && localStorage.getItem('gantt-user')) {
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = '1';
+                        console.log('✅ Кнопка компаний принудительно показана для планшета/мобильного');
+                    }
+                }, 1500);
+            }
             setTimeout(forceShowAuthButtons, 300);
             setTimeout(forceShowAuthButtons, 500);
             setTimeout(forceShowAuthButtons, 1000);
@@ -16372,6 +16923,51 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     }
                     event.preventDefault();
                     openDeleteConfirm();
+                    return;
+                }
+
+                // Копирование задачи по Ctrl+C
+                if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
+                    const target = event.target;
+                    // Не перехватываем нажатие, если фокус в инпуте/textarea/select (стандартное копирование текста)
+                    if (
+                        target instanceof HTMLInputElement ||
+                        target instanceof HTMLTextAreaElement ||
+                        target instanceof HTMLSelectElement ||
+                        target.isContentEditable
+                    ) {
+                        return;
+                    }
+                    if (!canEdit()) {
+                        return; // Блокируем копирование в режиме просмотра
+                    }
+                    const primaryTaskId = getPrimarySelectedTaskId();
+                    if (primaryTaskId !== null) {
+                        event.preventDefault();
+                        copyTask(primaryTaskId);
+                    }
+                    return;
+                }
+
+                // Вставка задачи по Ctrl+V
+                if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+                    const target = event.target;
+                    // Не перехватываем нажатие, если фокус в инпуте/textarea/select (стандартная вставка текста)
+                    if (
+                        target instanceof HTMLInputElement ||
+                        target instanceof HTMLTextAreaElement ||
+                        target instanceof HTMLSelectElement ||
+                        target.isContentEditable
+                    ) {
+                        return;
+                    }
+                    if (!canEdit()) {
+                        return; // Блокируем вставку в режиме просмотра
+                    }
+                    if (copiedTask !== null) {
+                        event.preventDefault();
+                        pasteTask();
+                    }
                     return;
                 }
 
@@ -16879,7 +17475,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 element: '#companiesBottomBtn',
                 title: 'Компании',
                 text: 'Кнопка для возврата к списку компаний из архива.',
-                position: 'left',
+                position: 'bottom',
                 temporaryShow: true
             },
             {
@@ -17426,6 +18022,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     <li><span class="help-key">Insert</span> — Добавить новую задачу под выделенной</li>
                     <li><span class="help-key">Delete</span> — Удалить выделенную задачу</li>
                     <li><span class="help-key">↑</span> / <span class="help-key">↓</span> — Навигация по задачам</li>
+                    <li><span class="help-key">Ctrl</span> + <span class="help-key">C</span> — Копировать задачу</li>
+                    <li><span class="help-key">Ctrl</span> + <span class="help-key">V</span> — Вставить задачу после выделенной</li>
                     <li><span class="help-key">F2</span> — Задать базовый план</li>
                     <li><span class="help-key">F3</span> — Переключить отображение директивного графика</li>
                 </ul>

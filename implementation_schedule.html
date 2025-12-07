@@ -160,7 +160,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex !important;
@@ -199,7 +199,7 @@
 
         .theme-toggle-btn:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
 
         .theme-toggle-btn::before {
@@ -339,7 +339,7 @@
             animation: rotateDot 2s linear infinite;
         }
 
-        .profile-btn:hover {
+        .profile-btn:hover:not(.animating) {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
@@ -574,7 +574,7 @@
             animation: rotateDot 2s linear infinite;
         }
 
-        .logout-btn:hover {
+        .logout-btn:hover:not(.animating) {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
@@ -619,9 +619,10 @@
 
         /* Новая кнопка компаний под кнопкой выхода */
         .companies-bottom-btn {
-            position: absolute;
+            position: absolute !important;
             top: 130px;
-            right: 30px;
+            right: 30px !important;
+            left: auto !important;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -654,7 +655,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .companies-bottom-btn:hover {
+        .companies-bottom-btn:hover:not(.animating) {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
@@ -2216,15 +2217,28 @@
         }
 
         .gantt-row.selected {
-            background: #bbdefb;
-            box-shadow: inset 0 0 0 1px #64b5f6;
+            background: #bbdefb !important;
+            box-shadow: inset 0 0 0 2px #2196f3, 0 2px 8px rgba(33, 150, 243, 0.2) !important;
+            position: relative;
         }
 
         /* При выделении задачи подсвечиваем и название, и три колонки с датами/днями,
            чтобы визуально вся строка в Ганте вела себя так же, как строка в таблице */
         .gantt-row.selected .gantt-label,
         .gantt-row.selected .gantt-details-cell {
-            background: #bbdefb;
+            background: #bbdefb !important;
+        }
+
+        /* Визуальная индикация выделенных задач - более заметная */
+        .gantt-row.selected::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #2196f3 0%, #1976d2 100%);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.6);
         }
 
         .gantt-row.dragging {
@@ -3540,6 +3554,14 @@
                 top: 181px; /* 129px (top кнопки выхода) + 40px (высота кнопки выхода) + 12px (отступ) = 181px */
             }
 
+            /* Ховер эффекты для планшетов */
+            .profile-btn:hover:not(.animating),
+            .logout-btn:hover:not(.animating),
+            .companies-bottom-btn:hover:not(.animating) {
+                transform: translateY(-2px) scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
+            }
+
             .help-btn {
                 top: 233px; /* 181px (top кнопки компаний) + 40px (высота кнопки компаний) + 12px (отступ) = 233px */
             }
@@ -3637,6 +3659,14 @@
 
             .companies-bottom-btn {
                 top: 115px; /* 65px (top кнопки выхода) + 38px (высота кнопки выхода) + 12px (отступ) = 115px */
+            }
+
+            /* Ховер эффекты для мобильных */
+            .profile-btn:hover:not(.animating),
+            .logout-btn:hover:not(.animating),
+            .companies-bottom-btn:hover:not(.animating) {
+                transform: translateY(-2px) scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
             }
 
             .profile-btn::before {
@@ -3986,6 +4016,14 @@
 
             .companies-bottom-btn {
                 top: 106px; /* 59px (top кнопки выхода) + 35px (высота кнопки выхода) + 12px (отступ) = 106px */
+            }
+
+            /* Ховер эффекты для маленьких экранов */
+            .profile-btn:hover:not(.animating),
+            .logout-btn:hover:not(.animating),
+            .companies-bottom-btn:hover:not(.animating) {
+                transform: translateY(-2px) scale(1.05) !important;
+                box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
             }
 
             .gantt-label {
@@ -5005,7 +5043,7 @@
             </div>
             <div class="form-group">
                 <p style="margin-bottom: 15px; line-height: 1.6; color: var(--color-text);">
-                    Добро пожаловать в систему планирования внедрения ICONA! 
+                    Добро пожаловать в систему планирования <span style="color: #4FC3F7; font-size: 1.15em; font-weight: 600;">DeadLinePro</span>! 
                     Мы подготовили для вас краткий тур по интерфейсу, который поможет быстро освоиться.
                 </p>
                 <p style="margin-bottom: 20px; line-height: 1.6; color: var(--color-text-secondary);">
@@ -6352,10 +6390,14 @@
 
         // Применить визуальное выделение к текущему набору выбранных задач
         function applySelectionHighlight() {
+            // Сохраняем выделенные задачи перед перерисовкой
+            const savedSelectedTaskIds = new Set(selectedTaskIds);
+            
             document.querySelectorAll('.gantt-row').forEach(row => {
                 if (!row.dataset.taskId) return;
                 const idStr = row.dataset.taskId;
-                const isSelected = selectedTaskIds.has(Number(idStr));
+                const taskId = Number(idStr);
+                const isSelected = savedSelectedTaskIds.has(taskId);
                 row.classList.toggle('selected', isSelected);
             });
 
@@ -6364,7 +6406,8 @@
                 tbody.querySelectorAll('tr').forEach(tr => {
                     if (!tr.dataset.taskId) return;
                     const idStr = tr.dataset.taskId;
-                    const isSelected = selectedTaskIds.has(Number(idStr));
+                    const taskId = Number(idStr);
+                    const isSelected = savedSelectedTaskIds.has(taskId);
                     tr.classList.toggle('selected', isSelected);
                 });
             }
@@ -6386,7 +6429,7 @@
 
         // Выбор задач по клику (поддержка Shift для диапазона)
         function selectTask(taskId, options = {}) {
-            const { range = false } = options;
+            const { range = false, preserveSelection = false } = options;
 
             if (range && lastSelectedTaskId !== null) {
                 // Диапазон между lastSelectedTaskId и текущей задачей
@@ -6400,16 +6443,34 @@
                     applySelectionHighlight();
                     return;
                 }
-                selectedTaskIds.clear();
+                // При Shift+клике добавляем диапазон к существующему выделению
                 const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
                 for (let i = from; i <= to; i++) {
                     selectedTaskIds.add(tasks[i].id);
                 }
+                // Обновляем lastSelectedTaskId на последнюю задачу в диапазоне
+                lastSelectedTaskId = taskId;
+            } else if (preserveSelection) {
+                // Сохраняем выделение - просто обновляем lastSelectedTaskId, если задача уже выделена
+                if (selectedTaskIds.has(taskId)) {
+                    lastSelectedTaskId = taskId;
+                } else {
+                    // Если задача не выделена, но нужно сохранить выделение - добавляем её
+                    selectedTaskIds.add(taskId);
+                    lastSelectedTaskId = taskId;
+                }
             } else {
                 // Одиночный клик — выделяем только одну строку
-                selectedTaskIds.clear();
-                selectedTaskIds.add(taskId);
-                lastSelectedTaskId = taskId;
+                // НО: если задача уже выделена и есть другие выделенные задачи, сохраняем выделение
+                if (selectedTaskIds.size > 1 && selectedTaskIds.has(taskId)) {
+                    // Задача уже выделена среди других - сохраняем выделение, просто обновляем lastSelectedTaskId
+                    lastSelectedTaskId = taskId;
+                } else {
+                    // Обычный клик - выделяем только эту задачу
+                    selectedTaskIds.clear();
+                    selectedTaskIds.add(taskId);
+                    lastSelectedTaskId = taskId;
+                }
             }
 
             applySelectionHighlight();
@@ -8483,11 +8544,15 @@
                 // Находим родительскую строку
                 const row = labelElement.closest('.gantt-row');
                 
-                // Выделяем строку при клике на label
+                // Выделяем строку при клике на label (поддержка Shift для диапазона)
                 if (row && row.dataset.taskId) {
                     const taskId = parseInt(row.dataset.taskId);
                     if (taskId) {
-                        selectTask(taskId, { range: false });
+                        if (e && e.shiftKey) {
+                            selectTask(taskId, { range: true });
+                        } else {
+                            selectTask(taskId, { range: false });
+                        }
                     }
                 }
             };
@@ -9084,7 +9149,7 @@
 
                 // Если этап свернут, создаем строку этапа вместо всех задач
                 if (isStageCollapsed) {
-                    const stageRow = createStageRow(stageName, stageTasks, stageIndex);
+                    const stageRow = createStageRow(stageName, stageTasks, stageIndex, timelineUnits, pxPerDay, ganttBarStyle);
                     chartContainer.appendChild(stageRow);
                     return; // Пропускаем отрисовку задач этапа
                 }
@@ -9298,6 +9363,17 @@
                 respCell.appendChild(respInput);
                 applyColumnWidth(respCell, 'responsible');
                 detailsRow.appendChild(respCell);
+                
+                // Добавляем обработчик клика на ячейки деталей для поддержки Shift+клика
+                detailsRow.addEventListener('click', (event) => {
+                    // Если это Shift+клик, обрабатываем выделение задачи
+                    if (event.shiftKey) {
+                        event.stopPropagation(); // Останавливаем всплытие, чтобы не вызвать обработчик строки дважды
+                        handleTaskRowClick(task.id, event);
+                    }
+                    // При обычном клике позволяем событию всплывать до обработчика строки
+                });
+                
                 row.appendChild(detailsRow);
 
             timelineUnits.forEach((unit, unitIdx) => {
@@ -9455,7 +9531,23 @@
                         // Функция для обработки клика/тапа
                         function handleBarClick(event, clientX, clientY) {
                             event.stopPropagation();
-                            handleTaskRowClick(task.id, event);
+                            
+                            // Обрабатываем Shift+клик для выделения задач
+                            if (event.shiftKey) {
+                                handleTaskRowClick(task.id, event);
+                                // При Shift+клике не открываем меню статусов, только выделяем задачи
+                                return;
+                            }
+                            
+                            // Обычный клик - если есть выделенные задачи и текущая задача в них, сохраняем выделение
+                            // Иначе выделяем только текущую задачу
+                            if (selectedTaskIds.size > 0 && selectedTaskIds.has(task.id)) {
+                                // Задача уже выделена - сохраняем выделение, но обновляем lastSelectedTaskId
+                                selectTask(task.id, { preserveSelection: true });
+                            } else {
+                                // Обычный клик - выделяем только эту задачу
+                                handleTaskRowClick(task.id, event);
+                            }
 
                             if (!canEdit()) {
                                 return; // Блокируем изменение статуса в режиме просмотра
@@ -9518,14 +9610,24 @@
                                     closeStatusMenu();
                                 }
                             } else {
-                                // Обычный клик - сбрасываем множественный выбор и открываем меню для одной ячейки
+                                // Обычный клик - сбрасываем множественный выбор ячеек, но сохраняем выделение задач
                                 if (selectedCells.size > 0) {
                                     selectedCells.clear();
                                     updateCellSelection();
                                 }
                                 
-                                // Передаем barElement для точного позиционирования меню рядом с ячейкой
-                                openStatusMenu(clickX, clickY, task.id, selectedDates, barElement);
+                                // Если есть выделенные задачи (включая текущую), открываем меню для применения статуса ко всем выделенным задачам
+                                if (selectedTaskIds.size > 0 && selectedTaskIds.has(task.id)) {
+                                    // Текущая задача входит в выделенные - применяем статус ко всем выделенным задачам
+                                    openStatusMenuForSelectedTasks(clickX, clickY, task.id, selectedDates, barElement);
+                                } else if (selectedTaskIds.size > 0 && !selectedTaskIds.has(task.id)) {
+                                    // Есть выделенные задачи, но текущая не входит в них - выделяем только текущую задачу
+                                    selectTask(task.id, { range: false });
+                                    openStatusMenu(clickX, clickY, task.id, selectedDates, barElement);
+                                } else {
+                                    // Нет выделенных задач - открываем меню для одной задачи
+                                    openStatusMenu(clickX, clickY, task.id, selectedDates, barElement);
+                                }
                             }
                         }
                         
@@ -9650,6 +9752,25 @@
 
                 // Клик по строке Ганта — выбираем задачу (поддержка Shift)
                 row.addEventListener('click', (event) => {
+                    // Проверяем, что клик не на input или select внутри строки (кроме Shift+клика)
+                    const target = event.target;
+                    const isInputElement = target.tagName === 'INPUT' || 
+                                         target.tagName === 'SELECT' || 
+                                         target.tagName === 'TEXTAREA' ||
+                                         target.closest('input, select, textarea');
+                    
+                    // Если это Shift+клик, обрабатываем выделение независимо от элемента
+                    if (event.shiftKey) {
+                        handleTaskRowClick(task.id, event);
+                        return;
+                    }
+                    
+                    // Если клик на input/select при обычном клике, не обрабатываем выделение
+                    if (isInputElement) {
+                        return;
+                    }
+                    
+                    // Обычный клик на строку - обрабатываем выделение
                     handleTaskRowClick(task.id, event);
                 });
 
@@ -9754,22 +9875,50 @@
                         }, 100);
                     }, 150);
                 } else {
+                    // Сохраняем текущую позицию прокрутки перед сворачиванием
+                    const scrollY = window.scrollY || window.pageYOffset;
+                    const scrollX = window.scrollX || window.pageXOffset;
+                    
+                    // Также сохраняем прокрутку контейнера диаграммы
+                    const currentChartContainer = document.getElementById('ganttChart');
+                    const chartScrollTop = currentChartContainer ? currentChartContainer.scrollTop : 0;
+                    const chartScrollLeft = currentChartContainer ? currentChartContainer.scrollLeft : 0;
+                    
                     // Сворачиваем этап
                     collapsedStages.add(stageName);
                     
-                    // Обновляем видимость задач этапа
-                    updateStageTasksVisibility(stageName, true);
+                    // Полностью перерисовываем график для корректного отображения баров свернутых этапов
+                    renderGantt();
+                    renderTable();
+                    
+                    // Восстанавливаем позицию прокрутки сразу после перерисовки
+                    requestAnimationFrame(() => {
+                        window.scrollTo(scrollX, scrollY);
+                        const newChartContainer = document.getElementById('ganttChart');
+                        if (newChartContainer) {
+                            newChartContainer.scrollTop = chartScrollTop;
+                            newChartContainer.scrollLeft = chartScrollLeft;
+                        }
+                    });
                     
                     // Обновляем метку этапа
-                    updateStageLabel(stageName, true);
-                    
-                    // Пересчитываем позиции всех меток этапов после анимации
                     setTimeout(() => {
-                        // Используем функцию пересчета позиций
+                        updateStageLabel(stageName, true);
+                        // Пересчитываем позиции всех меток этапов после анимации
                         recalculateStageLabelsPositions();
                         // Обновляем видимость вертикального скролла
                         updateVerticalScrollVisibility();
-                    }, 350); // После завершения анимации скрытия/показа строк
+                        
+                        // Финальное восстановление позиции прокрутки после всех обновлений
+                        requestAnimationFrame(() => {
+                            window.scrollTo(scrollX, scrollY);
+                            const newChartContainer = document.getElementById('ganttChart');
+                            if (newChartContainer) {
+                                newChartContainer.scrollTop = chartScrollTop;
+                                newChartContainer.scrollLeft = chartScrollLeft;
+                            }
+                        });
+                    }, 150);
                 }
             }
 
@@ -9845,7 +9994,7 @@
             }
 
             // Функция для создания строки этапа (свернутое состояние)
-            function createStageRow(stageName, stageTasks, stageIndex) {
+            function createStageRow(stageName, stageTasks, stageIndex, timelineUnits, pxPerDay, ganttBarStyle) {
                 const stageData = calculateStageData(stageTasks);
                 const stageMatch = stageName.match(/^(Этап\s+\d+)/);
                 const stageNumber = stageMatch ? stageMatch[1] : stageName;
@@ -9928,12 +10077,76 @@
                 
                 row.appendChild(detailsRow);
                 
-                // Пустые ячейки для временной шкалы (не рисуем бары для этапа)
-                timelineUnits.forEach(() => {
+                // Получаем все рабочие дни этапа для отрисовки баров
+                let stageWorkdays = [];
+                if (stageData.startDate && stageData.endDate) {
+                    stageWorkdays = getWorkdaysBetween(stageData.startDate, stageData.endDate);
+                }
+                
+                // Создаем ячейки для временной шкалы с барами для этапа
+                const msInDay = 24 * 60 * 60 * 1000;
+                timelineUnits.forEach((unit, unitIdx) => {
                     const cell = document.createElement('div');
                     cell.className = 'gantt-cell';
-                    cell.style.minWidth = '30px';
-                    cell.style.width = '30px';
+                    const unitDays = Math.round((unit.end - unit.start) / msInDay) + 1;
+                    const width = Math.max(30, unitDays * pxPerDay);
+                    cell.style.minWidth = width + 'px';
+                    cell.style.width = width + 'px';
+                    
+                    // Проверяем, есть ли рабочие дни этапа внутри текущей единицы времени
+                    const unitDatesForStage = stageWorkdays.filter(d => {
+                        const time = d.getTime();
+                        return time >= unit.start.getTime() && time <= unit.end.getTime();
+                    });
+                    
+                    const hasWorkInUnit = unitDatesForStage.length > 0;
+                    
+                    if (hasWorkInUnit) {
+                        // Создаем бар для этапа
+                        const bar = document.createElement('div');
+                        bar.className = 'gantt-bar'; // По умолчанию статус "pending" (синий)
+                        
+                        // В режиме полос убираем символ и управляем скруглением/границами
+                        if (ganttBarStyle === 'segments') {
+                            bar.textContent = '';
+                            
+                            // Определяем, есть ли дни этапа в соседних единицах времени
+                            const hasPrev = unitIdx > 0 && stageWorkdays.some(d => {
+                                const t = d.getTime();
+                                const prev = timelineUnits[unitIdx - 1];
+                                return t >= prev.start.getTime() && t <= prev.end.getTime();
+                            });
+                            const hasNext = unitIdx < timelineUnits.length - 1 && stageWorkdays.some(d => {
+                                const t = d.getTime();
+                                const next = timelineUnits[unitIdx + 1];
+                                return t >= next.start.getTime() && t <= next.end.getTime();
+                            });
+                            
+                            if (hasPrev && hasNext) {
+                                bar.classList.add('segment-middle');
+                            } else if (!hasPrev && hasNext) {
+                                bar.classList.add('segment-start');
+                            } else if (hasPrev && !hasNext) {
+                                bar.classList.add('segment-end');
+                            } else if (!hasPrev && !hasNext) {
+                                bar.classList.add('segment-single');
+                            }
+                        } else {
+                            bar.textContent = '■';
+                        }
+                        
+                        bar.title = '';
+                        bar.style.cursor = 'pointer';
+                        
+                        // При клике на бар этапа разворачиваем этап
+                        bar.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            toggleStageCollapse(stageName);
+                        });
+                        
+                        cell.appendChild(bar);
+                    }
+                    
                     row.appendChild(cell);
                 });
                 
@@ -9963,63 +10176,16 @@
                 const stageTasks = tasksByStage[stageName] || [];
                 
                 if (isCollapsing) {
-                    // Сворачиваем: создаем строку этапа и скрываем задачи
-                    // Находим первую задачу этапа для позиционирования
-                    const firstTaskRow = chartContainer.querySelector(`[data-task-id="${stageTasks[0].task.id}"]`);
-                    if (firstTaskRow) {
-                        // Удаляем старую строку этапа, если есть
-                        const oldStageRow = chartContainer.querySelector(`[data-stage-name="${stageName}"]`);
-                        if (oldStageRow) {
-                            oldStageRow.remove();
+                    // Сворачиваем: перерисовываем график для корректного отображения баров свернутых этапов
+                    // renderGantt() уже вызывается в toggleStageCollapse(), поэтому здесь просто создаем строку в таблице
+                    const firstTableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${stageTasks[0].task.id}"]`);
+                    if (firstTableRow) {
+                        const oldStageTableRow = document.querySelector(`#tasksTableBody tr[data-stage-name="${stageName}"]`);
+                        if (oldStageTableRow) {
+                            oldStageTableRow.remove();
                         }
-                        
-                        // Создаем новую строку этапа
-                        const stageRow = createStageRow(stageName, stageTasks, 0);
-                        
-                        // Вставляем строку этапа на место первой задачи СРАЗУ (до скрытия задач)
-                        if (firstTaskRow.parentNode) {
-                            firstTaskRow.parentNode.insertBefore(stageRow, firstTaskRow);
-                        } else {
-                            chartContainer.appendChild(stageRow);
-                        }
-                        
-                        // Создаем строку этапа в таблице задач
-                        const firstTableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${stageTasks[0].task.id}"]`);
-                        if (firstTableRow) {
-                            const oldStageTableRow = document.querySelector(`#tasksTableBody tr[data-stage-name="${stageName}"]`);
-                            if (oldStageTableRow) {
-                                oldStageTableRow.remove();
-                            }
-                            const stageTableRow = createStageTableRow(stageName, stageTasks);
-                            firstTableRow.parentNode.insertBefore(stageTableRow, firstTableRow);
-                        }
-                        
-                        // Теперь скрываем все задачи этапа одновременно (без задержки между ними)
-                        stageTasks.forEach(({ task }) => {
-                            // Скрываем строку в диаграмме Ганта
-                            const taskRow = chartContainer.querySelector(`[data-task-id="${task.id}"]`);
-                            if (taskRow && taskRow !== stageRow) {
-                                // Добавляем класс для анимации и сразу скрываем
-                                taskRow.classList.add('collapsing');
-                                // Скрываем быстро, чтобы не было пробелов
-                                setTimeout(() => {
-                                    taskRow.style.display = 'none';
-                                    taskRow.classList.remove('collapsing');
-                                }, 200);
-                            }
-                            
-                            // Скрываем строку в таблице задач
-                            const tableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${task.id}"]`);
-                            if (tableRow) {
-                                // Добавляем класс для анимации и сразу скрываем
-                                tableRow.classList.add('collapsing');
-                                // Скрываем быстро, чтобы не было пробелов
-                                setTimeout(() => {
-                                    tableRow.style.display = 'none';
-                                    tableRow.classList.remove('collapsing');
-                                }, 200);
-                            }
-                        });
+                        const stageTableRow = createStageTableRow(stageName, stageTasks);
+                        firstTableRow.parentNode.insertBefore(stageTableRow, firstTableRow);
                     }
                 } else {
                     // Разворачиваем: удаляем строку этапа и показываем задачи
@@ -10334,6 +10500,25 @@
             setTimeout(() => {
                 updateVerticalScrollVisibility();
             }, 100);
+            
+            // Добавляем обработчик клика на фон графика для сброса выделения задач
+            // (только если клик был на фон, а не на задачу)
+            if (chartContainer && !chartContainer.hasAttribute('data-selection-handler')) {
+                chartContainer.setAttribute('data-selection-handler', 'true');
+                chartContainer.addEventListener('click', (event) => {
+                    // Проверяем, что клик был на фон (не на задачу, не на ячейку, не на бар)
+                    const target = event.target;
+                    if (target && 
+                        !target.closest('.gantt-row') && 
+                        !target.closest('.gantt-bar') && 
+                        !target.closest('.gantt-cell') &&
+                        !target.closest('.gantt-label') &&
+                        !target.closest('.gantt-details-cell')) {
+                        // Клик на фон - сбрасываем выделение задач
+                        clearSelection();
+                    }
+                });
+            }
         }
 
         // Функция для вычисления данных этапа (даты начала, окончания, рабочих дней)
@@ -13332,10 +13517,45 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             // Авто‑подбор ширины столбцов для табличного листа
             const wsCols = buildAutoColumnWidths(wsData);
-            // Столбцы "Дата начала" и "Дата окончания" (индексы 6 и 7) фиксируем в ширину 10
-            if (wsCols[6]) wsCols[6].wch = 10;
-            if (wsCols[7]) wsCols[7].wch = 10;
+            
+            // Настройка ширины столбцов для листа "Задачи"
+            // Столбец A (№ п/п) - ширина 7, выравнивание по центру
+            if (wsCols[0]) {
+                wsCols[0].wch = 7;
+            }
+            // Столбцы B, C, D (Этап, Вид контроля, Мероприятие) - по самой длинной строке (уже настроено автоматически)
+            // Столбец E (Рабочих дней) - ширина 13, выравнивание по центру
+            if (wsCols[4]) {
+                wsCols[4].wch = 13;
+            }
+            // Столбец F (Ответственный) - по самой длинной строке (уже настроено автоматически)
+            // Столбцы G, H (Дата начала, Дата окончания) - ширина 15
+            if (wsCols[6]) wsCols[6].wch = 15;
+            if (wsCols[7]) wsCols[7].wch = 15;
+            // Столбец I (Комментарии) - по самой длинной строке (уже настроено автоматически)
+            
             ws['!cols'] = wsCols;
+            
+            // Настройка выравнивания по центру для столбцов A и E
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            for (let row = 0; row <= range.e.r; row++) {
+                // Столбец A (№ п/п) - выравнивание по центру
+                const cellA = XLSX.utils.encode_cell({ c: 0, r: row });
+                if (ws[cellA]) {
+                    if (!ws[cellA].s) ws[cellA].s = {};
+                    if (!ws[cellA].s.alignment) ws[cellA].s.alignment = {};
+                    ws[cellA].s.alignment.horizontal = 'center';
+                    ws[cellA].s.alignment.vertical = 'center';
+                }
+                // Столбец E (Рабочих дней) - выравнивание по центру
+                const cellE = XLSX.utils.encode_cell({ c: 4, r: row });
+                if (ws[cellE]) {
+                    if (!ws[cellE].s) ws[cellE].s = {};
+                    if (!ws[cellE].s.alignment) ws[cellE].s.alignment = {};
+                    ws[cellE].s.alignment.horizontal = 'center';
+                    ws[cellE].s.alignment.vertical = 'center';
+                }
+            }
 
             XLSX.utils.book_append_sheet(wb, ws, 'Задачи');
 
@@ -14715,6 +14935,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             modal.style.alignItems = '';
             modal.style.justifyContent = '';
             
+            // Проверяем, есть ли выделенные задачи (Shift+клик)
+            if (selectedTaskIds.size > 0) {
+                // Применяем статус ко всем выделенным задачам с комментарием
+                applyStatusToSelectedTasks(status, text);
+                return;
+            }
+            
             const targetSnapshot = window.__statusCommentTargetSnapshot || null;
             applyStatusToSelection(status, text, targetSnapshot);
         }
@@ -15501,6 +15728,120 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             });
         }
 
+        // Открытие меню статуса для выделенных задач (Shift+клик)
+        function openStatusMenuForSelectedTasks(x, y, taskId, dateStrs, targetElement = null) {
+            // Создаем специальный target для выделенных задач
+            const selectedTasksArray = Array.from(selectedTaskIds);
+            currentStatusTarget = {
+                isSelectedTasks: true,
+                taskIds: selectedTasksArray
+            };
+            
+            // Сохраняем координаты для позиционирования модального окна комментария на мобильных
+            lastClickCoordinates.x = x;
+            lastClickCoordinates.y = y;
+            
+            const menu = document.getElementById('statusMenu');
+            if (!menu) return;
+            
+            // Используем ту же логику позиционирования, что и в openStatusMenu
+            const isMobile = window.innerWidth <= 1024;
+            
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+            
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.transform = '';
+            menu.style.margin = '0';
+            
+            menu.style.display = 'block';
+            menu.style.position = 'fixed';
+            menu.style.zIndex = '200';
+            
+            requestAnimationFrame(() => {
+                const menuRect = menu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                let referenceX = x;
+                let referenceY = y;
+                
+                if (targetElement) {
+                    const targetRect = targetElement.getBoundingClientRect();
+                    referenceX = targetRect.right;
+                    referenceY = targetRect.top + targetRect.height / 2;
+                }
+                
+                let left = referenceX;
+                let top = referenceY;
+                
+                if (isMobile) {
+                    const offset = 15;
+                    if (referenceX + menuRect.width + offset > viewportWidth) {
+                        left = Math.max(10, referenceX - menuRect.width - offset);
+                    } else {
+                        left = referenceX + offset;
+                    }
+                    
+                    const spaceBelow = viewportHeight - referenceY - offset;
+                    const spaceAbove = referenceY - offset;
+                    
+                    if (spaceBelow >= menuRect.height + 10) {
+                        top = referenceY + offset;
+                    } else if (spaceAbove >= menuRect.height + 10) {
+                        top = referenceY - menuRect.height - offset;
+                    } else {
+                        if (spaceBelow > spaceAbove) {
+                            top = Math.min(referenceY + offset, viewportHeight - menuRect.height - 10);
+                        } else {
+                            top = Math.max(10, referenceY - menuRect.height - offset);
+                        }
+                    }
+                    
+                    if (top < 10) {
+                        top = 10;
+                    } else if (top + menuRect.height > viewportHeight - 10) {
+                        top = viewportHeight - menuRect.height - 10;
+                    }
+                } else {
+                    const offset = 5;
+                    if (referenceX + menuRect.width + offset > viewportWidth) {
+                        left = Math.max(10, referenceX - menuRect.width - offset);
+                    } else {
+                        left = referenceX + offset;
+                    }
+                    
+                    const spaceBelow = viewportHeight - referenceY - offset;
+                    const spaceAbove = referenceY - offset;
+                    
+                    if (spaceBelow >= menuRect.height + 10) {
+                        top = referenceY + offset;
+                    } else if (spaceAbove >= menuRect.height + 10) {
+                        top = referenceY - menuRect.height - offset;
+                    } else {
+                        if (spaceBelow > spaceAbove) {
+                            top = Math.min(referenceY + offset, viewportHeight - menuRect.height - 10);
+                        } else {
+                            top = Math.max(10, referenceY - menuRect.height - offset);
+                        }
+                    }
+                    
+                    if (top < 10) {
+                        top = 10;
+                    } else if (top + menuRect.height > viewportHeight - 10) {
+                        top = viewportHeight - menuRect.height - 10;
+                    }
+                }
+                
+                menu.style.left = `${left}px`;
+                menu.style.top = `${top}px`;
+            });
+        }
+
         // Открытие меню статуса для множественного выбора
         function openStatusMenuForMultipleSelection(x, y) {
             // Создаем виртуальный target для множественного выбора
@@ -15727,6 +16068,14 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         function applyStatusToSelection(status, commentText, targetOverride) {
             const target = targetOverride || currentStatusTarget;
+            
+            // Проверяем, есть ли выделенные задачи (Shift+клик)
+            if (selectedTaskIds.size > 0 && (!target || !target.isMultiple || !target.cells)) {
+                // Применяем статус ко всем выделенным задачам
+                applyStatusToSelectedTasks(status, commentText);
+                return;
+            }
+            
             if (!target) return;
 
             // Сохраняем состояние в историю перед изменением статуса
@@ -15944,6 +16293,126 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             saveFullGanttState(); // Сохраняем сразу, без задержки
         }
 
+        // Применение статуса ко всем выделенным задачам (Shift+клик)
+        function applyStatusToSelectedTasks(status, commentText) {
+            if (selectedTaskIds.size === 0) return;
+
+            // Сохраняем состояние в историю перед изменением статуса
+            addToUndoHistory();
+
+            const affectedTaskIndices = new Set();
+
+            // Применяем статус ко всем выделенным задачам
+            selectedTaskIds.forEach(taskId => {
+                const taskIndex = tasks.findIndex(t => t.id === taskId);
+                const task = tasks[taskIndex];
+                if (!task) return;
+
+                affectedTaskIndices.add(taskIndex);
+
+                // Убеждаемся, что у задачи есть объекты для статусов и комментариев
+                if (!task.dateStatuses) {
+                    task.dateStatuses = {};
+                }
+                if (!task.dateComments) {
+                    task.dateComments = {};
+                }
+
+                // Применяем статус ко всем ячейкам задачи
+                // ВАЖНО: Даты окончания остаются по плану (не изменяются)
+                if (task.dates && task.dates.length > 0) {
+                    task.dates.forEach(date => {
+                        const key = formatDateKey(date);
+
+                        if (status === 'completed') {
+                            // Для "завершено" применяем ко всем датам задачи
+                            task.dateStatuses[key] = 'completed';
+                            if (commentText && commentText.trim().length > 0) {
+                                task.dateComments[key] = commentText.trim();
+                            }
+                        } else if (status === 'in-progress') {
+                            // Для "в работе" применяем ко всем датам задачи
+                            task.dateStatuses[key] = 'in-progress';
+                            if (commentText && commentText.trim().length > 0) {
+                                task.dateComments[key] = commentText.trim();
+                            }
+                        } else if (status === 'pending') {
+                            // Возврат к статусу "Запланировано"
+                            if (task.dateStatuses[key]) {
+                                delete task.dateStatuses[key];
+                            }
+                            if (task.dateComments[key]) {
+                                delete task.dateComments[key];
+                            }
+                        } else if (status === 'weekend-manual') {
+                            // Выходной день
+                            task.dateStatuses[key] = 'weekend-manual';
+                        }
+                    });
+
+                    // Устанавливаем общий статус задачи
+                    // ВАЖНО: Не изменяем даты начала и окончания - они остаются по плану
+                    if (status === 'completed') {
+                        task.status = 'completed';
+                    } else if (status === 'in-progress') {
+                        task.status = 'in-progress';
+                    } else if (status === 'pending') {
+                        task.status = 'pending';
+                    }
+                }
+            });
+
+            // Пересчитываем даты для всех затронутых задач
+            // ВАЖНО: Для массового выбора даты окончания остаются по плану
+            // Пересчитываем только для weekend-manual (выходные дни сдвигают даты)
+            affectedTaskIndices.forEach(taskIndex => {
+                const task = tasks[taskIndex];
+                if (task && status === 'weekend-manual') {
+                    recalculateTaskDatesWithWeekends(task);
+                }
+                // Для статусов completed, in-progress, pending даты остаются по плану
+            });
+
+            // Находим минимальный индекс затронутой задачи для пересчета последующих
+            // Пересчитываем только если были изменения дат (weekend-manual)
+            const minAffectedIndex = (status === 'weekend-manual' && affectedTaskIndices.size > 0)
+                ? Math.min(...Array.from(affectedTaskIndices))
+                : -1;
+            
+            if (minAffectedIndex >= 0) {
+                // Пересчитываем все задачи, начиная с минимального затронутого индекса
+                recalculateFollowingTasks(minAffectedIndex);
+            }
+
+            closeStatusMenu();
+            
+            // Сохраняем текущую позицию прокрутки перед перерисовкой
+            const scrollY = window.scrollY || window.pageYOffset;
+            const scrollX = window.scrollX || window.pageXOffset;
+            const chartContainer = document.getElementById('ganttChart');
+            const chartScrollTop = chartContainer ? chartContainer.scrollTop : 0;
+            const chartScrollLeft = chartContainer ? chartContainer.scrollLeft : 0;
+
+            updateStatistics();
+            
+            if (currentView === 'gantt') {
+                renderGantt();
+            }
+            renderTable();
+            
+            // Восстанавливаем позицию прокрутки
+            window.scrollTo(scrollX, scrollY);
+            const newChartContainer = document.getElementById('ganttChart');
+            if (newChartContainer) {
+                newChartContainer.scrollTop = chartScrollTop;
+                newChartContainer.scrollLeft = chartScrollLeft;
+            }
+            
+            // Немедленное сохранение
+            console.log('💾 Критическое изменение: статус применен к выделенным задачам, сохраняем немедленно');
+            saveFullGanttState();
+        }
+
         // Применение статуса к множественному выбору ячеек
         function applyStatusToMultipleCells(status, commentText, target) {
             if (!target.isMultiple || !target.cells) return;
@@ -16154,6 +16623,20 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                             // Показываем предупреждение о масштабе
                             openScaleWarning(status, currentScaleMode);
                             return; // Не применяем статус сразу, ждём подтверждения
+                        }
+                        
+                        // Проверяем, есть ли выделенные задачи (Shift+клик)
+                        if (selectedTaskIds.size > 0 && (!target || !target.isMultiple || !target.cells)) {
+                            // Для выделенных задач всегда открываем модальное окно комментария
+                            // для статусов "В работе" и "Завершено"
+                            if (status === 'in-progress' || status === 'completed') {
+                                pendingStatusForComment = status;
+                                openStatusCommentModal();
+                            } else {
+                                // Для других статусов применяем сразу
+                                applyStatusToSelectedTasks(status, '');
+                            }
+                            return;
                         }
                         
                         // Проверяем, является ли это множественным выбором
@@ -17451,7 +17934,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 element: '#companiesBottomBtn',
                 title: 'Компании',
                 text: 'Кнопка для возврата к списку компаний из архива.',
-                position: 'left',
+                position: 'bottom',
                 temporaryShow: true
             },
             {
@@ -17812,7 +18295,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             badge.className = 'new-feature-badge';
             badge.textContent = '!';
             badge.title = 'Новая функция';
-            element.style.position = 'relative';
+            // Не изменяем position для кнопок с абсолютным позиционированием
+            // element.style.position = 'relative';
+            // Вместо этого убеждаемся, что элемент имеет position для корректного позиционирования бейджа
+            const computedPosition = window.getComputedStyle(element).position;
+            if (computedPosition === 'static') {
+                element.style.position = 'relative';
+            }
             element.appendChild(badge);
 
             // Удаляем бейдж при первом клике

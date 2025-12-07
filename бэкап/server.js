@@ -315,109 +315,301 @@ app.put('/api/companies/:id', (req, res) => {
 // Удалить компанию
 app.delete('/api/companies/:id', (req, res) => {
   try {
-    const companyId = req.params.id;
+    let companyId = req.params.id;
+    console.log('🗑️ DELETE /api/companies/:id вызван');
+    console.log('   companyId из params:', companyId);
+    console.log('   typeof companyId:', typeof companyId);
+    
+    // Декодируем ID компании, если он был закодирован в URL
+    try {
+      companyId = decodeURIComponent(companyId);
+      console.log('   companyId после декодирования:', companyId);
+    } catch (decodeError) {
+      console.warn('   Предупреждение: не удалось декодировать companyId, используем как есть');
+    }
 
     if (!fs.existsSync(COMPANIES_FILE)) {
+      console.error('   ❌ Файл companies.json не найден');
       return res.status(404).json({ ok: false, error: 'Компания не найдена' });
     }
 
-    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    let companies = JSON.parse(raw);
+    console.log('   📖 Чтение файла companies.json...');
+    let raw, companies;
+    try {
+      raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = JSON.parse(raw);
+      console.log('   ✅ Файл прочитан, компаний:', companies.length);
+    } catch (readError) {
+      console.error('   ❌ Ошибка чтения/парсинга companies.json:', readError);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных компаний' });
+    }
+
+    // Сохраняем информацию о компании ДО удаления для логирования
+    console.log('   🔍 Поиск компании с ID:', companyId);
+    const deletedCompany = companies.find(c => c.id === companyId);
+    if (!deletedCompany) {
+      console.error('   ❌ Компания не найдена. Доступные ID:', companies.map(c => c.id));
+      return res.status(404).json({ ok: false, error: 'Компания не найдена' });
+    }
+    console.log('   ✅ Компания найдена:', deletedCompany.name || deletedCompany.id);
 
     const initialLength = companies.length;
     companies = companies.filter(c => c.id !== companyId);
 
     if (companies.length === initialLength) {
+      console.error('   ❌ Компания не была удалена из массива');
       return res.status(404).json({ ok: false, error: 'Компания не найдена' });
     }
+    console.log('   ✅ Компания удалена из массива (было:', initialLength, ', стало:', companies.length, ')');
 
     // Удаляем файлы данных компании
     const dataFile = getCompanyDataFile(companyId);
     const infoFile = getCompanyInfoFile(companyId);
-    if (fs.existsSync(dataFile)) fs.unlinkSync(dataFile);
-    if (fs.existsSync(infoFile)) fs.unlinkSync(infoFile);
+    console.log('   🗑️ Удаление файлов компании...');
+    console.log('      dataFile:', dataFile);
+    console.log('      infoFile:', infoFile);
+    try {
+      if (fs.existsSync(dataFile)) {
+        fs.unlinkSync(dataFile);
+        console.log('      ✅ dataFile удален');
+      } else {
+        console.log('      ℹ️ dataFile не существует, пропускаем');
+      }
+      if (fs.existsSync(infoFile)) {
+        fs.unlinkSync(infoFile);
+        console.log('      ✅ infoFile удален');
+      } else {
+        console.log('      ℹ️ infoFile не существует, пропускаем');
+      }
+    } catch (fileError) {
+      console.error('   ⚠️ Ошибка удаления файлов компании:', fileError);
+      console.error('      Стек ошибки:', fileError.stack);
+      // Продолжаем выполнение, даже если файлы не удалились
+    }
 
-    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    console.log('   💾 Сохранение обновленного списка компаний...');
+    try {
+      fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+      console.log('   ✅ Файл companies.json обновлен');
+    } catch (writeError) {
+      console.error('   ❌ Ошибка записи companies.json:', writeError);
+      console.error('      Стек ошибки:', writeError.stack);
+      return res.status(500).json({ ok: false, error: 'Ошибка сохранения данных' });
+    }
     
     // Логируем удаление компании
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    const deletedCompany = companies.find(c => c.id === companyId) || { name: companyId };
-    addLog(userName, 'Удалил компанию', `Компания: ${deletedCompany.name || companyId} (ID: ${companyId})`, companyId);
+    console.log('   📝 Логирование удаления компании...');
+    try {
+      const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+      const logResult = addLog(userName, 'Удалил компанию', `Компания: ${deletedCompany.name || companyId} (ID: ${companyId})`, companyId);
+      if (logResult) {
+        console.log('   ✅ Лог добавлен успешно');
+      } else {
+        console.warn('   ⚠️ Не удалось добавить лог, но это не критично');
+      }
+    } catch (logError) {
+      console.error('   ⚠️ Ошибка логирования (не критично):', logError);
+      // Не прерываем выполнение из-за ошибки логирования
+    }
     
+    console.log('   ✅ Удаление компании завершено успешно');
     res.json({ ok: true });
   } catch (e) {
-    console.error('Ошибка удаления компании:', e);
-    res.status(500).json({ ok: false, error: 'delete_failed' });
+    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА удаления компании:', e);
+    console.error('   Тип ошибки:', e.constructor.name);
+    console.error('   Сообщение:', e.message);
+    console.error('   Стек ошибки:', e.stack);
+    res.status(500).json({ ok: false, error: 'delete_failed', message: process.env.NODE_ENV === 'development' ? e.message : 'Внутренняя ошибка сервера' });
   }
 });
 
 // Архивировать компанию
 app.post('/api/companies/:id/archive', (req, res) => {
   try {
-    const companyId = decodeURIComponent(req.params.id);
+    let companyId = req.params.id;
+    console.log('📦 POST /api/companies/:id/archive вызван');
+    console.log('   companyId из params:', companyId);
+    console.log('   typeof companyId:', typeof companyId);
+    
+    // Декодируем ID компании, если он был закодирован в URL
+    try {
+      companyId = decodeURIComponent(companyId);
+      console.log('   companyId после декодирования:', companyId);
+    } catch (decodeError) {
+      console.warn('   Предупреждение: не удалось декодировать companyId, используем как есть');
+      console.warn('   Ошибка декодирования:', decodeError.message);
+    }
 
     if (!fs.existsSync(COMPANIES_FILE)) {
+      console.error('   ❌ Файл companies.json не найден');
       return res.status(404).json({ ok: false, error: 'Компания не найдена' });
     }
 
-    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    let companies = JSON.parse(raw);
+    console.log('   📖 Чтение файла companies.json...');
+    let raw, companies;
+    try {
+      raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = JSON.parse(raw);
+      console.log('   ✅ Файл прочитан, компаний:', companies.length);
+    } catch (readError) {
+      console.error('   ❌ Ошибка чтения/парсинга companies.json:', readError);
+      console.error('      Тип ошибки:', readError.constructor.name);
+      console.error('      Сообщение:', readError.message);
+      console.error('      Стек ошибки:', readError.stack);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных компаний' });
+    }
 
+    console.log('   🔍 Поиск компании с ID:', companyId);
     const companyIndex = companies.findIndex(c => c.id === companyId);
     if (companyIndex === -1) {
+      console.error('   ❌ Компания не найдена. Доступные ID:', companies.map(c => c.id));
       return res.status(404).json({ ok: false, error: 'Компания не найдена' });
     }
+    
+    const company = companies[companyIndex];
+    console.log('   ✅ Компания найдена:', company.name || company.id);
+    console.log('   Текущий статус архивирования:', company.archived ? 'архивирована' : 'не архивирована');
 
     // Помечаем компанию как архивированную
+    console.log('   📦 Помечаем компанию как архивированную...');
     companies[companyIndex].archived = true;
     companies[companyIndex].archivedAt = new Date().toISOString();
+    console.log('   ✅ Компания помечена как архивированная');
 
-    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    console.log('   💾 Сохранение обновленного списка компаний...');
+    try {
+      fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+      console.log('   ✅ Файл companies.json обновлен');
+    } catch (writeError) {
+      console.error('   ❌ Ошибка записи companies.json:', writeError);
+      console.error('      Тип ошибки:', writeError.constructor.name);
+      console.error('      Сообщение:', writeError.message);
+      console.error('      Стек ошибки:', writeError.stack);
+      return res.status(500).json({ ok: false, error: 'Ошибка сохранения данных' });
+    }
     
     // Логируем архивирование компании
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    const company = companies[companyIndex];
-    addLog(userName, 'Архивировал компанию', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
+    console.log('   📝 Логирование архивирования компании...');
+    try {
+      const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+      const logResult = addLog(userName, 'Архивировал компанию', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
+      if (logResult) {
+        console.log('   ✅ Лог добавлен успешно');
+      } else {
+        console.warn('   ⚠️ Не удалось добавить лог, но это не критично');
+      }
+    } catch (logError) {
+      console.error('   ⚠️ Ошибка логирования (не критично):', logError);
+      console.error('      Тип ошибки:', logError.constructor.name);
+      console.error('      Сообщение:', logError.message);
+      console.error('      Стек ошибки:', logError.stack);
+      // Не прерываем выполнение из-за ошибки логирования
+    }
     
+    console.log('   ✅ Архивирование компании завершено успешно');
     res.json({ ok: true });
   } catch (e) {
-    console.error('Ошибка архивирования компании:', e);
-    res.status(500).json({ ok: false, error: 'archive_failed' });
+    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА архивирования компании:', e);
+    console.error('   Тип ошибки:', e.constructor.name);
+    console.error('   Сообщение:', e.message);
+    console.error('   Стек ошибки:', e.stack);
+    res.status(500).json({ ok: false, error: 'archive_failed', message: process.env.NODE_ENV === 'development' ? e.message : 'Внутренняя ошибка сервера' });
   }
 });
 
 // Восстановить компанию из архива
 app.post('/api/companies/:id/restore', (req, res) => {
   try {
-    const companyId = decodeURIComponent(req.params.id);
+    let companyId = req.params.id;
+    console.log('♻️ POST /api/companies/:id/restore вызван');
+    console.log('   companyId из params:', companyId);
+    console.log('   typeof companyId:', typeof companyId);
+    
+    // Декодируем ID компании, если он был закодирован в URL
+    try {
+      companyId = decodeURIComponent(companyId);
+      console.log('   companyId после декодирования:', companyId);
+    } catch (decodeError) {
+      console.warn('   Предупреждение: не удалось декодировать companyId, используем как есть');
+      console.warn('   Ошибка декодирования:', decodeError.message);
+    }
 
     if (!fs.existsSync(COMPANIES_FILE)) {
+      console.error('   ❌ Файл companies.json не найден');
       return res.status(404).json({ ok: false, error: 'Компания не найдена' });
     }
 
-    const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    let companies = JSON.parse(raw);
+    console.log('   📖 Чтение файла companies.json...');
+    let raw, companies;
+    try {
+      raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = JSON.parse(raw);
+      console.log('   ✅ Файл прочитан, компаний:', companies.length);
+    } catch (readError) {
+      console.error('   ❌ Ошибка чтения/парсинга companies.json:', readError);
+      console.error('      Тип ошибки:', readError.constructor.name);
+      console.error('      Сообщение:', readError.message);
+      console.error('      Стек ошибки:', readError.stack);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения данных компаний' });
+    }
 
+    console.log('   🔍 Поиск компании с ID:', companyId);
     const companyIndex = companies.findIndex(c => c.id === companyId);
     if (companyIndex === -1) {
+      console.error('   ❌ Компания не найдена. Доступные ID:', companies.map(c => c.id));
       return res.status(404).json({ ok: false, error: 'Компания не найдена' });
     }
+    
+    const company = companies[companyIndex];
+    console.log('   ✅ Компания найдена:', company.name || company.id);
+    console.log('   Текущий статус архивирования:', company.archived ? 'архивирована' : 'не архивирована');
 
     // Убираем флаг архивирования
+    console.log('   ♻️ Восстанавливаем компанию из архива...');
     companies[companyIndex].archived = false;
-    delete companies[companyIndex].archivedAt;
+    if (companies[companyIndex].archivedAt) {
+      delete companies[companyIndex].archivedAt;
+    }
+    console.log('   ✅ Компания восстановлена из архива');
 
-    fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+    console.log('   💾 Сохранение обновленного списка компаний...');
+    try {
+      fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+      console.log('   ✅ Файл companies.json обновлен');
+    } catch (writeError) {
+      console.error('   ❌ Ошибка записи companies.json:', writeError);
+      console.error('      Тип ошибки:', writeError.constructor.name);
+      console.error('      Сообщение:', writeError.message);
+      console.error('      Стек ошибки:', writeError.stack);
+      return res.status(500).json({ ok: false, error: 'Ошибка сохранения данных' });
+    }
     
     // Логируем восстановление компании
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    const company = companies[companyIndex];
-    addLog(userName, 'Восстановил компанию из архива', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
+    console.log('   📝 Логирование восстановления компании...');
+    try {
+      const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+      const logResult = addLog(userName, 'Восстановил компанию из архива', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
+      if (logResult) {
+        console.log('   ✅ Лог добавлен успешно');
+      } else {
+        console.warn('   ⚠️ Не удалось добавить лог, но это не критично');
+      }
+    } catch (logError) {
+      console.error('   ⚠️ Ошибка логирования (не критично):', logError);
+      console.error('      Тип ошибки:', logError.constructor.name);
+      console.error('      Сообщение:', logError.message);
+      console.error('      Стек ошибки:', logError.stack);
+      // Не прерываем выполнение из-за ошибки логирования
+    }
     
+    console.log('   ✅ Восстановление компании завершено успешно');
     res.json({ ok: true });
   } catch (e) {
-    console.error('Ошибка восстановления компании:', e);
-    res.status(500).json({ ok: false, error: 'restore_failed' });
+    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА восстановления компании:', e);
+    console.error('   Тип ошибки:', e.constructor.name);
+    console.error('   Сообщение:', e.message);
+    console.error('   Стек ошибки:', e.stack);
+    res.status(500).json({ ok: false, error: 'restore_failed', message: process.env.NODE_ENV === 'development' ? e.message : 'Внутренняя ошибка сервера' });
   }
 });
 

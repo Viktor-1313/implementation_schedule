@@ -123,5 +123,17 @@
       "SetlTech"
     ],
     "createdAt": "2025-12-06T18:41:28.085Z"
+  },
+  {
+    "id": "1765099055068",
+    "name": "admi1444",
+    "login": "admi1444",
+    "password": "$2b$10$9FTvZ0O8AGeRSzaqosKLauYO1Y9FcxdOQJK8/.X7F4PyOEzkHJOeq",
+    "role": "user",
+    "companies": [
+      "SetlTech",
+      "lsr"
+    ],
+    "createdAt": "2025-12-07T09:17:35.069Z"
   }
 ]

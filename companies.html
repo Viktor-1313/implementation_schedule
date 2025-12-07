@@ -171,6 +171,30 @@
             border: 1px solid var(--color-border);
         }
 
+        /* Зеленый бордер в темной теме - все задачи завершены */
+        [data-theme="dark"] .company-card.all-completed {
+            border: 3px solid #66bb6a;
+            box-shadow: 0 10px 40px rgba(102, 187, 106, 0.3);
+        }
+
+        [data-theme="dark"] .company-card.all-completed:hover {
+            box-shadow: 0 15px 50px rgba(102, 187, 106, 0.4);
+        }
+
+        /* Темно-красный бордер в темной теме - есть просроченные задачи */
+        [data-theme="dark"] .company-card.has-overdue {
+            border: 3px solid #d32f2f;
+            box-shadow: 0 10px 40px rgba(211, 47, 47, 0.3);
+        }
+
+        [data-theme="dark"] .company-card.has-overdue:hover {
+            box-shadow: 0 15px 50px rgba(211, 47, 47, 0.4);
+        }
+
+        [data-theme="dark"] .company-card:hover {
+            border-color: #2196f3 !important;
+        }
+
         [data-theme="dark"] h1,
         [data-theme="dark"] p,
         [data-theme="dark"] .company-name,
@@ -191,9 +215,9 @@
             animation: fadeInScale 0.4s ease forwards;
         }
 
-        .archive-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+        .archive-btn:hover:not(.animating) {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         .archive-btn .archive-icon {
@@ -233,7 +257,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             overflow: visible;
@@ -243,6 +267,11 @@
             text-decoration: none;
             opacity: 0;
             transform: scale(0.8);
+        }
+        
+        .admin-btn:hover:not(.animating) {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         .admin-btn.show {
@@ -410,8 +439,8 @@
         }
 
         .admin-btn:hover:not(.animating) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         /* Подсказка для кнопки админа */
@@ -496,6 +525,7 @@
         .profile-btn,
         .logout-btn,
         .admin-btn,
+        a.admin-btn,
         .companies-bottom-btn,
         .archive-btn {
             position: absolute;
@@ -507,16 +537,29 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             overflow: visible;
+            pointer-events: auto !important;
+        }
+        
+        /* Общие hover эффекты для всех кнопок */
+        .profile-btn:hover:not(.animating),
+        .logout-btn:hover:not(.animating),
+        .admin-btn:hover:not(.animating),
+        a.admin-btn:hover:not(.animating),
+        .companies-bottom-btn:hover:not(.animating),
+        .archive-btn:hover:not(.animating) {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         /* Золотая точка, вращающаяся по кругу при наведении */
         .profile-btn::after,
         .logout-btn::after,
         .admin-btn::after,
+        a.admin-btn::after,
         .companies-bottom-btn::after,
         .archive-btn::after {
             content: '';
@@ -539,10 +582,11 @@
         .profile-btn:hover::after,
         .logout-btn:hover::after,
         .admin-btn:hover::after,
+        a.admin-btn:hover::after,
         .companies-bottom-btn:hover::after,
         .archive-btn:hover::after {
-            opacity: 1;
-            animation: rotateDot 2s linear infinite;
+            opacity: 1 !important;
+            animation: rotateDot 2s linear infinite !important;
         }
 
         .profile-btn {
@@ -613,8 +657,8 @@
         }
 
         .profile-btn:hover:not(.animating) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         .companies-bottom-btn {
@@ -623,15 +667,48 @@
             right: 80px;
             opacity: 0;
             transform: scale(0.8);
+            display: flex !important;
+            visibility: visible !important;
         }
 
         .companies-bottom-btn.show {
             animation: fadeInScale 0.4s ease forwards;
         }
+        
+        /* Кнопка компаний всегда видна на мобильных устройствах */
+        @media (max-width: 1024px) {
+            .companies-bottom-btn {
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 1000 !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .companies-bottom-btn {
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 1000 !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .companies-bottom-btn {
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 1000 !important;
+            }
+        }
 
-        .companies-bottom-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+        .companies-bottom-btn:hover:not(.animating) {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         /* Иконка зданий для кнопки компаний */
@@ -710,8 +787,8 @@
 
         .logout-btn {
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
-            top: 30px;
-            right: 30px;
+            top: 30px; /* На том же уровне, что и кнопка профиля */
+            right: 30px; /* Справа от кнопки профиля (которая на right: 80px) */
             opacity: 0;
             transform: scale(0.8);
         }
@@ -731,17 +808,18 @@
         }
 
         .logout-btn:hover:not(.animating) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
         }
 
         /* Подсказки для кнопок */
         .profile-btn[data-tooltip]:hover .profile-tooltip,
         .logout-btn[data-tooltip]:hover .logout-tooltip,
         .admin-btn[data-tooltip]:hover .admin-tooltip,
+        a.admin-btn[data-tooltip]:hover .admin-tooltip,
         .companies-bottom-btn[data-tooltip]:hover .companies-bottom-tooltip,
         .archive-btn[data-tooltip]:hover .archive-tooltip {
-            opacity: 1;
+            opacity: 1 !important;
             transition-delay: 0.3s;
         }
 
@@ -835,35 +913,192 @@
             padding: 30px;
             box-shadow: 0 10px 40px rgba(33, 150, 243, 0.2);
             border: 1px solid rgba(100, 181, 246, 0.3);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: visible;
+        }
+
+        /* Зеленый бордер - все задачи завершены */
+        .company-card.all-completed {
+            border: 3px solid #4caf50;
+            box-shadow: 0 10px 40px rgba(76, 175, 80, 0.3);
+        }
+
+        .company-card.all-completed:hover {
+            box-shadow: 0 15px 50px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Темно-красный бордер - есть просроченные задачи */
+        .company-card.has-overdue {
+            border: 3px solid #b71c1c;
+            box-shadow: 0 10px 40px rgba(183, 28, 28, 0.3);
+        }
+
+        .company-card.has-overdue:hover {
+            box-shadow: 0 15px 50px rgba(183, 28, 28, 0.4);
         }
 
         .company-card.animating {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .company-card::before {
+        .company-card::before,
+        .company-card::after {
             content: '';
             position: absolute;
+            background: linear-gradient(90deg, #42a5f5, #2196f3, #64b5f6);
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        /* Левая полоса: от верха влево и вниз до центра низа */
+        .company-card::before {
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #42a5f5, #2196f3);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            transform: translateX(-50%);
+            animation: borderLeftFlow 1.2s ease-out forwards;
+            animation-play-state: paused;
+        }
+
+        /* Правая полоса: от верха вправо и вниз до центра низа */
+        .company-card::after {
+            top: 0;
+            right: 50%;
+            width: 0;
+            height: 3px;
+            transform: translateX(50%);
+            animation: borderRightFlow 1.2s ease-out forwards;
+            animation-play-state: paused;
+        }
+
+        @keyframes borderLeftFlow {
+            0% {
+                top: 0;
+                left: 50%;
+                width: 0;
+                height: 3px;
+                opacity: 1;
+                transform: translateX(-50%);
+                border-radius: 20px 0 0 0;
+            }
+            20% {
+                left: 0;
+                width: 50%;
+                height: 3px;
+                transform: translateX(0);
+            }
+            40% {
+                left: 0;
+                top: 0;
+                width: 3px;
+                height: 100%;
+            }
+            60% {
+                left: 0;
+                top: 100%;
+                width: 3px;
+                height: 0;
+            }
+            80% {
+                left: 0;
+                top: 100%;
+                width: 50%;
+                height: 3px;
+            }
+            90% {
+                left: 50%;
+                top: 100%;
+                width: 0;
+                height: 3px;
+                opacity: 1;
+                transform: translateX(-50%);
+                border-radius: 0 0 0 20px;
+            }
+            100% {
+                left: 50%;
+                top: 100%;
+                width: 0;
+                height: 5px;
+                opacity: 1;
+                transform: translateX(-50%);
+                border-radius: 0 0 0 20px;
+                box-shadow: 0 0 25px rgba(100, 181, 246, 1), 0 0 50px rgba(66, 165, 245, 1), 0 0 75px rgba(33, 150, 243, 0.8);
+                filter: blur(2px);
+            }
+        }
+
+        @keyframes borderRightFlow {
+            0% {
+                top: 0;
+                right: 50%;
+                width: 0;
+                height: 3px;
+                opacity: 1;
+                transform: translateX(50%);
+                border-radius: 0 20px 0 0;
+            }
+            20% {
+                right: 0;
+                width: 50%;
+                height: 3px;
+                transform: translateX(0);
+            }
+            40% {
+                right: 0;
+                top: 0;
+                width: 3px;
+                height: 100%;
+            }
+            60% {
+                right: 0;
+                top: 100%;
+                width: 3px;
+                height: 0;
+            }
+            80% {
+                right: 0;
+                top: 100%;
+                width: 50%;
+                height: 3px;
+            }
+            90% {
+                right: 50%;
+                top: 100%;
+                width: 0;
+                height: 3px;
+                opacity: 1;
+                transform: translateX(50%);
+                border-radius: 0 0 20px 0;
+            }
+            100% {
+                right: 50%;
+                top: 100%;
+                width: 0;
+                height: 5px;
+                opacity: 1;
+                transform: translateX(50%);
+                border-radius: 0 0 20px 0;
+                box-shadow: 0 0 25px rgba(100, 181, 246, 1), 0 0 50px rgba(66, 165, 245, 1), 0 0 75px rgba(33, 150, 243, 0.8);
+                filter: blur(2px);
+            }
         }
 
         .company-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 50px rgba(33, 150, 243, 0.3);
+            border-color: #2196f3 !important;
+            border-width: 3px !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.3s ease, border-width 0.3s ease;
         }
 
-        .company-card:hover::before {
-            transform: scaleX(1);
+        .company-card:hover::before,
+        .company-card:hover::after {
+            animation-play-state: running;
         }
 
         /* Drag and Drop стили */
@@ -1452,6 +1687,56 @@
             color: #1565c0;
         }
 
+        .modal-header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .statistics-export-pdf-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .statistics-export-pdf-btn:hover {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        .statistics-export-pdf-btn:active {
+            transform: translateY(0);
+        }
+
+        .statistics-export-pdf-btn .pdf-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+        }
+
+        .statistics-export-pdf-btn .pdf-icon svg {
+            width: 100%;
+            height: 100%;
+            color: white;
+        }
+
+        .statistics-export-pdf-btn .pdf-text {
+            font-size: 0.9rem;
+        }
+
         /* Модальное окно статистики */
         .statistics-modal-content {
             background: white;
@@ -1727,6 +2012,12 @@
             border: 1px solid rgba(239, 83, 80, 0.5);
         }
 
+        .message.info {
+            background: rgba(33, 150, 243, 0.2);
+            color: #1565c0;
+            border: 1px solid rgba(33, 150, 243, 0.5);
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 40px;
@@ -1792,13 +2083,18 @@
             }
 
             .logout-btn {
-                top: 129px; /* 77px (top второй) + 40px (высота второй) + 12px (отступ) = 129px */
-                right: 25px !important;
+                top: 25px; /* На том же уровне, что и кнопка профиля */
+                right: 65px !important; /* Справа от кнопки профиля (25px + 40px ширина) */
             }
 
             .companies-bottom-btn {
-                top: 77px; /* 25px (top профиля) + 40px (высота профиля) + 12px (отступ) = 77px */
-                right: 25px !important;
+                top: 77px; /* 25px (top выхода) + 40px (высота выхода) + 12px (отступ) = 77px */
+                right: 65px !important; /* Та же позиция по right, что и кнопка выхода */
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 1000 !important;
             }
         }
 
@@ -1922,13 +2218,18 @@
             }
 
             .logout-btn {
-                top: 115px; /* 65px (top второй) + 38px (высота второй) + 12px (отступ) = 115px */
-                right: 15px !important;
+                top: 15px; /* На том же уровне, что и кнопка профиля */
+                right: 53px !important; /* Справа от кнопки профиля (15px + 38px ширина) */
             }
 
             .companies-bottom-btn {
-                top: 65px; /* 15px (top профиля) + 38px (высота профиля) + 12px (отступ) = 65px */
-                right: 15px !important;
+                top: 65px; /* 15px (top выхода) + 38px (высота выхода) + 12px (отступ) = 65px */
+                right: 53px !important; /* Та же позиция по right, что и кнопка выхода */
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 1000 !important;
             }
         }
 
@@ -2044,13 +2345,18 @@
             }
 
             .logout-btn {
-                top: 106px; /* 59px (top второй) + 35px (высота второй) + 12px (отступ) = 106px */
-                right: 12px !important;
+                top: 12px; /* На том же уровне, что и кнопка профиля */
+                right: 47px !important; /* Справа от кнопки профиля (12px + 35px ширина) */
             }
 
             .companies-bottom-btn {
-                top: 59px; /* 12px (top профиля) + 35px (высота профиля) + 12px (отступ) = 59px */
-                right: 12px !important;
+                top: 59px; /* 12px (top выхода) + 35px (высота выхода) + 12px (отступ) = 59px */
+                right: 47px !important; /* Та же позиция по right, что и кнопка выхода */
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 1000 !important;
             }
 
             .modal-content {
@@ -2105,7 +2411,7 @@
 
         /* Модальное окно редактирования профиля */
         .profile-modal {
-            display: none !important;
+            display: none;
             position: fixed;
             z-index: -1;
             left: 0;
@@ -2120,17 +2426,17 @@
         }
 
         .profile-modal.show {
-            display: flex;
-            z-index: 10002;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            display: flex !important;
+            z-index: 10002 !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(5px) !important;
             animation: fadeIn 0.3s ease;
             align-items: flex-start;
             justify-content: center;
             padding-top: 10vh;
-            visibility: visible;
-            opacity: 1;
-            pointer-events: auto;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
 
         @media (max-width: 768px) {
@@ -2661,17 +2967,17 @@
     <div class="container">
         <div class="header">
             <!-- Кнопки управления в правом верхнем углу -->
-            <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" onclick="logout()">
-                <span class="logout-icon"></span>
-                <span class="logout-tooltip">Выход</span>
-            </button>
-            <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль" onclick="openProfileModal()">
+            <button class="profile-btn" id="profileBtn" data-tooltip="Редактировать профиль">
                 <span class="profile-icon-head"></span>
                 <span class="profile-icon-mouth"></span>
                 <span class="profile-icon-shoulders"></span>
                 <span class="profile-tooltip">Редактировать профиль</span>
             </button>
-            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" style="display: none;" onclick="hideArchive()">
+            <button class="logout-btn" id="logoutBtn" data-tooltip="Выход" onclick="logout()">
+                <span class="logout-icon"></span>
+                <span class="logout-tooltip">Выход</span>
+            </button>
+            <button class="companies-bottom-btn" id="companiesBottomBtn" data-tooltip="Компании" onclick="hideArchive()">
                 <span class="archive-companies-icon"></span>
                 <span class="companies-bottom-tooltip">Компании</span>
             </button>
@@ -2729,7 +3035,7 @@
                 <div class="form-group">
                     <label for="editCompanyId">ID компании *</label>
                     <input type="text" id="editCompanyId" name="editCompanyId" required
-                           pattern="[a-zA-Z0-9_-]+"
+                           pattern="[a-zA-Z0-9_\-]+"
                            title="Только латинские буквы, цифры, дефисы и подчеркивания">
                     <small>Используется в URL. Например: SetlTech, setlsoft, company-1</small>
                 </div>
@@ -2835,7 +3141,7 @@
                 <div class="form-group">
                     <label for="companyId">ID компании *</label>
                     <input type="text" id="companyId" name="companyId" required 
-                           placeholder="SetlTech" pattern="[a-zA-Z0-9_-]+"
+                           placeholder="SetlTech" pattern="[a-zA-Z0-9_\-]+"
                            title="Только латинские буквы, цифры, дефисы и подчеркивания">
                     <small>Используется в URL. Например: SetlTech, setlsoft, company-1</small>
                 </div>
@@ -2912,7 +3218,19 @@
         <div class="statistics-modal-content">
             <div class="modal-header">
                 <h2 id="statisticsModalTitle">Статистика компании</h2>
-                <button class="modal-close" onclick="closeStatisticsModal()">&times;</button>
+                <div class="modal-header-buttons">
+                    <button class="statistics-export-pdf-btn" onclick="exportStatisticsToPDF()" title="Экспортировать статистику в PDF">
+                        <span class="pdf-icon">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.41421C14 5.149 13.8946 4.89464 13.7071 4.70711L10.2929 1.29289C10.1054 1.10536 9.851 1 9.58579 1H3ZM3 3H9V5H13V13H3V3Z" fill="currentColor"/>
+                                <path d="M10 1V4H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                <path d="M5 8H11M5 10H11M5 12H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="pdf-text">PDF</span>
+                    </button>
+                    <button class="modal-close" onclick="closeStatisticsModal()">&times;</button>
+                </div>
             </div>
             <div id="statisticsContent">
                 <div class="statistics-loading">Загрузка статистики...</div>
@@ -3052,6 +3370,27 @@
 
         // Загрузить данные текущего пользователя
         function loadCurrentUser() {
+            // Показываем кнопку компаний всегда, независимо от режима
+            const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+            if (companiesBottomBtn) {
+                // Проверяем, является ли устройство мобильным
+                const isMobile = window.innerWidth <= 1024;
+                
+                companiesBottomBtn.style.display = 'flex';
+                companiesBottomBtn.style.visibility = 'visible';
+                companiesBottomBtn.style.opacity = isMobile ? '1' : '0';
+                companiesBottomBtn.style.transform = isMobile ? 'scale(1)' : 'scale(0.8)';
+                
+                if (!isMobile) {
+                    setTimeout(() => {
+                        companiesBottomBtn.classList.add('show');
+                    }, 100);
+                } else {
+                    // На мобильных сразу делаем видимой
+                    companiesBottomBtn.classList.add('show');
+                }
+            }
+            
             const ganttMode = localStorage.getItem('gantt-mode') || 'edit';
             const isViewMode = ganttMode === 'view';
             
@@ -3071,6 +3410,17 @@
                     adminPanelLink.style.display = 'none';
                 }
                 
+                // Кнопка компаний всегда видима, даже в режиме просмотра
+                const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                if (companiesBottomBtn) {
+                    const isMobile = window.innerWidth <= 1024;
+                    companiesBottomBtn.style.display = 'flex';
+                    companiesBottomBtn.style.visibility = 'visible';
+                    companiesBottomBtn.style.opacity = '1';
+                    companiesBottomBtn.style.transform = 'scale(1)';
+                    companiesBottomBtn.classList.add('show');
+                }
+                
                 // Обновляем заголовок для режима просмотра
                 const subtitle = document.getElementById('headerSubtitle');
                 if (subtitle) {
@@ -3085,6 +3435,25 @@
                 try {
                     currentUser = JSON.parse(userStr);
                     isAdmin = currentUser.role === 'admin';
+                    
+                    // Показываем кнопку компаний всегда
+                    const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                    if (companiesBottomBtn) {
+                        const isMobile = window.innerWidth <= 1024;
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = isMobile ? '1' : '0';
+                        companiesBottomBtn.style.transform = isMobile ? 'scale(1)' : 'scale(0.8)';
+                        
+                        if (!isMobile) {
+                            setTimeout(() => {
+                                companiesBottomBtn.classList.add('show');
+                            }, 350);
+                        } else {
+                            // На мобильных сразу делаем видимой
+                            companiesBottomBtn.classList.add('show');
+                        }
+                    }
                     
                     // Показываем кнопку архива только для админов
                     const archiveBtn = document.getElementById('archiveBtn');
@@ -3192,6 +3561,107 @@
             return null;
         }
 
+        // Функция для проверки статуса задач компании
+        async function checkCompanyTasksStatus(companyId) {
+            try {
+                const response = await fetch(`/api/gantt-state?company=${encodeURIComponent(companyId)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        let allCompleted = true;
+                        let hasOverdue = false;
+                        
+                        for (const task of data.tasks) {
+                            // Пропускаем задачи-этапы (свернутые этапы)
+                            if (task.isStageRow) continue;
+                            
+                            // Проверяем дату окончания задачи
+                            let endDate = null;
+                            if (task.endDate) {
+                                if (typeof task.endDate === 'string') {
+                                    endDate = new Date(task.endDate);
+                                } else if (task.endDate instanceof Date) {
+                                    endDate = new Date(task.endDate);
+                                } else if (task.endDate.getTime) {
+                                    // Если это объект Date
+                                    endDate = new Date(task.endDate.getTime());
+                                }
+                                if (endDate && !isNaN(endDate.getTime())) {
+                                    endDate.setHours(0, 0, 0, 0);
+                                } else {
+                                    endDate = null;
+                                }
+                            }
+                            
+                            // Проверяем статус задачи (может быть 'pending', 'in-progress', 'completed')
+                            const taskStatus = task.status || 'pending';
+                            
+                            // Проверяем dateStatuses для отдельных дат
+                            const dateStatuses = task.dateStatuses || {};
+                            let taskFullyCompleted = false;
+                            
+                            // Если есть dateStatuses, проверяем все даты
+                            if (Object.keys(dateStatuses).length > 0) {
+                                let allDatesCompleted = true;
+                                let hasOverdueDate = false;
+                                
+                                for (const [dateStr, status] of Object.entries(dateStatuses)) {
+                                    const date = new Date(dateStr);
+                                    if (!isNaN(date.getTime())) {
+                                        date.setHours(0, 0, 0, 0);
+                                        
+                                        // Если дата прошла и статус не 'completed'
+                                        if (date < today && status !== 'completed') {
+                                            hasOverdueDate = true;
+                                        }
+                                        
+                                        // Если хотя бы одна дата не завершена
+                                        if (status !== 'completed') {
+                                            allDatesCompleted = false;
+                                        }
+                                    }
+                                }
+                                
+                                taskFullyCompleted = allDatesCompleted;
+                                if (hasOverdueDate) {
+                                    hasOverdue = true;
+                                }
+                            } else {
+                                // Если нет dateStatuses, проверяем общий статус задачи
+                                taskFullyCompleted = (taskStatus === 'completed');
+                            }
+                            
+                            // Если задача не полностью завершена
+                            if (!taskFullyCompleted) {
+                                allCompleted = false;
+                                
+                                // Если дата окончания прошла и задача не завершена, она просрочена
+                                if (endDate && endDate < today) {
+                                    hasOverdue = true;
+                                }
+                            }
+                        }
+                        
+                        // Если все задачи завершены
+                        if (allCompleted) {
+                            return 'all-completed';
+                        }
+                        
+                        // Если есть просроченные задачи
+                        if (hasOverdue) {
+                            return 'has-overdue';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn(`Не удалось проверить статус задач компании ${companyId}:`, e);
+            }
+            return null;
+        }
+
         // Отобразить список компаний
         async function renderCompanies(companies, allCompanies = []) {
             const container = document.getElementById('companiesContainer');
@@ -3213,7 +3683,7 @@
                             <div class="empty-state">
                                 <p>Компании не найдены. Создайте первую компанию.</p>
                             </div>
-                            <div class="add-company-card" onclick="openCreateModal()">
+                            <div class="add-company-card" onclick="return openCreateModal(event)">
                                 <div class="add-company-icon">+</div>
                                 <h3>Создать новую компанию</h3>
                             </div>
@@ -3231,10 +3701,13 @@
                 return;
             }
 
-            // Загружаем информацию о компаниях (логотипы, названия и типы графиков) параллельно
+            // Загружаем информацию о компаниях (логотипы, названия и типы графиков) и статус задач параллельно
             const companiesWithInfo = await Promise.all(
                 companies.map(async (company) => {
-                    const companyInfo = await loadCompanyInfo(company.id);
+                    const [companyInfo, taskStatus] = await Promise.all([
+                        loadCompanyInfo(company.id),
+                        checkCompanyTasksStatus(company.id)
+                    ]);
                     // Используем название из company-info, если оно есть, иначе из companies.json
                     const companyName = companyInfo && companyInfo.name ? companyInfo.name : company.name;
                     const objectName = companyInfo && companyInfo.objectName ? companyInfo.objectName : null;
@@ -3242,7 +3715,7 @@
                     const chartType = companyInfo && companyInfo.chartType ? companyInfo.chartType : 'icona';
                     // Используем сохраненный containerName, если он есть
                     const containerName = companyInfo && companyInfo.containerName ? companyInfo.containerName : null;
-                    return { ...company, name: companyName, objectName, logoData, chartType, containerName };
+                    return { ...company, name: companyName, objectName, logoData, chartType, containerName, taskStatus };
                 })
             );
 
@@ -3347,8 +3820,11 @@
                     </button>
                 `;
                 
+                // Определяем класс статуса задач
+                const statusClass = company.taskStatus || '';
+                
                 return `
-                <div class="company-card ${isAdmin ? 'draggable' : ''}" ${isAdmin ? '' : `data-company-id="${safeCompanyId}"`} ${isAdmin ? `draggable="true" data-company-id="${safeCompanyId}"` : ''}>
+                <div class="company-card ${isAdmin ? 'draggable' : ''} ${statusClass}" ${isAdmin ? '' : `data-company-id="${safeCompanyId}"`} ${isAdmin ? `draggable="true" data-company-id="${safeCompanyId}"` : ''}>
                     ${statisticsButtonHtml}
                     ${copyButtonHtml}
                     ${logoHtml}
@@ -3392,7 +3868,7 @@
                 html += `
                     <div class="chart-type-section">
                         <div class="companies-grid">
-                            <div class="add-company-card" onclick="openCreateModal()">
+                            <div class="add-company-card" onclick="return openCreateModal(event)">
                                 <div class="add-company-icon">+</div>
                                 <h3>Создать новую компанию</h3>
                             </div>
@@ -3409,7 +3885,7 @@
                             <div class="empty-state">
                                 <p>Компании не найдены. Создайте первую компанию.</p>
                             </div>
-                            <div class="add-company-card" onclick="openCreateModal()">
+                            <div class="add-company-card" onclick="return openCreateModal(event)">
                                 <div class="add-company-icon">+</div>
                                 <h3>Создать новую компанию</h3>
                             </div>
@@ -4539,12 +5015,14 @@
             }
             
             if (pageTitle) pageTitle.textContent = 'Архив компаний';
+            // Кнопка компаний всегда видима
             if (companiesBottomBtn) {
+                const isMobile = window.innerWidth <= 1024;
                 companiesBottomBtn.style.display = 'flex';
-                // Запускаем анимацию появления
-                setTimeout(() => {
-                    companiesBottomBtn.classList.add('show');
-                }, 10);
+                companiesBottomBtn.style.visibility = 'visible';
+                companiesBottomBtn.style.opacity = '1';
+                companiesBottomBtn.style.transform = 'scale(1)';
+                companiesBottomBtn.classList.add('show');
             }
             
             await loadArchivedCompanies();
@@ -4581,12 +5059,14 @@
             }
             
             if (pageTitle) pageTitle.textContent = 'Выбор компании';
+            // Кнопка компаний всегда видима, не скрываем её
             if (companiesBottomBtn) {
-                companiesBottomBtn.classList.remove('show');
-                // Скрываем кнопку после завершения анимации
-                setTimeout(() => {
-                    companiesBottomBtn.style.display = 'none';
-                }, 400);
+                const isMobile = window.innerWidth <= 1024;
+                companiesBottomBtn.style.display = 'flex';
+                companiesBottomBtn.style.visibility = 'visible';
+                companiesBottomBtn.style.opacity = '1';
+                companiesBottomBtn.style.transform = 'scale(1)';
+                companiesBottomBtn.classList.add('show');
             }
         }
 
@@ -5037,21 +5517,33 @@
         window.confirmDeleteCompany = confirmDeleteCompany;
 
         // Открыть модальное окно создания (только для админов)
-        function openCreateModal() {
+        function openCreateModal(event) {
+            // Предотвращаем дефолтное поведение, если событие передано
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             // Обновляем список типов графиков перед открытием модального окна
             updateChartTypeSelects();
             if (!isAdmin) {
                 showMessage('Только администраторы могут создавать компании', 'error');
-                return;
+                return false;
             }
             const modal = document.getElementById('createModal');
+            if (!modal) {
+                console.error('Модальное окно создания компании не найдено');
+                return false;
+            }
             const modalContent = modal.querySelector('.modal-content');
-            
-            // Сначала прокручиваем страницу к началу, если нужно
-            window.scrollTo({ top: 0, behavior: 'instant' });
             
             // Открываем модальное окно
             modal.classList.add('show');
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'auto';
+            modal.style.zIndex = '10000';
             
             // Прокручиваем модальное окно к началу
             modal.scrollTop = 0;
@@ -5071,6 +5563,8 @@
             document.getElementById('createMessage').classList.remove('show');
             document.getElementById('logoPreview').style.display = 'none';
             document.getElementById('logoPreviewImg').src = '';
+            
+            return false;
         }
 
         // Функция сжатия изображения
@@ -5185,11 +5679,12 @@
                 }
                 
                 // Сначала создаем компанию
+                // Убираем заголовок X-User-Name, так как userName передается в теле запроса
+                // Заголовки HTTP могут содержать только ASCII символы, а userName может содержать кириллицу
                 const response = await fetch('/api/companies', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-User-Name': userName
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         id: companyId,
@@ -5302,12 +5797,6 @@
             }
         });
 
-        // Закрытие модального окна профиля при клике вне его
-        document.getElementById('profileModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeProfileModal();
-            }
-        });
 
 
         // ========== СВЕТЛЯЧКИ ==========
@@ -6085,6 +6574,250 @@
             setTimeout(removeDarkening, 500);
         })();
 
+        // ========== ФУНКЦИИ ДЛЯ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ==========
+        // Определяем функции до DOMContentLoaded, чтобы они были доступны при добавлении обработчиков
+
+        // Перетаскивание модального окна
+        let isProfileModalDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let initialPosition = { x: 0, y: 0 };
+
+        function initProfileModalDrag() {
+            const modal = document.getElementById('profileModal');
+            const modalContent = modal?.querySelector('.profile-modal-content');
+            const modalHeader = modal?.querySelector('.profile-modal-header');
+            
+            if (!modalContent || !modalHeader) return;
+
+            modalHeader.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('profile-modal-close')) {
+                    return; // Не перетаскиваем при клике на кнопку закрытия
+                }
+                
+                isProfileModalDragging = true;
+                const rect = modalContent.getBoundingClientRect();
+                
+                // Вычисляем смещение от точки клика до левого верхнего угла окна
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                
+                // Сохраняем начальную позицию окна
+                initialPosition.x = rect.left;
+                initialPosition.y = rect.top;
+                
+                // Переключаем на fixed позиционирование для корректного перетаскивания
+                modalContent.style.position = 'fixed';
+                modalContent.style.left = rect.left + 'px';
+                modalContent.style.top = rect.top + 'px';
+                modalContent.style.margin = '0';
+                modalContent.style.transition = 'none';
+                
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isProfileModalDragging) return;
+                
+                const modalContent = document.querySelector('.profile-modal-content');
+                if (!modalContent) return;
+
+                // Вычисляем новую позицию так, чтобы точка клика оставалась под курсором
+                let newX = e.clientX - dragOffset.x;
+                let newY = e.clientY - dragOffset.y;
+                
+                // Ограничиваем перемещение границами экрана
+                const maxX = window.innerWidth - modalContent.offsetWidth;
+                const maxY = window.innerHeight - modalContent.offsetHeight;
+                
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+                
+                modalContent.style.left = newX + 'px';
+                modalContent.style.top = newY + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isProfileModalDragging) {
+                    isProfileModalDragging = false;
+                    const modalContent = document.querySelector('.profile-modal-content');
+                    if (modalContent) {
+                        // Возвращаем transition для плавных анимаций
+                        modalContent.style.transition = '';
+                        // Оставляем position: fixed, чтобы окно осталось на месте
+                    }
+                }
+            });
+        }
+
+        // Открыть модальное окно профиля
+        function openProfileModal() {
+            console.log('🚀 openProfileModal вызвана');
+            const modal = document.getElementById('profileModal');
+            const modalContent = modal?.querySelector('.profile-modal-content');
+            const loginInput = document.getElementById('profileLogin');
+            
+            console.log('🔍 Поиск элементов модального окна:', {
+                modal: !!modal,
+                modalElement: modal,
+                modalContent: !!modalContent,
+                loginInput: !!loginInput,
+                currentUser: !!currentUser
+            });
+            
+            // Если currentUser еще не загружен, пытаемся загрузить его
+            if (!currentUser) {
+                console.log('📥 currentUser не найден, загружаем...');
+                loadCurrentUser();
+            }
+            
+            if (!modal) {
+                console.error('❌ Модальное окно профиля не найдено');
+                return;
+            }
+            
+            if (!loginInput) {
+                console.error('❌ Поле логина не найдено');
+                return;
+            }
+            
+            console.log('✅ Все элементы найдены, продолжаем открытие модального окна');
+            
+            // Заполняем поля, если пользователь загружен
+            if (currentUser) {
+                loginInput.value = currentUser.login || '';
+            } else {
+                // Если пользователь не загружен, пытаемся получить из localStorage
+                const userStr = localStorage.getItem('gantt-user');
+                if (userStr) {
+                    try {
+                        const user = JSON.parse(userStr);
+                        loginInput.value = user.login || '';
+                    } catch (e) {
+                        console.error('Ошибка парсинга данных пользователя:', e);
+                    }
+                }
+            }
+            
+            // Очищаем поля паролей и сообщений
+            const passwordInput = document.getElementById('profilePassword');
+            const passwordConfirmInput = document.getElementById('profilePasswordConfirm');
+            const messageEl = document.getElementById('profileMessage');
+            
+            if (passwordInput) passwordInput.value = '';
+            if (passwordConfirmInput) passwordConfirmInput.value = '';
+            if (messageEl) {
+                messageEl.classList.remove('show');
+                messageEl.textContent = '';
+            }
+            
+            // Сбрасываем позицию при открытии
+            if (modalContent) {
+                modalContent.style.position = '';
+                modalContent.style.left = '';
+                modalContent.style.top = '';
+                modalContent.style.margin = '';
+                modalContent.style.transform = '';
+            }
+            
+            // Показываем модальное окно
+            console.log('👁️ Показываем модальное окно');
+            
+            // Сначала добавляем класс show
+            modal.classList.add('show');
+            
+            // Затем устанавливаем стили через JavaScript с !important через setProperty
+            modal.style.setProperty('display', 'flex', 'important');
+            modal.style.setProperty('visibility', 'visible', 'important');
+            modal.style.setProperty('opacity', '1', 'important');
+            modal.style.setProperty('pointer-events', 'auto', 'important');
+            modal.style.setProperty('z-index', '10002', 'important');
+            modal.style.setProperty('background-color', 'rgba(0, 0, 0, 0.5)', 'important');
+            
+            // Получаем computed стили для проверки
+            const computedStyle = window.getComputedStyle(modal);
+            const rect = modal.getBoundingClientRect();
+            
+            console.log('✅ Модальное окно открыто:', {
+                hasShowClass: modal.classList.contains('show'),
+                inlineStyles: {
+                    display: modal.style.display,
+                    visibility: modal.style.visibility,
+                    opacity: modal.style.opacity,
+                    pointerEvents: modal.style.pointerEvents,
+                    zIndex: modal.style.zIndex
+                },
+                computedStyles: {
+                    display: computedStyle.display,
+                    visibility: computedStyle.visibility,
+                    opacity: computedStyle.opacity,
+                    pointerEvents: computedStyle.pointerEvents,
+                    zIndex: computedStyle.zIndex,
+                    position: computedStyle.position,
+                    width: computedStyle.width,
+                    height: computedStyle.height
+                },
+                boundingRect: {
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height,
+                    visible: rect.width > 0 && rect.height > 0
+                },
+                isInViewport: rect.top >= 0 && rect.left >= 0 && rect.width > 0 && rect.height > 0
+            });
+            
+            // Проверяем, не перекрыто ли модальное окно другими элементами
+            setTimeout(() => {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                const elementAtCenter = document.elementFromPoint(centerX, centerY);
+                const computedStyleAfter = window.getComputedStyle(modal);
+                const rectAfter = modal.getBoundingClientRect();
+                
+                console.log('🎯 Проверка через 100ms после открытия:', {
+                    element: elementAtCenter,
+                    isModal: elementAtCenter === modal || modal.contains(elementAtCenter),
+                    elementTag: elementAtCenter?.tagName,
+                    elementClass: elementAtCenter?.className,
+                    elementId: elementAtCenter?.id,
+                    modalStillOpen: modal.classList.contains('show'),
+                    computedDisplay: computedStyleAfter.display,
+                    computedVisibility: computedStyleAfter.visibility,
+                    computedOpacity: computedStyleAfter.opacity,
+                    computedZIndex: computedStyleAfter.zIndex,
+                    boundingRect: {
+                        top: rectAfter.top,
+                        left: rectAfter.left,
+                        width: rectAfter.width,
+                        height: rectAfter.height,
+                        visible: rectAfter.width > 0 && rectAfter.height > 0
+                    }
+                });
+            }, 100);
+            
+            // Проверка через 500ms - не закрылось ли модальное окно автоматически
+            setTimeout(() => {
+                const stillOpen = modal.classList.contains('show');
+                const computedStyle = window.getComputedStyle(modal);
+                console.log('⏰ Проверка через 500ms после открытия:', {
+                    stillOpen: stillOpen,
+                    computedDisplay: computedStyle.display,
+                    computedVisibility: computedStyle.visibility,
+                    computedOpacity: computedStyle.opacity,
+                    hasShowClass: modal.classList.contains('show'),
+                    inlineDisplay: modal.style.display,
+                    inlineVisibility: modal.style.visibility
+                });
+                
+                if (!stillOpen || computedStyle.display === 'none') {
+                    console.error('❌ Модальное окно закрылось автоматически! Проверьте код, который может его закрывать.');
+                }
+            }, 500);
+        }
+        
+        // Делаем функцию доступной глобально сразу
+        window.openProfileModal = openProfileModal;
+
         window.addEventListener('DOMContentLoaded', async function() {
             // Убираем класс fade-out при загрузке страницы (на случай возврата назад)
             const container = document.querySelector('.container');
@@ -6093,8 +6826,12 @@
             }
             
             // Закрываем все модальные окна при загрузке страницы принудительно
+            console.log('🔄 DOMContentLoaded: закрываем все модальные окна при загрузке');
             const modals = document.querySelectorAll('.modal, .delete-modal, .profile-modal');
             modals.forEach(modal => {
+                if (modal.id === 'profileModal') {
+                    console.log('🔄 Закрываем модальное окно профиля при загрузке страницы');
+                }
                 modal.classList.remove('show');
                 modal.style.display = 'none';
                 modal.style.visibility = 'hidden';
@@ -6137,18 +6874,109 @@
             initFireflies();
             // Подсказки теперь работают через простой CSS, без JavaScript
             
-            // Привязываем обработчик для кнопки профиля
+            // Обработчик изменения размера окна для кнопки компаний
+            function updateCompaniesButtonVisibility() {
+                const companiesBottomBtn = document.getElementById('companiesBottomBtn');
+                if (companiesBottomBtn) {
+                    const isMobile = window.innerWidth <= 1024;
+                    if (isMobile) {
+                        companiesBottomBtn.style.display = 'flex';
+                        companiesBottomBtn.style.visibility = 'visible';
+                        companiesBottomBtn.style.opacity = '1';
+                        companiesBottomBtn.style.transform = 'scale(1)';
+                        companiesBottomBtn.classList.add('show');
+                    }
+                }
+            }
+            
+            // Вызываем при загрузке
+            updateCompaniesButtonVisibility();
+            
+            // Вызываем при изменении размера окна
+            window.addEventListener('resize', updateCompaniesButtonVisibility);
+            
+            // Обработчики для профиля
             const profileBtn = document.getElementById('profileBtn');
+            console.log('🔍 Инициализация кнопки профиля:', {
+                profileBtn: !!profileBtn,
+                profileBtnElement: profileBtn,
+                computedStyle: profileBtn ? window.getComputedStyle(profileBtn) : null
+            });
             if (profileBtn) {
-                // Удаляем старый обработчик onclick, если есть
-                profileBtn.removeAttribute('onclick');
-                // Добавляем обработчик через addEventListener
+                console.log('✅ Кнопка профиля найдена, добавляем обработчик клика');
                 profileBtn.addEventListener('click', function(e) {
+                    console.log('🖱️ Клик по кнопке профиля:', {
+                        event: e,
+                        target: e.target,
+                        currentTarget: e.currentTarget,
+                        button: profileBtn,
+                        isProfileModalOpen: document.getElementById('profileModal')?.classList.contains('show')
+                    });
                     e.preventDefault();
                     e.stopPropagation();
                     openProfileModal();
                 });
+                console.log('✅ Обработчик клика добавлен на кнопку профиля');
+            } else {
+                console.error('❌ Кнопка профиля не найдена!');
             }
+            
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', saveProfile);
+            }
+
+            // Инициализация перетаскивания модального окна
+            initProfileModalDrag();
+
+            // Закрытие модального окна при клике вне его
+            const profileModal = document.getElementById('profileModal');
+            if (profileModal) {
+                profileModal.addEventListener('click', function(e) {
+                    if (e.target === profileModal && !isProfileModalDragging) {
+                        closeProfileModal();
+                    }
+                });
+            }
+            
+            // Проверяем кнопку профиля еще раз после полной загрузки
+            setTimeout(() => {
+                const profileBtnCheck = document.getElementById('profileBtn');
+                if (profileBtnCheck) {
+                    const rect = profileBtnCheck.getBoundingClientRect();
+                    const computedStyle = window.getComputedStyle(profileBtnCheck);
+                    console.log('🔍 Финальная проверка кнопки профиля:', {
+                        exists: !!profileBtnCheck,
+                        visible: rect.width > 0 && rect.height > 0,
+                        position: {
+                            top: rect.top,
+                            left: rect.left,
+                            right: rect.right,
+                            bottom: rect.bottom,
+                            width: rect.width,
+                            height: rect.height
+                        },
+                        styles: {
+                            display: computedStyle.display,
+                            visibility: computedStyle.visibility,
+                            opacity: computedStyle.opacity,
+                            pointerEvents: computedStyle.pointerEvents,
+                            zIndex: computedStyle.zIndex,
+                            position: computedStyle.position
+                        },
+                        hasClickHandler: profileBtnCheck.onclick !== null || profileBtnCheck.getAttribute('onclick') !== null
+                    });
+                    
+                    // Проверяем, не перекрыта ли кнопка другими элементами
+                    const elementAtPoint = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                    console.log('🎯 Элемент в центре кнопки:', {
+                        element: elementAtPoint,
+                        isButton: elementAtPoint === profileBtnCheck,
+                        elementTag: elementAtPoint?.tagName,
+                        elementClass: elementAtPoint?.className
+                    });
+                }
+            }, 500);
             
             // Запускаем анимацию появления для всех кнопок
             setTimeout(() => {
@@ -6161,7 +6989,25 @@
                     setTimeout(() => themeBtn.classList.add('show'), 100);
                 }
                 if (profileBtnForAnimation) {
-                    setTimeout(() => profileBtnForAnimation.classList.add('show'), 200);
+                    setTimeout(() => {
+                        profileBtnForAnimation.classList.add('show');
+                        console.log('✨ Кнопка профиля получила класс show:', {
+                            hasShowClass: profileBtnForAnimation.classList.contains('show'),
+                            computedStyle: {
+                                display: window.getComputedStyle(profileBtnForAnimation).display,
+                                visibility: window.getComputedStyle(profileBtnForAnimation).visibility,
+                                opacity: window.getComputedStyle(profileBtnForAnimation).opacity,
+                                pointerEvents: window.getComputedStyle(profileBtnForAnimation).pointerEvents,
+                                zIndex: window.getComputedStyle(profileBtnForAnimation).zIndex,
+                                position: window.getComputedStyle(profileBtnForAnimation).position,
+                                top: window.getComputedStyle(profileBtnForAnimation).top,
+                                right: window.getComputedStyle(profileBtnForAnimation).right
+                            },
+                            isClickable: profileBtnForAnimation.style.pointerEvents !== 'none'
+                        });
+                    }, 200);
+                } else {
+                    console.error('❌ Кнопка профиля не найдена для анимации');
                 }
                 if (adminBtn && adminBtn.style.display !== 'none') {
                     setTimeout(() => adminBtn.classList.add('show'), 200);
@@ -6198,73 +7044,14 @@
         });
 
         // ========== ФУНКЦИИ ДЛЯ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ==========
-
-        // Открыть модальное окно профиля
-        function openProfileModal() {
-            const modal = document.getElementById('profileModal');
-            const loginInput = document.getElementById('profileLogin');
-            
-            // Если currentUser еще не загружен, пытаемся загрузить его
-            if (!currentUser) {
-                loadCurrentUser();
-            }
-            
-            if (!modal) {
-                console.error('Модальное окно профиля не найдено');
-                return;
-            }
-            
-            if (!loginInput) {
-                console.error('Поле логина не найдено');
-                return;
-            }
-            
-            // Заполняем поля, если пользователь загружен
-            if (currentUser) {
-                loginInput.value = currentUser.login || '';
-            } else {
-                // Если пользователь не загружен, пытаемся получить из localStorage
-                const userStr = localStorage.getItem('gantt-user');
-                if (userStr) {
-                    try {
-                        const user = JSON.parse(userStr);
-                        loginInput.value = user.login || '';
-                    } catch (e) {
-                        console.error('Ошибка парсинга данных пользователя:', e);
-                    }
-                }
-            }
-            
-            // Очищаем поля паролей и сообщений
-            const passwordInput = document.getElementById('profilePassword');
-            const passwordConfirmInput = document.getElementById('profilePasswordConfirm');
-            const messageEl = document.getElementById('profileMessage');
-            
-            if (passwordInput) passwordInput.value = '';
-            if (passwordConfirmInput) passwordConfirmInput.value = '';
-            if (messageEl) {
-                messageEl.classList.remove('show');
-                messageEl.textContent = '';
-            }
-            
-            // Показываем модальное окно
-            modal.classList.add('show');
-            
-            // Убеждаемся, что модальное окно видимо
-            modal.style.display = 'flex';
-            modal.style.visibility = 'visible';
-            modal.style.opacity = '1';
-            modal.style.pointerEvents = 'auto';
-            modal.style.zIndex = '10002';
-        }
-        
-        // Делаем функцию доступной глобально
-        window.openProfileModal = openProfileModal;
+        // (Функция openProfileModal уже определена выше, перед DOMContentLoaded)
 
         // Закрыть модальное окно профиля
         function closeProfileModal() {
+            console.log('🔒 closeProfileModal вызвана', new Error().stack);
             const modal = document.getElementById('profileModal');
             if (modal) {
+                console.log('🔒 Закрываем модальное окно профиля');
                 modal.classList.remove('show');
                 // Убеждаемся, что модальное окно скрыто
                 modal.style.display = 'none';
@@ -6272,6 +7059,9 @@
                 modal.style.opacity = '0';
                 modal.style.pointerEvents = 'none';
                 modal.style.zIndex = '-1';
+                console.log('🔒 Модальное окно закрыто');
+            } else {
+                console.error('❌ Модальное окно профиля не найдено при закрытии');
             }
         }
         
@@ -6869,10 +7659,252 @@
                 modal.style.pointerEvents = 'none';
             }
         }
+
+        // Асинхронная загрузка html2pdf.js библиотеки
+        let html2pdfLoaded = false;
+        let html2pdfLoading = false;
+
+        function loadHtml2Pdf() {
+            return new Promise((resolve, reject) => {
+                // Если уже загружена, сразу возвращаем
+                if (html2pdfLoaded && typeof html2pdf !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                
+                // Если уже загружается, ждём
+                if (html2pdfLoading) {
+                    const checkInterval = setInterval(() => {
+                        if (html2pdfLoaded && typeof html2pdf !== 'undefined') {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                    return;
+                }
+                
+                // Начинаем загрузку
+                html2pdfLoading = true;
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                script.async = true;
+                script.onload = () => {
+                    html2pdfLoaded = true;
+                    html2pdfLoading = false;
+                    if (typeof html2pdf !== 'undefined') {
+                        resolve();
+                    } else {
+                        reject(new Error('html2pdf не загрузился'));
+                    }
+                };
+                script.onerror = () => {
+                    html2pdfLoading = false;
+                    reject(new Error('Не удалось загрузить html2pdf.js. Проверьте подключение к интернету.'));
+                };
+                
+                // Устанавливаем таймаут 10 секунд
+                setTimeout(() => {
+                    if (!html2pdfLoaded) {
+                        html2pdfLoading = false;
+                        script.remove();
+                        reject(new Error('Таймаут загрузки html2pdf.js'));
+                    }
+                }, 10000);
+                
+                document.head.appendChild(script);
+            });
+        }
+
+        // Экспорт статистики в PDF
+        async function exportStatisticsToPDF() {
+            const content = document.getElementById('statisticsContent');
+            const title = document.getElementById('statisticsModalTitle');
+            
+            if (!content) {
+                showMessage('Ошибка: содержимое статистики не найдено', 'error');
+                return;
+            }
+
+            // Проверяем, что статистика загружена
+            if (content.innerHTML.includes('Загрузка статистики') || content.innerHTML.includes('Ошибка')) {
+                showMessage('Пожалуйста, дождитесь загрузки статистики', 'error');
+                return;
+            }
+
+            // Загружаем библиотеку html2pdf.js перед использованием
+            try {
+                showMessage('Загрузка библиотеки для экспорта...', 'info');
+                await loadHtml2Pdf();
+            } catch (error) {
+                console.error('Ошибка загрузки html2pdf.js:', error);
+                showMessage('Не удалось загрузить библиотеку для экспорта в PDF. Проверьте подключение к интернету.', 'error');
+                return;
+            }
+            
+            if (typeof html2pdf === 'undefined') {
+                showMessage('Библиотека html2pdf не доступна. Пожалуйста, обновите страницу и попробуйте снова.', 'error');
+                return;
+            }
+
+            try {
+                showMessage('Генерация PDF...', 'info');
+
+                // Создаем контейнер для экспорта
+                const exportWrapper = document.createElement('div');
+                exportWrapper.style.padding = '20px';
+                exportWrapper.style.paddingBottom = '40px';
+                exportWrapper.style.background = '#ffffff';
+                exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'Arial, sans-serif';
+                exportWrapper.style.color = '#000';
+
+                // Добавляем заголовок
+                const header = document.createElement('div');
+                header.style.marginBottom = '20px';
+                header.style.paddingBottom = '15px';
+                header.style.borderBottom = '2px solid #e0e0e0';
+                
+                const titleElement = document.createElement('h1');
+                titleElement.textContent = title ? title.textContent : 'Статистика компании';
+                titleElement.style.color = '#1565c0';
+                titleElement.style.fontSize = '24px';
+                titleElement.style.fontWeight = '700';
+                titleElement.style.margin = '0 0 10px 0';
+                header.appendChild(titleElement);
+
+                const dateElement = document.createElement('div');
+                dateElement.textContent = `Дата экспорта: ${new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+                dateElement.style.color = '#666';
+                dateElement.style.fontSize = '12px';
+                header.appendChild(dateElement);
+
+                exportWrapper.appendChild(header);
+
+                // Клонируем содержимое статистики
+                const contentClone = content.cloneNode(true);
+                contentClone.style.marginTop = '20px';
+
+                // Применяем стили для PDF
+                const style = document.createElement('style');
+                style.textContent = `
+                    .statistics-grid {
+                        display: grid !important;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+                        gap: 15px !important;
+                        margin-top: 20px !important;
+                    }
+                    .statistics-card {
+                        background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%) !important;
+                        border-radius: 12px !important;
+                        padding: 15px !important;
+                        border-left: 4px solid #2196f3 !important;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .statistics-card-label {
+                        font-size: 14px !important;
+                        color: #666 !important;
+                        margin-bottom: 8px !important;
+                    }
+                    .statistics-card-value {
+                        font-size: 28px !important;
+                        font-weight: 700 !important;
+                        color: #1565c0 !important;
+                        margin-bottom: 10px !important;
+                    }
+                    .statistics-progress-bar {
+                        height: 8px !important;
+                        background: #e0e0e0 !important;
+                        border-radius: 4px !important;
+                        overflow: hidden !important;
+                        margin-top: 10px !important;
+                    }
+                    .statistics-progress-fill {
+                        height: 100% !important;
+                        background: linear-gradient(90deg, #2196f3 0%, #1976d2 100%) !important;
+                        transition: width 0.3s ease !important;
+                    }
+                    .statistics-badge {
+                        display: inline-block !important;
+                        padding: 4px 8px !important;
+                        border-radius: 4px !important;
+                        font-size: 11px !important;
+                        font-weight: 600 !important;
+                        margin-top: 8px !important;
+                    }
+                    .statistics-deadlines {
+                        margin-top: 30px !important;
+                        padding: 20px !important;
+                        background: #f9f9f9 !important;
+                        border-radius: 12px !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .statistics-deadlines h3 {
+                        color: #1565c0 !important;
+                        font-size: 18px !important;
+                        margin-bottom: 15px !important;
+                    }
+                    .deadline-item {
+                        padding: 12px !important;
+                        margin-bottom: 10px !important;
+                        border-radius: 8px !important;
+                        background: white !important;
+                        border-left: 4px solid #ff9800 !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .deadline-item.danger {
+                        border-left-color: #f44336 !important;
+                        background: #ffebee !important;
+                    }
+                    .deadline-item.warning {
+                        border-left-color: #ff9800 !important;
+                        background: #fff3e0 !important;
+                    }
+                    .deadline-item-title {
+                        font-weight: 600 !important;
+                        color: #333 !important;
+                        margin-bottom: 5px !important;
+                        font-size: 14px !important;
+                    }
+                    .deadline-item-text {
+                        color: #666 !important;
+                        font-size: 12px !important;
+                    }
+                `;
+                exportWrapper.appendChild(style);
+                exportWrapper.appendChild(contentClone);
+
+                // Настройки для экспорта
+                const opt = {
+                    margin: [10, 10, 10, 10],
+                    filename: `Статистика_${title ? title.textContent.replace(/[^a-zA-Z0-9]/g, '_') : 'компании'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff'
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait' 
+                    }
+                };
+
+                // Экспортируем в PDF
+                await html2pdf().set(opt).from(exportWrapper).save();
+                
+                showMessage('PDF готов!', 'success');
+            } catch (error) {
+                console.error('Ошибка экспорта статистики в PDF:', error);
+                showMessage('Ошибка экспорта в PDF: ' + (error.message || 'неизвестная ошибка'), 'error');
+            }
+        }
         
         // Делаем функции доступными глобально
         window.showCompanyStatistics = showCompanyStatistics;
         window.closeStatisticsModal = closeStatisticsModal;
+        window.exportStatisticsToPDF = exportStatisticsToPDF;
     </script>
     
     <footer class="footer">
