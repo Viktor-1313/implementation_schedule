@@ -4709,11 +4709,16 @@
 
         @media (max-width: 768px) {
             .help-btn {
-                top: 153px; /* 106px (top кнопки компаний) + 35px (высота кнопки компаний) + 12px (отступ) = 153px */
-                right: 20px;
+                top: 180px; /* Кнопка компаний на 130px, добавляем отступ 50px для размещения друг под другом */
+                right: 30px;
                 width: 35px;
                 height: 35px;
                 font-size: 18px;
+            }
+            
+            .companies-bottom-btn {
+                top: 130px !important;
+                right: 30px !important;
             }
 
             .tour-tooltip {
@@ -12663,15 +12668,18 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
     // Контейнер для экспорта
     const exportWrapper = document.createElement('div');
-    exportWrapper.style.padding = '16px';
-    exportWrapper.style.paddingBottom = '40px'; // Увеличиваем отступ снизу, чтобы последняя строка не обрезалась
+    exportWrapper.style.width = '297mm'; // A3 landscape width
+    exportWrapper.style.maxWidth = '100%';
     exportWrapper.style.background = '#ffffff';
     exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'sans-serif';
     exportWrapper.style.fontSize = '10px';
     exportWrapper.style.color = '#000';
+    exportWrapper.style.visibility = 'visible';
+    exportWrapper.style.display = 'block';
+    exportWrapper.style.opacity = '1';
 
     // Функция создания шапки с логотипом
-    const createHeader = () => {
+    const createHeader = (isFirstPage = false) => {
         const header = document.createElement('div');
         header.style.display = 'flex';
         header.style.alignItems = 'center';
@@ -12692,7 +12700,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         const nameBlock = document.createElement('div');
         const title = document.createElement('div');
-        title.textContent = `График внедрения и обучения системы ${chartTypeContainerName}`;
+        title.textContent = `График внедрения и обучения`;
         title.style.fontSize = '14px';
         title.style.fontWeight = '600';
 
@@ -12708,19 +12716,359 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         nameBlock.appendChild(title);
         nameBlock.appendChild(company);
+        
+        // Добавляем название объекта только на первой странице
+        if (isFirstPage) {
+            // Получаем название объекта из элемента отображения
+            const objectNameDisplay = document.getElementById('companyObjectNameDisplay');
+            let objectName = '';
+            
+            if (objectNameDisplay && objectNameDisplay.style.display !== 'none') {
+                objectName = (objectNameDisplay.innerText || objectNameDisplay.textContent || '').trim();
+            }
+            
+            // Если не нашли в элементе, пробуем из переменной (если доступна)
+            if (!objectName && typeof companyObjectName !== 'undefined' && companyObjectName) {
+                objectName = String(companyObjectName).trim();
+            }
+            
+            if (objectName && objectName.length > 0) {
+                const object = document.createElement('div');
+                object.innerText = objectName;
+                object.style.marginTop = '4px';
+                object.style.fontSize = '11px';
+                object.style.fontWeight = '500';
+                object.style.color = '#2196f3';
+                nameBlock.appendChild(object);
+            }
+        }
+        
         header.appendChild(nameBlock);
         
         return header;
     };
 
-    // --- Шапка ---
-    exportWrapper.appendChild(createHeader());
+    // Функция создания секции с шапкой и разрывом страницы
+    const createPageSection = (isFirst = false) => {
+        const section = document.createElement('div');
+        section.className = 'pdf-page-section';
+        section.style.width = '100%';
+        section.style.padding = '16px';
+        section.style.paddingBottom = '20px';
+        section.style.background = '#ffffff';
+        section.style.pageBreakInside = 'avoid';
+        section.style.breakInside = 'avoid';
+        
+        if (!isFirst) {
+            // Разрыв страницы перед каждой новой секцией (кроме первой)
+            section.style.pageBreakBefore = 'always';
+            section.style.breakBefore = 'page';
+        }
+        
+        // Добавляем шапку в каждую секцию (полная информация только на первой странице)
+        section.appendChild(createHeader(isFirst));
+        
+        return section;
+    };
 
     // Функция для создания ячейки с границей
     const addCellBorder = (td) => {
         td.style.border = '1px solid #cccccc';
         td.style.padding = '2px 3px';
     };
+
+    // Локальная функция для форматирования даты в ключ YYYY-MM-DD
+    const formatDateKeyLocal = (date) => {
+        if (typeof date === 'string') {
+            return date;
+        }
+        if (!(date instanceof Date)) {
+            if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                return date;
+            }
+            const parsedDate = new Date(date);
+            if (isNaN(parsedDate.getTime())) {
+                return '';
+            }
+            date = parsedDate;
+        }
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    // Функция для подсчета метрик задач
+    const calculateTaskMetrics = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let completed = 0;
+        let overdue = 0;
+        let pending = 0;
+        
+        tasks.forEach(task => {
+            if (!task.dates || task.dates.length === 0) {
+                pending++;
+                return;
+            }
+            
+            const statuses = task.dateStatuses || {};
+            const workDays = task.dates.filter(d => {
+                const dateKey = formatDateKeyLocal(d);
+                return statuses[dateKey] !== 'weekend-manual';
+            });
+            
+            if (workDays.length === 0) {
+                pending++;
+                return;
+            }
+            
+            // Проверяем, все ли рабочие дни завершены
+            const allCompleted = workDays.every(d => {
+                const dateKey = formatDateKeyLocal(d);
+                return statuses[dateKey] === 'completed';
+            });
+            
+            if (allCompleted) {
+                completed++;
+            } else {
+                // Проверяем, просрочена ли задача
+                const endDate = task.endDate ? new Date(task.endDate) : null;
+                if (endDate) {
+                    endDate.setHours(0, 0, 0, 0);
+                    if (endDate < today) {
+                        overdue++;
+                    } else {
+                        pending++;
+                    }
+                } else {
+                    pending++;
+                }
+            }
+        });
+        
+        return { completed, overdue, pending };
+    };
+
+    // Функция создания титульного листа
+    const createTitlePage = () => {
+        const titleSection = document.createElement('div');
+        titleSection.className = 'pdf-page-section';
+        titleSection.style.width = '100%';
+        titleSection.style.padding = '60px 40px';
+        titleSection.style.background = '#ffffff';
+        titleSection.style.display = 'block';
+        titleSection.style.position = 'relative';
+        titleSection.style.overflow = 'visible';
+        titleSection.style.visibility = 'visible';
+        titleSection.style.opacity = '1';
+        // Убираем принудительный разрыв страницы после титульного листа
+        // Разрыв будет создан следующей секцией через pageBreakBefore
+        titleSection.style.pageBreakAfter = 'auto';
+        titleSection.style.breakAfter = 'auto';
+        titleSection.style.pageBreakInside = 'avoid';
+        titleSection.style.breakInside = 'avoid';
+        titleSection.style.height = 'auto';
+        titleSection.style.minHeight = '400px';
+        
+        // Контейнер для контента титульного листа
+        const contentWrapper = document.createElement('div');
+        contentWrapper.style.width = '100%';
+        contentWrapper.style.maxWidth = '600px';
+        contentWrapper.style.margin = '0 auto';
+        contentWrapper.style.display = 'block';
+        contentWrapper.style.textAlign = 'center';
+        contentWrapper.style.position = 'relative';
+        
+        // Логотип компании
+        if (logoEl && logoEl.src) {
+            const logoClone = document.createElement('img');
+            logoClone.src = logoEl.src;
+            logoClone.style.width = '200px';
+            logoClone.style.height = '200px';
+            logoClone.style.borderRadius = '12px';
+            logoClone.style.border = '2px solid #e0e0e0';
+            logoClone.style.objectFit = 'contain';
+            logoClone.style.background = '#fafafa';
+            logoClone.style.padding = '8px';
+            logoClone.style.display = 'block';
+            logoClone.style.margin = '0 auto 30px auto';
+            logoClone.style.visibility = 'visible';
+            logoClone.style.opacity = '1';
+            contentWrapper.appendChild(logoClone);
+        }
+        
+        // Название компании
+        const companyNameBlock = document.createElement('div');
+        companyNameBlock.style.textAlign = 'center';
+        companyNameBlock.style.marginBottom = '20px';
+        companyNameBlock.style.display = 'block';
+        companyNameBlock.style.width = '100%';
+        companyNameBlock.style.marginLeft = 'auto';
+        companyNameBlock.style.marginRight = 'auto';
+        
+        const currentNameText =
+            nameDisplay && nameDisplay.classList.contains('has-value')
+                ? (nameDisplay.innerText || nameDisplay.textContent)
+                : '';
+        const companyNameTitle = document.createElement('div');
+        companyNameTitle.textContent = currentNameText || 'Название компании';
+        companyNameTitle.style.fontSize = '28px';
+        companyNameTitle.style.fontWeight = '700';
+        companyNameTitle.style.color = '#333333';
+        companyNameTitle.style.marginBottom = '15px';
+        companyNameTitle.style.display = 'block';
+        companyNameTitle.style.textAlign = 'center';
+        companyNameTitle.style.marginLeft = 'auto';
+        companyNameTitle.style.marginRight = 'auto';
+        companyNameBlock.appendChild(companyNameTitle);
+        
+        // Название объекта
+        const objectNameDisplay = document.getElementById('companyObjectNameDisplay');
+        let objectName = '';
+        if (objectNameDisplay && objectNameDisplay.style.display !== 'none') {
+            objectName = (objectNameDisplay.innerText || objectNameDisplay.textContent || '').trim();
+        }
+        if (!objectName && typeof companyObjectName !== 'undefined' && companyObjectName) {
+            objectName = String(companyObjectName).trim();
+        }
+        
+        if (objectName && objectName.length > 0) {
+            const objectNameTitle = document.createElement('div');
+            objectNameTitle.textContent = objectName;
+            objectNameTitle.style.fontSize = '22px';
+            objectNameTitle.style.fontWeight = '600';
+            objectNameTitle.style.color = '#2196f3';
+            objectNameTitle.style.marginBottom = '15px';
+            objectNameTitle.style.display = 'block';
+            objectNameTitle.style.textAlign = 'center';
+            objectNameTitle.style.marginLeft = 'auto';
+            objectNameTitle.style.marginRight = 'auto';
+            companyNameBlock.appendChild(objectNameTitle);
+        }
+        
+        const chartTypeTitle = document.createElement('div');
+        chartTypeTitle.textContent = `График внедрения и обучения`;
+        chartTypeTitle.style.fontSize = '18px';
+        chartTypeTitle.style.fontWeight = '500';
+        chartTypeTitle.style.color = '#666666';
+        chartTypeTitle.style.display = 'block';
+        chartTypeTitle.style.textAlign = 'center';
+        chartTypeTitle.style.marginLeft = 'auto';
+        chartTypeTitle.style.marginRight = 'auto';
+        companyNameBlock.appendChild(chartTypeTitle);
+        
+        contentWrapper.appendChild(companyNameBlock);
+        
+        // Метрики
+        const metrics = calculateTaskMetrics();
+        const metricsContainer = document.createElement('table');
+        metricsContainer.style.width = '100%';
+        metricsContainer.style.margin = '40px auto 0 auto';
+        metricsContainer.style.borderCollapse = 'separate';
+        metricsContainer.style.borderSpacing = '15px';
+        metricsContainer.style.tableLayout = 'fixed';
+        
+        const metricsRow = document.createElement('tr');
+        
+        // Метрика: Закрыто
+        const completedCell = document.createElement('td');
+        completedCell.style.width = '33%';
+        completedCell.style.textAlign = 'center';
+        completedCell.style.padding = '20px';
+        completedCell.style.background = '#e8f5e9';
+        completedCell.style.borderRadius = '8px';
+        completedCell.style.border = '2px solid #4caf50';
+        completedCell.style.verticalAlign = 'middle';
+        
+        const completedLabel = document.createElement('div');
+        completedLabel.textContent = 'Закрыто';
+        completedLabel.style.fontSize = '14px';
+        completedLabel.style.color = '#666';
+        completedLabel.style.marginBottom = '8px';
+        completedCell.appendChild(completedLabel);
+        
+        const completedValue = document.createElement('div');
+        completedValue.textContent = String(metrics.completed);
+        completedValue.style.fontSize = '36px';
+        completedValue.style.fontWeight = '700';
+        completedValue.style.color = '#4caf50';
+        completedCell.appendChild(completedValue);
+        
+        metricsRow.appendChild(completedCell);
+        
+        // Метрика: Просрочено
+        const overdueCell = document.createElement('td');
+        overdueCell.style.width = '33%';
+        overdueCell.style.textAlign = 'center';
+        overdueCell.style.padding = '20px';
+        overdueCell.style.background = '#ffebee';
+        overdueCell.style.borderRadius = '8px';
+        overdueCell.style.border = '2px solid #f44336';
+        overdueCell.style.verticalAlign = 'middle';
+        
+        const overdueLabel = document.createElement('div');
+        overdueLabel.textContent = 'Просрочено';
+        overdueLabel.style.fontSize = '14px';
+        overdueLabel.style.color = '#666';
+        overdueLabel.style.marginBottom = '8px';
+        overdueCell.appendChild(overdueLabel);
+        
+        const overdueValue = document.createElement('div');
+        overdueValue.textContent = String(metrics.overdue);
+        overdueValue.style.fontSize = '36px';
+        overdueValue.style.fontWeight = '700';
+        overdueValue.style.color = '#f44336';
+        overdueCell.appendChild(overdueValue);
+        
+        metricsRow.appendChild(overdueCell);
+        
+        // Метрика: Предстоит
+        const pendingCell = document.createElement('td');
+        pendingCell.style.width = '33%';
+        pendingCell.style.textAlign = 'center';
+        pendingCell.style.padding = '20px';
+        pendingCell.style.background = '#e3f2fd';
+        pendingCell.style.borderRadius = '8px';
+        pendingCell.style.border = '2px solid #2196f3';
+        pendingCell.style.verticalAlign = 'middle';
+        
+        const pendingLabel = document.createElement('div');
+        pendingLabel.textContent = 'Предстоит';
+        pendingLabel.style.fontSize = '14px';
+        pendingLabel.style.color = '#666';
+        pendingLabel.style.marginBottom = '8px';
+        pendingCell.appendChild(pendingLabel);
+        
+        const pendingValue = document.createElement('div');
+        pendingValue.textContent = String(metrics.pending);
+        pendingValue.style.fontSize = '36px';
+        pendingValue.style.fontWeight = '700';
+        pendingValue.style.color = '#2196f3';
+        pendingCell.appendChild(pendingValue);
+        
+        metricsRow.appendChild(pendingCell);
+        
+        metricsContainer.appendChild(metricsRow);
+        contentWrapper.appendChild(metricsContainer);
+        titleSection.appendChild(contentWrapper);
+        
+        // Проверка, что контент создан
+        console.log('Титульный лист создан:', {
+            hasContent: contentWrapper.children.length > 0,
+            metrics: metrics,
+            companyName: currentNameText || 'Название компании',
+            objectName: objectName
+        });
+        
+        return titleSection;
+    };
+
+    // Создаем титульный лист первым
+    const titlePage = createTitlePage();
+    exportWrapper.appendChild(titlePage);
+    console.log('Титульный лист создан и добавлен', titlePage);
 
     let diagramRendered = false;
     const shouldIncludeDiagram = includeDiagram !== false;
@@ -12732,12 +13080,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         } else {
             diagramRendered = true;
             const scaleLabel = getExportScaleLabel(scaleMode);
-            const ganttTitle = document.createElement('div');
-            ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
-            ganttTitle.style.fontSize = '12px';
-            ganttTitle.style.fontWeight = '600';
-            ganttTitle.style.margin = '4px 0 6px 0';
-            exportWrapper.appendChild(ganttTitle);
 
             const statusColors = {
                 pending: '#1e88e5',
@@ -12749,15 +13091,28 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const unitsPerPage = scaleMode === 'day' ? 22 : scaleMode === 'week' ? 12 : 6;
             const chunks = [];
             for (let i = 0; i < timelineUnits.length; i += unitsPerPage) {
-                chunks.push(timelineUnits.slice(i, i + unitsPerPage));
+                const chunk = timelineUnits.slice(i, i + unitsPerPage);
+                // Добавляем только непустые chunks
+                if (chunk && chunk.length > 0) {
+                    chunks.push(chunk);
+                }
             }
 
-            chunks.forEach((chunk, chunkIdx) => {
-                if (chunkIdx > 0) {
-                    const spacer = document.createElement('div');
-                    spacer.style.height = '40px';
-                    exportWrapper.appendChild(spacer);
-                }
+            // Создаем секции только если есть chunks и задачи
+            if (chunks.length > 0 && tasks && tasks.length > 0) {
+                chunks.forEach((chunk, chunkIdx) => {
+                    // Создаем отдельную секцию для каждого chunk с собственной шапкой
+                    // Первая секция после титульного листа не должна иметь pageBreakBefore, чтобы не создавать пустой лист
+                    const isFirstAfterTitle = chunkIdx === 0;
+                    const section = createPageSection(isFirstAfterTitle);
+
+                // Добавляем заголовок диаграммы
+                const ganttTitle = document.createElement('div');
+                ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
+                ganttTitle.style.fontSize = '12px';
+                ganttTitle.style.fontWeight = '600';
+                ganttTitle.style.margin = '4px 0 6px 0';
+                section.appendChild(ganttTitle);
 
                 const ganttTable = document.createElement('table');
                 ganttTable.style.borderCollapse = 'collapse';
@@ -12862,97 +13217,108 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     ganttTable.appendChild(tr);
                 });
 
-                exportWrapper.appendChild(ganttTable);
-            });
+                    // Добавляем секцию только если таблица содержит данные
+                    if (ganttTable.rows.length > 1) { // Больше 1, потому что есть заголовок
+                        section.appendChild(ganttTable);
+                        exportWrapper.appendChild(section);
+                    }
+                });
+            }
         }
-    }
-
-    if (diagramRendered) {
-        const separator = document.createElement('div');
-        separator.style.height = '60px';
-        exportWrapper.appendChild(separator);
     }
 
     // --- Детальная таблица задач с комментариями ---
-    const detailTitle = document.createElement('div');
-    detailTitle.textContent = 'Детальная таблица задач';
-    detailTitle.style.fontSize = '12px';
-    detailTitle.style.fontWeight = '600';
-    detailTitle.style.margin = '4px 0 6px 0';
-    exportWrapper.appendChild(detailTitle);
+    // Создаем отдельную секцию для детальной таблицы с собственной шапкой только если есть задачи
+    // Проверяем, была ли создана хотя бы одна секция диаграммы, чтобы не создавать pageBreakBefore для первой секции
+    const hasDiagramSections = exportWrapper.querySelectorAll('.pdf-page-section').length > 1; // Больше 1, потому что есть титульный лист
+    if (tasks && tasks.length > 0) {
+        // Если это первая секция после титульного листа (нет секций диаграммы), не создаем pageBreakBefore
+        const detailSection = createPageSection(hasDiagramSections ? false : true);
 
-    const detailTable = document.createElement('table');
-    detailTable.style.borderCollapse = 'collapse';
-    detailTable.style.width = '100%';
-    detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
+        const detailTitle = document.createElement('div');
+        detailTitle.textContent = 'Детальная таблица задач';
+        detailTitle.style.fontSize = '12px';
+        detailTitle.style.fontWeight = '600';
+        detailTitle.style.margin = '4px 0 6px 0';
+        detailSection.appendChild(detailTitle);
 
-    // Заголовок таблицы
-    const detailHeaderTr = document.createElement('tr');
-    [
-        '№ п/п',
-        'Этап',
-        'Вид контроля',
-        'Мероприятие',
-        'Рабочих дней',
-        'Ответственный',
-        'Дата начала',
-        'Дата окончания',
-        'Комментарии по датам'
-    ].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.background = '#f5f5f5';
-        th.style.color = '#222222';
-        th.style.fontWeight = '600';
-        th.style.fontSize = '9px';
-        th.style.whiteSpace = 'nowrap';
-        addCellBorder(th);
-        detailHeaderTr.appendChild(th);
-    });
-    detailTable.appendChild(detailHeaderTr);
+        const detailTable = document.createElement('table');
+        detailTable.style.borderCollapse = 'collapse';
+        detailTable.style.width = '100%';
+        detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
 
-    // Строки задач
-    tasks.forEach((task, idx) => {
-        const tr = document.createElement('tr');
+        // Заголовок таблицы
+        const detailHeaderTr = document.createElement('tr');
+        [
+            '№ п/п',
+            'Этап',
+            'Вид контроля',
+            'Мероприятие',
+            'Рабочих дней',
+            'Ответственный',
+            'Дата начала',
+            'Дата окончания',
+            'Комментарии по датам'
+        ].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            th.style.background = '#f5f5f5';
+            th.style.color = '#222222';
+            th.style.fontWeight = '600';
+            th.style.fontSize = '9px';
+            th.style.whiteSpace = 'nowrap';
+            addCellBorder(th);
+            detailHeaderTr.appendChild(th);
+        });
+        detailTable.appendChild(detailHeaderTr);
 
-        let commentsSummary = '';
-        if (task.dateComments) {
-            const entries = Object.entries(task.dateComments)
-                .filter(([, text]) => text && String(text).trim().length > 0)
-                .sort(([d1], [d2]) => (d1 < d2 ? -1 : d1 > d2 ? 1 : 0))
-                .map(([date, text]) => `${date}: ${String(text).trim()}`);
-            commentsSummary = entries.join('; ');
-        }
+        // Строки задач
+        tasks.forEach((task, idx) => {
+            const tr = document.createElement('tr');
 
-        const cells = [
-            idx + 1,
-            task.stage || '',
-            task.control || '',
-            task.task || '',
-            task.days != null ? String(task.days) : '',
-            task.responsible || '',
-            task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
-            task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
-            commentsSummary
-        ];
-
-        cells.forEach((val, cellIdx) => {
-            const td = document.createElement('td');
-            td.textContent = val;
-            td.style.fontSize = '9px';
-            if (cellIdx === 3 || cellIdx === 8) {
-                td.style.whiteSpace = 'normal';
-            } else {
-                td.style.whiteSpace = 'nowrap';
+            let commentsSummary = '';
+            if (task.dateComments) {
+                const entries = Object.entries(task.dateComments)
+                    .filter(([, text]) => text && String(text).trim().length > 0)
+                    .sort(([d1], [d2]) => (d1 < d2 ? -1 : d1 > d2 ? 1 : 0))
+                    .map(([date, text]) => `${date}: ${String(text).trim()}`);
+                commentsSummary = entries.join('; ');
             }
-            addCellBorder(td);
-            tr.appendChild(td);
+
+            const cells = [
+                idx + 1,
+                task.stage || '',
+                task.control || '',
+                task.task || '',
+                task.days != null ? String(task.days) : '',
+                task.responsible || '',
+                task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
+                task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
+                commentsSummary
+            ];
+
+            cells.forEach((val, cellIdx) => {
+                const td = document.createElement('td');
+                td.textContent = val;
+                td.style.fontSize = '9px';
+                if (cellIdx === 3 || cellIdx === 8) {
+                    td.style.whiteSpace = 'normal';
+                } else {
+                    td.style.whiteSpace = 'nowrap';
+                }
+                addCellBorder(td);
+                tr.appendChild(td);
+            });
+
+            detailTable.appendChild(tr);
         });
 
-        detailTable.appendChild(tr);
-    });
-
-    exportWrapper.appendChild(detailTable);
+        // Добавляем секцию только если таблица содержит данные
+        if (detailTable.rows.length > 1) { // Больше 1, потому что есть заголовок
+            detailSection.appendChild(detailTable);
+            exportWrapper.appendChild(detailSection);
+        }
+    }
 
     // --- Генерация PDF ---
     
@@ -12972,47 +13338,118 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     loadingIndicator.style.fontWeight = '600';
     document.body.appendChild(loadingIndicator);
     
+    // Проверяем, что есть контент для экспорта
+    const sections = exportWrapper.querySelectorAll('.pdf-page-section');
+    if (sections.length === 0) {
+        console.error('Нет контента для экспорта в PDF');
+        if (loadingIndicator.parentNode) {
+            document.body.removeChild(loadingIndicator);
+        }
+        alert('Ошибка: нет данных для экспорта в PDF');
+        return;
+    }
+
+    // Проверяем, что все секции содержат контент (не пустые)
+    const validSections = Array.from(sections).filter(section => {
+        // Проверяем, что секция содержит видимый контент
+        const hasContent = section.children.length > 0 && 
+                          (section.textContent.trim().length > 0 || 
+                           section.querySelector('table') || 
+                           section.querySelector('img'));
+        if (!hasContent) {
+            console.warn('Обнаружена пустая секция, удаляем:', section);
+            section.remove();
+        }
+        return hasContent;
+    });
+
+    console.log(`Экспорт PDF: создано ${validSections.length} секций (проверено ${sections.length}, удалено ${sections.length - validSections.length} пустых)`);
+    
+    if (validSections.length === 0) {
+        console.error('Нет валидного контента для экспорта в PDF');
+        if (loadingIndicator.parentNode) {
+            document.body.removeChild(loadingIndicator);
+        }
+        alert('Ошибка: нет данных для экспорта в PDF');
+        if (exportWrapper.parentNode) {
+            document.body.removeChild(exportWrapper);
+        }
+        return;
+    }
+
+    // Добавляем CSS стили для разрывов страниц
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .pdf-page-section {
+                page-break-before: always;
+                page-break-inside: avoid;
+                break-before: page;
+                break-inside: avoid;
+            }
+            .pdf-page-section:first-child {
+                page-break-before: auto;
+                break-before: auto;
+            }
+        }
+    `;
+    exportWrapper.appendChild(style);
+
     document.body.appendChild(exportWrapper);
 
-    const opt = {
-        margin: [10, 10, 20, 10], // [top, left, bottom, right] - увеличиваем нижний отступ
-        filename: generateExportFileName('pdf'),
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            windowWidth: exportWrapper.scrollWidth,
-            windowHeight: exportWrapper.scrollHeight
-        },
-        jsPDF: { 
-            orientation: 'landscape', 
-            unit: 'mm', 
-            format: 'a3'
-        }
-    };
+    // Даем время DOM обновиться перед экспортом
+    setTimeout(() => {
+        const opt = {
+            margin: [10, 10, 20, 10], // [top, left, bottom, right]
+            filename: generateExportFileName('pdf'),
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: exportWrapper.scrollWidth || 1200,
+                windowHeight: exportWrapper.scrollHeight || 800,
+                allowTaint: true
+            },
+            jsPDF: { 
+                orientation: 'landscape', 
+                unit: 'mm', 
+                format: 'a3'
+            },
+            pagebreak: { 
+                mode: ['avoid-all', 'css', 'legacy'],
+                before: '.pdf-page-section',
+                after: [],
+                avoid: []
+            }
+        };
 
-    html2pdf()
-        .set(opt)
-        .from(exportWrapper)
-        .save()
-        .then(() => {
-            document.body.removeChild(exportWrapper);
-            loadingIndicator.textContent = 'PDF готов!';
-            setTimeout(() => {
+        html2pdf()
+            .set(opt)
+            .from(exportWrapper)
+            .save()
+            .then(() => {
+                if (exportWrapper.parentNode) {
+                    document.body.removeChild(exportWrapper);
+                }
+                loadingIndicator.textContent = 'PDF готов!';
+                setTimeout(() => {
+                    if (loadingIndicator.parentNode) {
+                        document.body.removeChild(loadingIndicator);
+                    }
+                }, 3000); // 3 секунды
+            })
+            .catch((err) => {
+                console.error('Ошибка генерации PDF:', err);
+                if (exportWrapper.parentNode) {
+                    document.body.removeChild(exportWrapper);
+                }
                 if (loadingIndicator.parentNode) {
                     document.body.removeChild(loadingIndicator);
                 }
-            }, 3000); // 3 секунды
-        })
-        .catch((err) => {
-            console.error('Ошибка генерации PDF:', err);
-            document.body.removeChild(exportWrapper);
-            if (loadingIndicator.parentNode) {
-                document.body.removeChild(loadingIndicator);
-            }
-            alert('Произошла ошибка при генерации PDF');
-        });
+                alert('Произошла ошибка при генерации PDF: ' + (err.message || 'неизвестная ошибка'));
+            });
+    }, 100); // Небольшая задержка для обновления DOM
 }
 
         // Построение временной шкалы для экспорта в Excel (дни/недели/месяцы/годы)
@@ -18487,6 +18924,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     <li><span class="help-key">Insert</span> — Добавить новую задачу под выделенной</li>
                     <li><span class="help-key">Delete</span> — Удалить выделенную задачу</li>
                     <li><span class="help-key">↑</span> / <span class="help-key">↓</span> — Навигация по задачам</li>
+                    <li><span class="help-key">Shift</span> + <span class="help-key">Клик</span> — Выделить несколько задач (диапазон от первой до последней выбранной задачи)</li>
                     <li><span class="help-key">Ctrl</span> + <span class="help-key">C</span> — Копировать задачу</li>
                     <li><span class="help-key">Ctrl</span> + <span class="help-key">V</span> — Вставить задачу после выделенной</li>
                     <li><span class="help-key">F2</span> — Задать базовый план</li>
