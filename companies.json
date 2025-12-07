@@ -21,19 +21,19 @@
   },
   {
     "id": "Tst1",
-    "name": "ООО \"Примьера\"",
+    "name": "ООО \"Прeмьера\"",
     "createdAt": "2025-12-03T09:55:28.899Z"
-  },
-  {
-    "id": "test",
-    "name": "test",
-    "createdAt": "2025-12-05T18:37:01.152Z",
-    "archived": true,
-    "archivedAt": "2025-12-05T18:37:37.836Z"
   },
   {
     "id": "test1",
     "name": "test",
     "createdAt": "2025-12-05T18:45:09.422Z"
+  },
+  {
+    "id": "lsr-copy",
+    "name": "ООО \"ЛСР\" (копия)",
+    "createdAt": "2025-12-07T10:57:35.861Z",
+    "archived": true,
+    "archivedAt": "2025-12-07T11:13:01.859Z"
   }
 ]
