@@ -3554,16 +3554,20 @@
                 top: 181px; /* 129px (top кнопки выхода) + 40px (высота кнопки выхода) + 12px (отступ) = 181px */
             }
 
+            .help-btn {
+                top: 233px !important; /* 181px (top кнопки компаний) + 40px (высота кнопки компаний) + 12px (отступ) = 233px */
+                right: 25px !important;
+                width: 40px !important;
+                height: 40px !important;
+            }
+
             /* Ховер эффекты для планшетов */
             .profile-btn:hover:not(.animating),
             .logout-btn:hover:not(.animating),
-            .companies-bottom-btn:hover:not(.animating) {
+            .companies-bottom-btn:hover:not(.animating),
+            .help-btn:hover:not(.animating) {
                 transform: translateY(-2px) scale(1.05) !important;
                 box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
-            }
-
-            .help-btn {
-                top: 233px; /* 181px (top кнопки компаний) + 40px (высота кнопки компаний) + 12px (отступ) = 233px */
             }
         }
 
@@ -3659,6 +3663,13 @@
 
             .companies-bottom-btn {
                 top: 115px; /* 65px (top кнопки выхода) + 38px (высота кнопки выхода) + 12px (отступ) = 115px */
+            }
+
+            .help-btn {
+                top: 165px !important; /* 115px (top кнопки компаний) + 38px (высота кнопки компаний) + 12px (отступ) = 165px */
+                right: 15px !important;
+                width: 38px !important;
+                height: 38px !important;
             }
 
             /* Ховер эффекты для мобильных */
@@ -4016,6 +4027,13 @@
 
             .companies-bottom-btn {
                 top: 106px; /* 59px (top кнопки выхода) + 35px (высота кнопки выхода) + 12px (отступ) = 106px */
+            }
+
+            .help-btn {
+                top: 153px !important; /* 106px (top кнопки компаний) + 35px (высота кнопки компаний) + 12px (отступ) = 153px */
+                right: 12px !important;
+                width: 35px !important;
+                height: 35px !important;
             }
 
             /* Ховер эффекты для маленьких экранов */
@@ -4708,17 +4726,9 @@
         }
 
         @media (max-width: 768px) {
+            /* Позиционирование кнопок уже задано в медиа-запросах выше, здесь только дополнительные стили */
             .help-btn {
-                top: 180px; /* Кнопка компаний на 130px, добавляем отступ 50px для размещения друг под другом */
-                right: 30px;
-                width: 35px;
-                height: 35px;
                 font-size: 18px;
-            }
-            
-            .companies-bottom-btn {
-                top: 130px !important;
-                right: 30px !important;
             }
 
             .tour-tooltip {
@@ -12670,6 +12680,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     const exportWrapper = document.createElement('div');
     exportWrapper.style.width = '297mm'; // A3 landscape width
     exportWrapper.style.maxWidth = '100%';
+    exportWrapper.style.margin = '0 auto'; // Центрирование контента
     exportWrapper.style.background = '#ffffff';
     exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'sans-serif';
     exportWrapper.style.fontSize = '10px';
@@ -12677,6 +12688,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     exportWrapper.style.visibility = 'visible';
     exportWrapper.style.display = 'block';
     exportWrapper.style.opacity = '1';
+    exportWrapper.style.boxSizing = 'border-box'; // Правильный расчет размеров с учетом padding
 
     // Функция создания шапки с логотипом
     const createHeader = (isFirstPage = false) => {
@@ -12758,6 +12770,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         section.style.background = '#ffffff';
         section.style.pageBreakInside = 'avoid';
         section.style.breakInside = 'avoid';
+        section.style.boxSizing = 'border-box'; // Правильный расчет размеров
+        section.style.margin = '0 auto'; // Центрирование секции
         
         if (!isFirst) {
             // Разрыв страницы перед каждой новой секцией (кроме первой)
@@ -13112,6 +13126,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 ganttTitle.style.fontSize = '12px';
                 ganttTitle.style.fontWeight = '600';
                 ganttTitle.style.margin = '4px 0 6px 0';
+                ganttTitle.style.textAlign = 'left'; // Выравнивание по левому краю в рамках секции
                 section.appendChild(ganttTitle);
 
                 const ganttTable = document.createElement('table');
@@ -13119,6 +13134,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 ganttTable.style.width = '100%';
                 ganttTable.style.fontSize = '8px';
                 ganttTable.style.marginBottom = '20px';
+                ganttTable.style.marginLeft = 'auto';
+                ganttTable.style.marginRight = 'auto';
+                ganttTable.style.tableLayout = 'auto'; // Автоматический расчет ширины колонок
 
                 const headerTr = document.createElement('tr');
                 const baseHeaders = ['Задача', 'Ответственный', 'Дата начала', 'Дата окончания', 'Рабочих дней'];
@@ -13240,12 +13258,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         detailTitle.style.fontSize = '12px';
         detailTitle.style.fontWeight = '600';
         detailTitle.style.margin = '4px 0 6px 0';
+        detailTitle.style.textAlign = 'left'; // Выравнивание по левому краю в рамках секции
         detailSection.appendChild(detailTitle);
 
         const detailTable = document.createElement('table');
         detailTable.style.borderCollapse = 'collapse';
         detailTable.style.width = '100%';
         detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
+        detailTable.style.marginLeft = 'auto';
+        detailTable.style.marginRight = 'auto';
+        detailTable.style.tableLayout = 'auto'; // Автоматический расчет ширины колонок
 
         // Заголовок таблицы
         const detailHeaderTr = document.createElement('tr');
@@ -13377,9 +13399,22 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         return;
     }
 
-    // Добавляем CSS стили для разрывов страниц
+    // Добавляем CSS стили для разрывов страниц и центрирования
     const style = document.createElement('style');
     style.textContent = `
+        * {
+            box-sizing: border-box;
+        }
+        .pdf-page-section {
+            width: 100% !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+        }
+        .pdf-page-section table {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            width: 100% !important;
+        }
         @media print {
             .pdf-page-section {
                 page-break-before: always;
@@ -13400,7 +13435,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     // Даем время DOM обновиться перед экспортом
     setTimeout(() => {
         const opt = {
-            margin: [10, 10, 20, 10], // [top, left, bottom, right]
+            margin: [10, 15, 20, 15], // [top, left, bottom, right] - увеличены боковые отступы для центрирования
             filename: generateExportFileName('pdf'),
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
@@ -13409,7 +13444,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 logging: false,
                 windowWidth: exportWrapper.scrollWidth || 1200,
                 windowHeight: exportWrapper.scrollHeight || 800,
-                allowTaint: true
+                allowTaint: true,
+                x: 0, // Начало координат слева
+                y: 0  // Начало координат сверху
             },
             jsPDF: { 
                 orientation: 'landscape', 

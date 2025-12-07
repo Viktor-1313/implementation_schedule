@@ -17,7 +17,9 @@ const http = require('http');
 
 // URL вашего сервиса на Render.com
 const SERVICE_URL = process.env.RENDER_SERVICE_URL || 'https://icona-design.onrender.com';
-const HEALTH_ENDPOINT = `${SERVICE_URL}/health`;
+// Используем /cron-ping для cron-запросов (без редиректов, минимальный ответ)
+const HEALTH_ENDPOINT = `${SERVICE_URL}/cron-ping`;
+// Если нужен токен, добавьте его в query string: `${SERVICE_URL}/cron-ping?token=YOUR_TOKEN`
 
 // Функция для отправки HTTP/HTTPS запроса
 function pingService(url) {
