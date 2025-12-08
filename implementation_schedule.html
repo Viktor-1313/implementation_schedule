@@ -9454,7 +9454,10 @@
                             // Иначе используем первый рабочий день
                             representativeDate = unitDatesForTask[0];
                             repDateStr = formatDateKey(representativeDate);
-                            statusForDate = task.dateStatuses[repDateStr] || 'pending';
+                            // ВАЖНО: Используем статус конкретной даты, а НЕ общий статус задачи
+                            // Это позволяет краситься только выбранной ячейке, а не всей строке
+                            statusForDate = task.dateStatuses && task.dateStatuses[repDateStr] ? task.dateStatuses[repDateStr] : 'pending';
+                            // НЕ используем task.status, так как это общий статус задачи, а не статус конкретной даты
                         } else {
                             // Fallback (не должно произойти, но на всякий случай)
                             representativeDate = unit.start;
@@ -9608,6 +9611,9 @@
                                 clickX, 
                                 clickY
                             });
+                            
+                            // Сохраняем элемент ячейки для точного позиционирования меню
+                            const targetBarElement = barElement;
 
                             // Определяем, какие даты выбраны
                             // ВАЖНО: В детальном режиме каждая ячейка должна обрабатываться отдельно
@@ -9654,30 +9660,25 @@
                                 
                                 // Если есть выбранные ячейки, открываем меню
                                 if (selectedCells.size > 0) {
-                                    openStatusMenuForMultipleSelection(clickX, clickY);
+                                    openStatusMenuForMultipleSelection(clickX, clickY, targetBarElement);
                                 } else {
                                     closeStatusMenu();
                                 }
                             } else {
                                 // Обычный клик - сбрасываем множественный выбор ячеек, но сохраняем выделение задач
+                                // (выделение задач остается для других операций, но не для проставления статуса)
                                 if (selectedCells.size > 0) {
                                     selectedCells.clear();
                                     updateCellSelection();
                                 }
                                 
-                                // Если есть выделенные задачи (включая текущую), открываем меню для применения статуса ко всем выделенным задачам
-                                if (selectedTaskIds.size > 0 && selectedTaskIds.has(task.id)) {
-                                    // Текущая задача входит в выделенные - применяем статус ко всем выделенным задачам
-                                    openStatusMenuForSelectedTasks(clickX, clickY, task.id, selectedDates, null);
-                                } else if (selectedTaskIds.size > 0 && !selectedTaskIds.has(task.id)) {
-                                    // Есть выделенные задачи, но текущая не входит в них - выделяем только текущую задачу
-                                    selectTask(task.id, { range: false });
-                                    openStatusMenu(clickX, clickY, task.id, selectedDates, null);
-                                } else {
-                                    // Нет выделенных задач - открываем меню для одной задачи
-                                    console.log('📋 Открываем меню для одной задачи:', { clickX, clickY, taskId: task.id, selectedDates });
-                                    openStatusMenu(clickX, clickY, task.id, selectedDates, null);
-                                }
+                                // УБРАНО: Массовое проставление статуса к выделенным задачам
+                                // Теперь статус применяется только к одной ячейке, на которую кликнули
+                                // Массовое выделение задач через Shift остается для других операций (копирование, вставка и т.д.)
+                                
+                                // Всегда открываем меню только для одной ячейки, на которую кликнули
+                                console.log('📋 Открываем меню для одной ячейки:', { clickX, clickY, taskId: task.id, selectedDates });
+                                openStatusMenu(clickX, clickY, task.id, selectedDates, targetBarElement);
                             }
                             
                             console.log('✅ handleBarClick завершена');
@@ -15482,12 +15483,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             modal.style.alignItems = '';
             modal.style.justifyContent = '';
             
-            // Проверяем, есть ли выделенные задачи (Shift+клик)
-            if (selectedTaskIds.size > 0) {
-                // Применяем статус ко всем выделенным задачам с комментарием
-                applyStatusToSelectedTasks(status, text);
-                return;
-            }
+            // УБРАНО: Массовое проставление статуса к выделенным задачам
+            // Теперь статус применяется только к одной ячейке, на которую кликнули
+            // Массовое выделение задач через Shift остается для других операций (копирование, вставка и т.д.)
             
             const targetSnapshot = window.__statusCommentTargetSnapshot || null;
             applyStatusToSelection(status, text, targetSnapshot);
@@ -16030,38 +16028,83 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
                 
-                // ВАЖНО: x = barRect.right (правый край ячейки), y = barRect.top + barRect.height/2 (центр ячейки)
-                console.log('📍 Начальные координаты:', { x, y, menuWidth: menuRect.width, menuHeight: menuRect.height });
+                // Если передан targetElement, используем его координаты для более точного позиционирования
+                let referenceX = x;
+                let referenceY = y;
+                let cellRect = null;
+                
+                if (targetElement) {
+                    cellRect = targetElement.getBoundingClientRect();
+                    referenceX = cellRect.right; // Правый край ячейки
+                    referenceY = cellRect.top + cellRect.height / 2; // Центр ячейки по вертикали
+                    console.log('📍 Используем координаты ячейки:', { 
+                        cellRect: { left: cellRect.left, top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, width: cellRect.width, height: cellRect.height },
+                        referenceX, 
+                        referenceY 
+                    });
+                } else {
+                    console.log('📍 Используем переданные координаты:', { x, y });
+                }
+                
+                console.log('📍 Начальные координаты:', { referenceX, referenceY, menuWidth: menuRect.width, menuHeight: menuRect.height });
                 
                 const offset = 8; // Отступ от ячейки
                 
                 // Позиционируем меню справа от ячейки, центрируя по вертикали
-                let left = x + offset;
-                let top = y - (menuRect.height / 2);
+                let left = referenceX + offset;
+                let top = referenceY - (menuRect.height / 2);
                 
                 // Если меню не влезает справа, показываем слева
                 if (left + menuRect.width > viewportWidth - 15) {
-                    // Пытаемся показать слева - нужно знать левый край ячейки
-                    // Используем примерную ширину ячейки (обычно 30-60px в режиме дней)
-                    const estimatedCellWidth = 50;
-                    left = x - estimatedCellWidth - menuRect.width - offset;
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
+                    } else {
+                        // Используем примерную ширину ячейки (обычно 30-60px в режиме дней)
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
+                    }
                 }
                 
-                // Если слева тоже не влезает или выходит за левый край
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
                 if (left < 15) {
-                    left = 15;
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
+                        }
+                    } else {
+                        left = 15;
+                    }
                 }
                 
-                // Корректируем вертикальное положение, если выходит за границы
+                // Корректируем вертикальное положение, стараясь остаться как можно ближе к ячейке
                 if (top < 15) {
-                    top = 15;
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.top + offset;
+                    } else {
+                        top = 15;
+                    }
                 } else if (top + menuRect.height > viewportHeight - 15) {
-                    top = viewportHeight - menuRect.height - 15;
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (top < 15) {
+                            top = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        top = viewportHeight - menuRect.height - 15;
+                    }
                 }
                 
-                console.log('✅ Финальная позиция меню:', { left, top, x, y });
+                console.log('✅ Финальная позиция меню:', { left, top, referenceX, referenceY });
                 
-                // Устанавливаем позицию ОДИН РАЗ - рядом с местом клика
+                // Устанавливаем позицию ОДИН РАЗ - рядом с ячейкой
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
                 menu.style.margin = '0';
@@ -16181,35 +16224,84 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
                 
-                // ВСЕГДА используем координаты клика (x, y) для позиционирования меню
+                // Если передан targetElement, используем его координаты для более точного позиционирования
                 let referenceX = x;
                 let referenceY = y;
+                let cellRect = null;
                 
-                if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y) || x <= 0 || y <= 0) {
-                    if (targetElement) {
-                        const targetRect = targetElement.getBoundingClientRect();
-                        referenceX = targetRect.left + targetRect.width / 2;
-                        referenceY = targetRect.top + targetRect.height / 2;
-                    } else {
+                if (targetElement) {
+                    cellRect = targetElement.getBoundingClientRect();
+                    referenceX = cellRect.right; // Правый край ячейки
+                    referenceY = cellRect.top + cellRect.height / 2; // Центр ячейки по вертикали
+                    console.log('📍 Используем координаты ячейки (выделенные задачи):', { 
+                        cellRect: { left: cellRect.left, top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, width: cellRect.width, height: cellRect.height },
+                        referenceX, 
+                        referenceY 
+                    });
+                } else {
+                    // Проверяем валидность координат
+                    if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y) || x <= 0 || y <= 0) {
+                        console.error('❌ Некорректные координаты клика!');
                         return;
+                    }
+                    console.log('📍 Используем переданные координаты (выделенные задачи):', { x, y });
+                }
+                
+                const offset = 8; // Отступ от ячейки
+                
+                // Позиционируем меню справа от ячейки, центрируя по вертикали
+                let left = referenceX + offset;
+                let top = referenceY - (menuRect.height / 2);
+                
+                // Если меню не влезает справа, показываем слева
+                if (left + menuRect.width > viewportWidth - 15) {
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
+                    } else {
+                        // Используем примерную ширину ячейки
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
                     }
                 }
                 
-                // ПРОСТАЯ ЛОГИКА: меню появляется рядом с местом клика
-                const offset = isMobile ? 10 : 5;
-                let left = referenceX + offset;
-                let top = referenceY + offset;
-                
-                if (left + menuRect.width > viewportWidth - 10) {
-                    left = referenceX - menuRect.width - offset;
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
+                if (left < 15) {
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
+                        }
+                    } else {
+                        left = 15;
+                    }
                 }
                 
-                if (top + menuRect.height > viewportHeight - 10) {
-                    top = referenceY - menuRect.height - offset;
+                // Корректируем вертикальное положение, стараясь остаться как можно ближе к ячейке
+                if (top < 15) {
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.top + offset;
+                    } else {
+                        top = 15;
+                    }
+                } else if (top + menuRect.height > viewportHeight - 15) {
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (top < 15) {
+                            top = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        top = viewportHeight - menuRect.height - 15;
+                    }
                 }
                 
-                left = Math.max(10, Math.min(left, viewportWidth - menuRect.width - 10));
-                top = Math.max(10, Math.min(top, viewportHeight - menuRect.height - 10));
+                console.log('✅ Финальная позиция меню (выделенные задачи):', { left, top, referenceX, referenceY });
                 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
@@ -16217,7 +16309,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         }
 
         // Открытие меню статуса для множественного выбора
-        function openStatusMenuForMultipleSelection(x, y) {
+        function openStatusMenuForMultipleSelection(x, y, targetElement = null) {
             // Создаем виртуальный target для множественного выбора
             // Собираем все выбранные ячейки
             const allSelectedCells = Array.from(selectedCells).map(cellKey => {
@@ -16272,27 +16364,82 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
                 
-                // Проверяем валидность координат
-                if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y) || x <= 0 || y <= 0) {
-                    console.error('❌ Некорректные координаты клика!');
-                    return;
+                // Если передан targetElement, используем его координаты для более точного позиционирования
+                let referenceX = x;
+                let referenceY = y;
+                let cellRect = null;
+                
+                if (targetElement) {
+                    cellRect = targetElement.getBoundingClientRect();
+                    referenceX = cellRect.right; // Правый край ячейки
+                    referenceY = cellRect.top + cellRect.height / 2; // Центр ячейки по вертикали
+                    console.log('📍 Используем координаты ячейки (множественный выбор):', { 
+                        cellRect: { left: cellRect.left, top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, width: cellRect.width, height: cellRect.height },
+                        referenceX, 
+                        referenceY 
+                    });
+                } else {
+                    // Проверяем валидность координат
+                    if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y) || x <= 0 || y <= 0) {
+                        console.error('❌ Некорректные координаты клика!');
+                        return;
+                    }
+                    console.log('📍 Используем переданные координаты (множественный выбор):', { x, y });
                 }
                 
-                // ПРОСТАЯ ЛОГИКА: меню появляется рядом с местом клика
-                const offset = isMobile ? 10 : 5;
-                let left = x + offset;
-                let top = y + offset;
+                const offset = 8; // Отступ от ячейки
                 
-                if (left + menuRect.width > viewportWidth - 10) {
-                    left = x - menuRect.width - offset;
+                // Позиционируем меню справа от ячейки, центрируя по вертикали
+                let left = referenceX + offset;
+                let top = referenceY - (menuRect.height / 2);
+                
+                // Если меню не влезает справа, показываем слева
+                if (left + menuRect.width > viewportWidth - 15) {
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
+                    } else {
+                        // Используем примерную ширину ячейки
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
+                    }
                 }
                 
-                if (top + menuRect.height > viewportHeight - 10) {
-                    top = y - menuRect.height - offset;
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
+                if (left < 15) {
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
+                        }
+                    } else {
+                        left = 15;
+                    }
                 }
                 
-                left = Math.max(10, Math.min(left, viewportWidth - menuRect.width - 10));
-                top = Math.max(10, Math.min(top, viewportHeight - menuRect.height - 10));
+                // Корректируем вертикальное положение, стараясь остаться как можно ближе к ячейке
+                if (top < 15) {
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.top + offset;
+                    } else {
+                        top = 15;
+                    }
+                } else if (top + menuRect.height > viewportHeight - 15) {
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (top < 15) {
+                            top = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        top = viewportHeight - menuRect.height - 15;
+                    }
+                }
 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
@@ -16396,13 +16543,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 selectedTaskIds: Array.from(selectedTaskIds)
             });
             
-            // Проверяем, есть ли выделенные задачи (Shift+клик)
-            if (selectedTaskIds.size > 0 && (!target || !target.isMultiple || !target.cells)) {
-                // Применяем статус ко всем выделенным задачам
-                console.log('📋 Применяем статус к выделенным задачам');
-                applyStatusToSelectedTasks(status, commentText);
-                return;
-            }
+            // УБРАНО: Массовое проставление статуса к выделенным задачам
+            // Теперь статус применяется только к одной ячейке, на которую кликнули
+            // Массовое выделение задач через Shift остается для других операций (копирование, вставка и т.д.)
             
             if (!target) {
                 console.error('❌ Нет target для применения статуса!');
@@ -16489,6 +16632,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 // Каждая ячейка (день) обрабатывается отдельно
                 // Это позволяет краситься только выбранной ячейке, а не всей строке
                 console.log('🟠 Применяем статус "В работе" к датам:', targetDates.map(d => formatDateKey(d)));
+                console.log('🟠 Все даты задачи:', task.dates.map(d => formatDateKey(d)));
+                
+                // Применяем статус ТОЛЬКО к выбранным датам
                 targetDates.forEach(d => {
                     const key = formatDateKey(d);
                     task.dateStatuses[key] = 'in-progress';
@@ -16498,22 +16644,31 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     }
                 });
                 
-                // Устанавливаем общий статус задачи только если статус применен ко всем датам задачи
-                // или если это единственная дата в задаче
+                // ВАЖНО: НЕ устанавливаем общий статус задачи, если статус применен только к одной дате
+                // Это позволяет краситься только выбранной ячейке, а не всей строке
+                // Общий статус задачи устанавливаем только если ВСЕ даты задачи имеют статус "В работе"
                 const allDatesHaveStatus = task.dates.every(d => {
                     const key = formatDateKey(d);
                     return task.dateStatuses[key] === 'in-progress';
                 });
                 
-                // Если статус применен только к одной дате, не меняем общий статус задачи
-                // Это позволяет краситься только выбранной ячейке, а не всей строке
+                console.log('🟠 Все даты имеют статус "В работе":', allDatesHaveStatus);
+                console.log('🟠 Количество выбранных дат:', targetDates.length);
+                console.log('🟠 Количество дат в задаче:', task.dates.length);
+                
+                // Устанавливаем общий статус задачи только если ВСЕ даты задачи имеют статус "В работе"
                 if (allDatesHaveStatus && targetDates.length === task.dates.length) {
                     task.status = 'in-progress';
+                    console.log('   ✅ Общий статус задачи установлен в "В работе"');
                 } else if (task.dates.length === 1 && targetDates.length === 1) {
                     // Если в задаче только одна дата, устанавливаем общий статус
                     task.status = 'in-progress';
+                    console.log('   ✅ Общий статус задачи установлен в "В работе" (одна дата)');
+                } else {
+                    // В остальных случаях НЕ меняем общий статус задачи
+                    // Это позволяет краситься только выбранной ячейке, а не всей строке
+                    console.log('   ⚠️ Общий статус задачи НЕ изменен (статус применен только к выбранным датам)');
                 }
-                // В остальных случаях оставляем общий статус как есть (не перекрашиваем всю строку)
             } else if (status === 'pending') {
                 // Возврат к статусу "Запланировано"
                 console.log('🔵 Применяем статус "Запланировано" к датам:', targetDates.map(d => formatDateKey(d)));
@@ -16997,19 +17152,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                             return; // Не применяем статус сразу, ждём подтверждения
                         }
                         
-                        // Проверяем, есть ли выделенные задачи (Shift+клик)
-                        if (selectedTaskIds.size > 0 && (!target || !target.isMultiple || !target.cells)) {
-                            // Для выделенных задач всегда открываем модальное окно комментария
-                            // для статусов "В работе" и "Завершено"
-                            if (status === 'in-progress' || status === 'completed') {
-                                pendingStatusForComment = status;
-                                openStatusCommentModal();
-                            } else {
-                                // Для других статусов применяем сразу
-                                applyStatusToSelectedTasks(status, '');
-                            }
-                            return;
-                        }
+                        // УБРАНО: Массовое проставление статуса к выделенным задачам
+                        // Теперь статус применяется только к одной ячейке, на которую кликнули
+                        // Массовое выделение задач через Shift остается для других операций (копирование, вставка и т.д.)
                         
                         // Проверяем, является ли это множественным выбором
                         if (target && target.isMultiple && target.cells) {

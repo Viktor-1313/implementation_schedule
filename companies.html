@@ -1097,7 +1097,9 @@
         }
 
         .company-card:hover::before,
-        .company-card:hover::after {
+        .company-card:hover::after,
+        .company-card.animating-border::before,
+        .company-card.animating-border::after {
             animation-play-state: running;
         }
 
@@ -3923,10 +3925,71 @@
             // Добавляем обработчики через делегирование
             setupCompanyButtons();
             
+            // Добавляем обработчики для анимации границы карточек
+            setupCompanyCardAnimations();
+            
             // Добавляем обработчики drag and drop для карточек компаний (только для админов)
             if (isAdmin) {
                 setupDragAndDrop();
             }
+        }
+        
+        // Настройка обработчиков анимации для карточек компаний
+        function setupCompanyCardAnimations() {
+            const container = document.getElementById('companiesContainer');
+            const archivedContainer = document.getElementById('archivedCompaniesContainer');
+            
+            // Обрабатываем основной контейнер
+            if (container) {
+                setupAnimationsForContainer(container);
+            }
+            
+            // Обрабатываем контейнер архивированных компаний
+            if (archivedContainer) {
+                setupAnimationsForContainer(archivedContainer);
+            }
+        }
+        
+        // Вспомогательная функция для настройки анимаций в контейнере
+        function setupAnimationsForContainer(container) {
+            // Находим все карточки компаний в контейнере
+            const cards = container.querySelectorAll('.company-card');
+            
+            cards.forEach(card => {
+                let animationTimeout = null;
+                
+                // Добавляем обработчик при наведении
+                card.addEventListener('mouseenter', function() {
+                    // Отменяем предыдущий таймер удаления класса, если он есть
+                    if (animationTimeout) {
+                        clearTimeout(animationTimeout);
+                        animationTimeout = null;
+                    }
+                    // Добавляем класс для запуска анимации
+                    this.classList.add('animating-border');
+                });
+                
+                // Добавляем обработчик при уходе курсора
+                card.addEventListener('mouseleave', function() {
+                    const cardElement = this;
+                    
+                    // Отменяем предыдущий таймер, если он есть
+                    if (animationTimeout) {
+                        clearTimeout(animationTimeout);
+                    }
+                    
+                    // Анимация длится 1.2 секунды, ждем её завершения
+                    // Используем 1300ms для небольшого запаса
+                    animationTimeout = setTimeout(() => {
+                        // Проверяем, что курсор действительно не на карточке
+                        // и что карточка все еще в DOM
+                        if (cardElement.parentNode && !cardElement.matches(':hover')) {
+                            cardElement.classList.remove('animating-border');
+                        }
+                        animationTimeout = null;
+                    }, 1300);
+                });
+            });
         }
         
         // Настройка обработчиков событий для кнопок компаний
@@ -5236,6 +5299,9 @@
             // Обработчики кнопок восстановления и удаления уже добавлены выше
             // Также вызываем setupCompanyButtons для дополнительной надежности
             setupCompanyButtons();
+            
+            // Добавляем обработчики для анимации границы карточек архивированных компаний
+            setupCompanyCardAnimations();
         }
 
         // Показать модальное окно подтверждения восстановления
