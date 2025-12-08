@@ -1347,6 +1347,21 @@
         </div>
     </div>
 
+    <!-- Модальное окно подтверждения очистки логов -->
+    <div id="clearLogsModal" class="delete-user-modal">
+        <div class="delete-user-modal-content">
+            <div class="delete-user-modal-header">
+                <h2>Очистить логи?</h2>
+                <span class="delete-user-modal-close" onclick="cancelClearLogs()">&times;</span>
+            </div>
+            <p>Вы уверены, что хотите очистить все логи? Это действие нельзя отменить.</p>
+            <div class="delete-user-modal-actions">
+                <button class="btn btn-danger" onclick="confirmClearLogs()">Да, очистить</button>
+                <button class="btn btn-secondary" onclick="cancelClearLogs()">Нет</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно подтверждения удаления типа графика -->
     <div id="deleteSkeletonTypeModal" class="delete-user-modal">
         <div class="delete-user-modal-content">
@@ -2066,6 +2081,16 @@
             }
         });
 
+        // Закрытие модального окна очистки логов при клике вне его
+        const clearLogsModal = document.getElementById('clearLogsModal');
+        if (clearLogsModal) {
+            clearLogsModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    cancelClearLogs();
+                }
+            });
+        }
+
         // Закрытие модального окна удаления задачи скелета при клике вне его
         const deleteSkeletonTaskModal = document.getElementById('deleteSkeletonTaskModal');
         if (deleteSkeletonTaskModal) {
@@ -2081,6 +2106,7 @@
             if (e.key === 'Escape') {
                 const editModal = document.getElementById('editUserModal');
                 const deleteModal = document.getElementById('deleteUserModal');
+                const clearLogsModal = document.getElementById('clearLogsModal');
                 const deleteSkeletonModal = document.getElementById('deleteSkeletonTaskModal');
                 const deleteSkeletonTypeModal = document.getElementById('deleteSkeletonTypeModal');
                 const createSkeletonModal = document.getElementById('createSkeletonModal');
@@ -2090,6 +2116,8 @@
                     closeEditUserModal();
                 } else if (deleteModal && deleteModal.classList.contains('show')) {
                     cancelDeleteUser();
+                } else if (clearLogsModal && clearLogsModal.classList.contains('show')) {
+                    cancelClearLogs();
                 } else if (deleteSkeletonModal && deleteSkeletonModal.classList.contains('show')) {
                     cancelDeleteSkeletonTask();
                 } else if (deleteSkeletonTypeModal && deleteSkeletonTypeModal.classList.contains('show')) {
@@ -3128,12 +3156,24 @@
             }).join('');
         }
 
-        // Очистить логи
-        async function clearActivityLogs() {
-            if (!confirm('Вы уверены, что хотите очистить все логи? Это действие нельзя отменить.')) {
-                return;
+        // Показать модальное окно подтверждения очистки логов
+        function clearActivityLogs() {
+            const modal = document.getElementById('clearLogsModal');
+            if (modal) {
+                modal.classList.add('show');
             }
-            
+        }
+
+        // Закрыть модальное окно очистки логов
+        function cancelClearLogs() {
+            const modal = document.getElementById('clearLogsModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        // Подтвердить очистку логов
+        async function confirmClearLogs() {
             try {
                 const response = await fetch('/api/activity-logs', {
                     method: 'DELETE'
@@ -3143,13 +3183,16 @@
                 
                 if (result.ok) {
                     showMessage('Логи успешно очищены', 'success');
+                    cancelClearLogs();
                     loadActivityLogs();
                 } else {
                     showMessage(result.error || 'Ошибка очистки логов', 'error');
+                    cancelClearLogs();
                 }
             } catch (error) {
                 console.error('Ошибка очистки логов:', error);
                 showMessage('Ошибка очистки логов', 'error');
+                cancelClearLogs();
             }
         }
 
