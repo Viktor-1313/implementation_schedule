@@ -160,7 +160,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             border: 2px solid #2c2c2c;
             cursor: pointer;
             display: flex !important;
@@ -199,7 +199,7 @@
 
         .theme-toggle-btn:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(255, 167, 38, 0.4);
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
         }
 
         .theme-toggle-btn::before {
@@ -619,9 +619,10 @@
 
         /* Новая кнопка компаний под кнопкой выхода */
         .companies-bottom-btn {
-            position: absolute;
+            position: absolute !important;
             top: 130px;
-            right: 30px;
+            right: 30px !important;
+            left: auto !important;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -2216,15 +2217,28 @@
         }
 
         .gantt-row.selected {
-            background: #bbdefb;
-            box-shadow: inset 0 0 0 1px #64b5f6;
+            background: #bbdefb !important;
+            box-shadow: inset 0 0 0 2px #2196f3, 0 2px 8px rgba(33, 150, 243, 0.2) !important;
+            position: relative;
         }
 
         /* При выделении задачи подсвечиваем и название, и три колонки с датами/днями,
            чтобы визуально вся строка в Ганте вела себя так же, как строка в таблице */
         .gantt-row.selected .gantt-label,
         .gantt-row.selected .gantt-details-cell {
-            background: #bbdefb;
+            background: #bbdefb !important;
+        }
+
+        /* Визуальная индикация выделенных задач - более заметная */
+        .gantt-row.selected::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #2196f3 0%, #1976d2 100%);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.6);
         }
 
         .gantt-row.dragging {
@@ -2308,6 +2322,8 @@
             transition: all 0.3s ease;
             position: relative;
             width: 100%;
+            min-width: 20px; /* Минимальная ширина для обеспечения кликабельности даже в маленьких ячейках */
+            flex-shrink: 0; /* Не сжимается меньше минимальной ширины */
         }
 
         .gantt-bar:hover {
@@ -3540,16 +3556,20 @@
                 top: 181px; /* 129px (top кнопки выхода) + 40px (высота кнопки выхода) + 12px (отступ) = 181px */
             }
 
+            .help-btn {
+                top: 233px !important; /* 181px (top кнопки компаний) + 40px (высота кнопки компаний) + 12px (отступ) = 233px */
+                right: 25px !important;
+                width: 40px !important;
+                height: 40px !important;
+            }
+
             /* Ховер эффекты для планшетов */
             .profile-btn:hover:not(.animating),
             .logout-btn:hover:not(.animating),
-            .companies-bottom-btn:hover:not(.animating) {
+            .companies-bottom-btn:hover:not(.animating),
+            .help-btn:hover:not(.animating) {
                 transform: translateY(-2px) scale(1.05) !important;
                 box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4) !important;
-            }
-
-            .help-btn {
-                top: 233px; /* 181px (top кнопки компаний) + 40px (высота кнопки компаний) + 12px (отступ) = 233px */
             }
         }
 
@@ -3645,6 +3665,13 @@
 
             .companies-bottom-btn {
                 top: 115px; /* 65px (top кнопки выхода) + 38px (высота кнопки выхода) + 12px (отступ) = 115px */
+            }
+
+            .help-btn {
+                top: 165px !important; /* 115px (top кнопки компаний) + 38px (высота кнопки компаний) + 12px (отступ) = 165px */
+                right: 15px !important;
+                width: 38px !important;
+                height: 38px !important;
             }
 
             /* Ховер эффекты для мобильных */
@@ -4002,6 +4029,13 @@
 
             .companies-bottom-btn {
                 top: 106px; /* 59px (top кнопки выхода) + 35px (высота кнопки выхода) + 12px (отступ) = 106px */
+            }
+
+            .help-btn {
+                top: 153px !important; /* 106px (top кнопки компаний) + 35px (высота кнопки компаний) + 12px (отступ) = 153px */
+                right: 12px !important;
+                width: 35px !important;
+                height: 35px !important;
             }
 
             /* Ховер эффекты для маленьких экранов */
@@ -4694,11 +4728,8 @@
         }
 
         @media (max-width: 768px) {
+            /* Позиционирование кнопок уже задано в медиа-запросах выше, здесь только дополнительные стили */
             .help-btn {
-                top: 153px; /* 106px (top кнопки компаний) + 35px (высота кнопки компаний) + 12px (отступ) = 153px */
-                right: 20px;
-                width: 35px;
-                height: 35px;
                 font-size: 18px;
             }
 
@@ -5029,7 +5060,7 @@
             </div>
             <div class="form-group">
                 <p style="margin-bottom: 15px; line-height: 1.6; color: var(--color-text);">
-                    Добро пожаловать в систему планирования внедрения ICONA! 
+                    Добро пожаловать в систему планирования <span style="color: #4FC3F7; font-size: 1.15em; font-weight: 600;">DeadLinePro</span>! 
                     Мы подготовили для вас краткий тур по интерфейсу, который поможет быстро освоиться.
                 </p>
                 <p style="margin-bottom: 20px; line-height: 1.6; color: var(--color-text-secondary);">
@@ -5832,6 +5863,8 @@
         let currentScaleMode = 'day';
         // Ожидающий применения статус после подтверждения предупреждения о масштабе
         let pendingStatusAfterScaleWarning = null;
+        // Сохраненный target для применения статуса после подтверждения предупреждения о масштабе
+        let pendingStatusTargetAfterScaleWarning = null;
         // Ожидающий применения статус из таблицы (индекс задачи и новый статус)
         let pendingStatusFromTable = null;
         let zoomLevel = 1; // 1 = 100%, влияет только на ширину колонок
@@ -6376,10 +6409,14 @@
 
         // Применить визуальное выделение к текущему набору выбранных задач
         function applySelectionHighlight() {
+            // Сохраняем выделенные задачи перед перерисовкой
+            const savedSelectedTaskIds = new Set(selectedTaskIds);
+            
             document.querySelectorAll('.gantt-row').forEach(row => {
                 if (!row.dataset.taskId) return;
                 const idStr = row.dataset.taskId;
-                const isSelected = selectedTaskIds.has(Number(idStr));
+                const taskId = Number(idStr);
+                const isSelected = savedSelectedTaskIds.has(taskId);
                 row.classList.toggle('selected', isSelected);
             });
 
@@ -6388,7 +6425,8 @@
                 tbody.querySelectorAll('tr').forEach(tr => {
                     if (!tr.dataset.taskId) return;
                     const idStr = tr.dataset.taskId;
-                    const isSelected = selectedTaskIds.has(Number(idStr));
+                    const taskId = Number(idStr);
+                    const isSelected = savedSelectedTaskIds.has(taskId);
                     tr.classList.toggle('selected', isSelected);
                 });
             }
@@ -6410,7 +6448,7 @@
 
         // Выбор задач по клику (поддержка Shift для диапазона)
         function selectTask(taskId, options = {}) {
-            const { range = false } = options;
+            const { range = false, preserveSelection = false } = options;
 
             if (range && lastSelectedTaskId !== null) {
                 // Диапазон между lastSelectedTaskId и текущей задачей
@@ -6424,16 +6462,34 @@
                     applySelectionHighlight();
                     return;
                 }
-                selectedTaskIds.clear();
+                // При Shift+клике добавляем диапазон к существующему выделению
                 const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
                 for (let i = from; i <= to; i++) {
                     selectedTaskIds.add(tasks[i].id);
                 }
+                // Обновляем lastSelectedTaskId на последнюю задачу в диапазоне
+                lastSelectedTaskId = taskId;
+            } else if (preserveSelection) {
+                // Сохраняем выделение - просто обновляем lastSelectedTaskId, если задача уже выделена
+                if (selectedTaskIds.has(taskId)) {
+                    lastSelectedTaskId = taskId;
+                } else {
+                    // Если задача не выделена, но нужно сохранить выделение - добавляем её
+                    selectedTaskIds.add(taskId);
+                    lastSelectedTaskId = taskId;
+                }
             } else {
                 // Одиночный клик — выделяем только одну строку
-                selectedTaskIds.clear();
-                selectedTaskIds.add(taskId);
-                lastSelectedTaskId = taskId;
+                // НО: если задача уже выделена и есть другие выделенные задачи, сохраняем выделение
+                if (selectedTaskIds.size > 1 && selectedTaskIds.has(taskId)) {
+                    // Задача уже выделена среди других - сохраняем выделение, просто обновляем lastSelectedTaskId
+                    lastSelectedTaskId = taskId;
+                } else {
+                    // Обычный клик - выделяем только эту задачу
+                    selectedTaskIds.clear();
+                    selectedTaskIds.add(taskId);
+                    lastSelectedTaskId = taskId;
+                }
             }
 
             applySelectionHighlight();
@@ -8507,11 +8563,15 @@
                 // Находим родительскую строку
                 const row = labelElement.closest('.gantt-row');
                 
-                // Выделяем строку при клике на label
+                // Выделяем строку при клике на label (поддержка Shift для диапазона)
                 if (row && row.dataset.taskId) {
                     const taskId = parseInt(row.dataset.taskId);
                     if (taskId) {
-                        selectTask(taskId, { range: false });
+                        if (e && e.shiftKey) {
+                            selectTask(taskId, { range: true });
+                        } else {
+                            selectTask(taskId, { range: false });
+                        }
                     }
                 }
             };
@@ -9108,7 +9168,7 @@
 
                 // Если этап свернут, создаем строку этапа вместо всех задач
                 if (isStageCollapsed) {
-                    const stageRow = createStageRow(stageName, stageTasks, stageIndex);
+                    const stageRow = createStageRow(stageName, stageTasks, stageIndex, timelineUnits, pxPerDay, ganttBarStyle);
                     chartContainer.appendChild(stageRow);
                     return; // Пропускаем отрисовку задач этапа
                 }
@@ -9322,6 +9382,17 @@
                 respCell.appendChild(respInput);
                 applyColumnWidth(respCell, 'responsible');
                 detailsRow.appendChild(respCell);
+                
+                // Добавляем обработчик клика на ячейки деталей для поддержки Shift+клика
+                detailsRow.addEventListener('click', (event) => {
+                    // Если это Shift+клик, обрабатываем выделение задачи
+                    if (event.shiftKey) {
+                        event.stopPropagation(); // Останавливаем всплытие, чтобы не вызвать обработчик строки дважды
+                        handleTaskRowClick(task.id, event);
+                    }
+                    // При обычном клике позволяем событию всплывать до обработчика строки
+                });
+                
                 row.appendChild(detailsRow);
 
             timelineUnits.forEach((unit, unitIdx) => {
@@ -9403,6 +9474,14 @@
                             barClasses += ' gantt-weekend';
                         }
                         bar.className = barClasses;
+                        
+                        // Убеждаемся, что bar кликабелен и находится выше других элементов
+                        bar.style.position = 'relative';
+                        bar.style.zIndex = '10';
+                        bar.style.pointerEvents = 'auto';
+                        bar.style.width = '100%'; // Занимает всю ширину ячейки
+                        bar.style.minHeight = '24px'; // Минимальная высота для удобного клика
+                        bar.style.alignSelf = 'center'; // Центрируем по вертикали
 
                         // Если для этой даты есть комментарий, добавляем data-tooltip,
                         // чтобы при наведении отображалась подсказка с чёрным фоном.
@@ -9478,19 +9557,60 @@
                         
                         // Функция для обработки клика/тапа
                         function handleBarClick(event, clientX, clientY) {
+                            console.log('🎯 handleBarClick вызвана!', { taskId: task.id, clientX, clientY, shiftKey: event.shiftKey });
+                            
                             event.stopPropagation();
-                            handleTaskRowClick(task.id, event);
-
-                            if (!canEdit()) {
-                                return; // Блокируем изменение статуса в режиме просмотра
+                            
+                            // Обрабатываем Shift+клик для выделения задач
+                            if (event.shiftKey) {
+                                console.log('⚠️ Shift+клик - пропускаем открытие меню');
+                                handleTaskRowClick(task.id, event);
+                                // При Shift+клике не открываем меню статусов, только выделяем задачи
+                                return;
+                            }
+                            
+                            // Обычный клик - если есть выделенные задачи и текущая задача в них, сохраняем выделение
+                            // Иначе выделяем только текущую задачу
+                            if (selectedTaskIds.size > 0 && selectedTaskIds.has(task.id)) {
+                                // Задача уже выделена - сохраняем выделение, но обновляем lastSelectedTaskId
+                                selectTask(task.id, { preserveSelection: true });
+                            } else {
+                                // Обычный клик - выделяем только эту задачу
+                                handleTaskRowClick(task.id, event);
                             }
 
+                            const canEditResult = canEdit();
+                            console.log('🔐 Проверка canEdit():', canEditResult);
+                            
+                            if (!canEditResult) {
+                                console.warn('⚠️ Режим просмотра - изменение статуса заблокировано');
+                                return; // Блокируем изменение статуса в режиме просмотра
+                            }
+                            
+                            console.log('✅ Режим редактирования - можно применять статус');
+
                             const barElement = event.currentTarget || event.target;
-                            const rect = barElement ? barElement.getBoundingClientRect() : null;
-                            const fallbackX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
-                            const fallbackY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
-                            const clickX = typeof clientX === 'number' ? clientX : fallbackX;
-                            const clickY = typeof clientY === 'number' ? clientY : fallbackY;
+                            
+                            // ВАЖНО: используем координаты самой ячейки (bar), чтобы меню появлялось рядом с ней
+                            // Это надежнее, чем использовать координаты клика, которые могут быть неточными
+                            const barRect = barElement ? barElement.getBoundingClientRect() : null;
+                            if (!barRect) {
+                                console.error('❌ Не удалось получить координаты ячейки!');
+                                return;
+                            }
+                            
+                            // Используем правый край ячейки и центр по вертикали для позиционирования меню
+                            const clickX = barRect.right; // Правая граница ячейки
+                            const clickY = barRect.top + barRect.height / 2; // Центр ячейки по вертикали
+                            
+                            console.log('🖱️ Координаты ячейки для меню:', { 
+                                barRect: { left: barRect.left, top: barRect.top, right: barRect.right, bottom: barRect.bottom, width: barRect.width, height: barRect.height },
+                                clickX, 
+                                clickY
+                            });
+                            
+                            // Сохраняем элемент ячейки для точного позиционирования меню
+                            const targetBarElement = barElement;
 
                             // Определяем, какие даты выбраны
                             // ВАЖНО: В детальном режиме каждая ячейка должна обрабатываться отдельно
@@ -9537,39 +9657,75 @@
                                 
                                 // Если есть выбранные ячейки, открываем меню
                                 if (selectedCells.size > 0) {
-                                    openStatusMenuForMultipleSelection(clickX, clickY);
+                                    openStatusMenuForMultipleSelection(clickX, clickY, targetBarElement);
                                 } else {
                                     closeStatusMenu();
                                 }
                             } else {
-                                // Обычный клик - сбрасываем множественный выбор и открываем меню для одной ячейки
+                                // Обычный клик - сбрасываем множественный выбор ячеек, но сохраняем выделение задач
                                 if (selectedCells.size > 0) {
                                     selectedCells.clear();
                                     updateCellSelection();
                                 }
                                 
-                                // Передаем barElement для точного позиционирования меню рядом с ячейкой
-                                openStatusMenu(clickX, clickY, task.id, selectedDates, barElement);
+                                // Если есть выделенные задачи (включая текущую), открываем меню для применения статуса ко всем выделенным задачам
+                                if (selectedTaskIds.size > 0 && selectedTaskIds.has(task.id)) {
+                                    // Текущая задача входит в выделенные - применяем статус ко всем выделенным задачам
+                                    openStatusMenuForSelectedTasks(clickX, clickY, task.id, selectedDates, targetBarElement);
+                                } else if (selectedTaskIds.size > 0 && !selectedTaskIds.has(task.id)) {
+                                    // Есть выделенные задачи, но текущая не входит в них - выделяем только текущую задачу
+                                    selectTask(task.id, { range: false });
+                                    openStatusMenu(clickX, clickY, task.id, selectedDates, targetBarElement);
+                                } else {
+                                    // Нет выделенных задач - открываем меню для одной задачи
+                                    console.log('📋 Открываем меню для одной задачи:', { clickX, clickY, taskId: task.id, selectedDates });
+                                    openStatusMenu(clickX, clickY, task.id, selectedDates, targetBarElement);
+                                }
                             }
+                            
+                            console.log('✅ handleBarClick завершена');
                         }
                         
                         // Обработчик клика (для десктопа)
                         bar.addEventListener('click', (event) => {
+                            console.log('🖱️ Клик на bar:', { taskId: task.id, date: repDateStr });
+                            event.stopPropagation(); // Останавливаем всплытие, чтобы ячейка не перехватила клик
                             handleBarClick(event, event.clientX, event.clientY);
                         });
                         
                         // Обработчик touch (для мобильных)
                         bar.addEventListener('touchend', (event) => {
                             event.preventDefault();
+                            event.stopPropagation(); // Останавливаем всплытие
                             const touch = event.changedTouches[0];
                             if (touch) {
+                                console.log('📱 Touch на bar:', { taskId: task.id, date: repDateStr });
                                 handleBarClick(event, touch.clientX, touch.clientY);
                             }
                         });
+                        
+                        // Также добавляем обработчик mousedown для надежности
+                        bar.addEventListener('mousedown', (event) => {
+                            event.stopPropagation(); // Останавливаем всплытие
+                        });
 
                         cell.appendChild(bar);
+                        
+                        // Если в ячейке есть bar, ячейка не должна перехватывать клики
+                        // Клики должны проходить к bar
+                        cell.style.pointerEvents = 'none';
+                    } else {
+                        // Если в ячейке нет bar, разрешаем клики по ячейке
+                        cell.style.pointerEvents = 'auto';
                     }
-
+                    
+                    // Убеждаемся, что bar всегда кликабелен, если он есть
+                    const existingBar = cell.querySelector('.gantt-bar');
+                    if (existingBar) {
+                        existingBar.style.pointerEvents = 'auto';
+                        existingBar.style.minWidth = '20px'; // Минимальная ширина для клика
+                    }
+                    
                     // Отрисовка жёлтой полосы директивного плана (baseline) под текущим баром/ячейкой.
                     // ВАЖНО: baseline рисуем независимо от того, есть ли сейчас работа в этом интервале,
                     // чтобы было видно исходный план даже после сдвигов задач.
@@ -9584,6 +9740,8 @@
                         if (hasBaselineInUnit) {
                             const baselineBar = document.createElement('div');
                             baselineBar.className = 'baseline-bar';
+                            baselineBar.style.pointerEvents = 'none'; // Убеждаемся, что baseline не блокирует клики
+                            baselineBar.style.zIndex = '1'; // baseline должен быть ниже bar
                             cell.appendChild(baselineBar);
                         }
                     }
@@ -9674,6 +9832,25 @@
 
                 // Клик по строке Ганта — выбираем задачу (поддержка Shift)
                 row.addEventListener('click', (event) => {
+                    // Проверяем, что клик не на input или select внутри строки (кроме Shift+клика)
+                    const target = event.target;
+                    const isInputElement = target.tagName === 'INPUT' || 
+                                         target.tagName === 'SELECT' || 
+                                         target.tagName === 'TEXTAREA' ||
+                                         target.closest('input, select, textarea');
+                    
+                    // Если это Shift+клик, обрабатываем выделение независимо от элемента
+                    if (event.shiftKey) {
+                        handleTaskRowClick(task.id, event);
+                        return;
+                    }
+                    
+                    // Если клик на input/select при обычном клике, не обрабатываем выделение
+                    if (isInputElement) {
+                        return;
+                    }
+                    
+                    // Обычный клик на строку - обрабатываем выделение
                     handleTaskRowClick(task.id, event);
                 });
 
@@ -9778,22 +9955,50 @@
                         }, 100);
                     }, 150);
                 } else {
+                    // Сохраняем текущую позицию прокрутки перед сворачиванием
+                    const scrollY = window.scrollY || window.pageYOffset;
+                    const scrollX = window.scrollX || window.pageXOffset;
+                    
+                    // Также сохраняем прокрутку контейнера диаграммы
+                    const currentChartContainer = document.getElementById('ganttChart');
+                    const chartScrollTop = currentChartContainer ? currentChartContainer.scrollTop : 0;
+                    const chartScrollLeft = currentChartContainer ? currentChartContainer.scrollLeft : 0;
+                    
                     // Сворачиваем этап
                     collapsedStages.add(stageName);
                     
-                    // Обновляем видимость задач этапа
-                    updateStageTasksVisibility(stageName, true);
+                    // Полностью перерисовываем график для корректного отображения баров свернутых этапов
+                    renderGantt();
+                    renderTable();
+                    
+                    // Восстанавливаем позицию прокрутки сразу после перерисовки
+                    requestAnimationFrame(() => {
+                        window.scrollTo(scrollX, scrollY);
+                        const newChartContainer = document.getElementById('ganttChart');
+                        if (newChartContainer) {
+                            newChartContainer.scrollTop = chartScrollTop;
+                            newChartContainer.scrollLeft = chartScrollLeft;
+                        }
+                    });
                     
                     // Обновляем метку этапа
-                    updateStageLabel(stageName, true);
-                    
-                    // Пересчитываем позиции всех меток этапов после анимации
                     setTimeout(() => {
-                        // Используем функцию пересчета позиций
+                        updateStageLabel(stageName, true);
+                        // Пересчитываем позиции всех меток этапов после анимации
                         recalculateStageLabelsPositions();
                         // Обновляем видимость вертикального скролла
                         updateVerticalScrollVisibility();
-                    }, 350); // После завершения анимации скрытия/показа строк
+                        
+                        // Финальное восстановление позиции прокрутки после всех обновлений
+                        requestAnimationFrame(() => {
+                            window.scrollTo(scrollX, scrollY);
+                            const newChartContainer = document.getElementById('ganttChart');
+                            if (newChartContainer) {
+                                newChartContainer.scrollTop = chartScrollTop;
+                                newChartContainer.scrollLeft = chartScrollLeft;
+                            }
+                        });
+                    }, 150);
                 }
             }
 
@@ -9869,7 +10074,7 @@
             }
 
             // Функция для создания строки этапа (свернутое состояние)
-            function createStageRow(stageName, stageTasks, stageIndex) {
+            function createStageRow(stageName, stageTasks, stageIndex, timelineUnits, pxPerDay, ganttBarStyle) {
                 const stageData = calculateStageData(stageTasks);
                 const stageMatch = stageName.match(/^(Этап\s+\d+)/);
                 const stageNumber = stageMatch ? stageMatch[1] : stageName;
@@ -9952,12 +10157,76 @@
                 
                 row.appendChild(detailsRow);
                 
-                // Пустые ячейки для временной шкалы (не рисуем бары для этапа)
-                timelineUnits.forEach(() => {
+                // Получаем все рабочие дни этапа для отрисовки баров
+                let stageWorkdays = [];
+                if (stageData.startDate && stageData.endDate) {
+                    stageWorkdays = getWorkdaysBetween(stageData.startDate, stageData.endDate);
+                }
+                
+                // Создаем ячейки для временной шкалы с барами для этапа
+                const msInDay = 24 * 60 * 60 * 1000;
+                timelineUnits.forEach((unit, unitIdx) => {
                     const cell = document.createElement('div');
                     cell.className = 'gantt-cell';
-                    cell.style.minWidth = '30px';
-                    cell.style.width = '30px';
+                    const unitDays = Math.round((unit.end - unit.start) / msInDay) + 1;
+                    const width = Math.max(30, unitDays * pxPerDay);
+                    cell.style.minWidth = width + 'px';
+                    cell.style.width = width + 'px';
+                    
+                    // Проверяем, есть ли рабочие дни этапа внутри текущей единицы времени
+                    const unitDatesForStage = stageWorkdays.filter(d => {
+                        const time = d.getTime();
+                        return time >= unit.start.getTime() && time <= unit.end.getTime();
+                    });
+                    
+                    const hasWorkInUnit = unitDatesForStage.length > 0;
+                    
+                    if (hasWorkInUnit) {
+                        // Создаем бар для этапа
+                        const bar = document.createElement('div');
+                        bar.className = 'gantt-bar'; // По умолчанию статус "pending" (синий)
+                        
+                        // В режиме полос убираем символ и управляем скруглением/границами
+                        if (ganttBarStyle === 'segments') {
+                            bar.textContent = '';
+                            
+                            // Определяем, есть ли дни этапа в соседних единицах времени
+                            const hasPrev = unitIdx > 0 && stageWorkdays.some(d => {
+                                const t = d.getTime();
+                                const prev = timelineUnits[unitIdx - 1];
+                                return t >= prev.start.getTime() && t <= prev.end.getTime();
+                            });
+                            const hasNext = unitIdx < timelineUnits.length - 1 && stageWorkdays.some(d => {
+                                const t = d.getTime();
+                                const next = timelineUnits[unitIdx + 1];
+                                return t >= next.start.getTime() && t <= next.end.getTime();
+                            });
+                            
+                            if (hasPrev && hasNext) {
+                                bar.classList.add('segment-middle');
+                            } else if (!hasPrev && hasNext) {
+                                bar.classList.add('segment-start');
+                            } else if (hasPrev && !hasNext) {
+                                bar.classList.add('segment-end');
+                            } else if (!hasPrev && !hasNext) {
+                                bar.classList.add('segment-single');
+                            }
+                        } else {
+                            bar.textContent = '■';
+                        }
+                        
+                        bar.title = '';
+                        bar.style.cursor = 'pointer';
+                        
+                        // При клике на бар этапа разворачиваем этап
+                        bar.addEventListener('click', (event) => {
+                            event.stopPropagation();
+                            toggleStageCollapse(stageName);
+                        });
+                        
+                        cell.appendChild(bar);
+                    }
+                    
                     row.appendChild(cell);
                 });
                 
@@ -9987,63 +10256,16 @@
                 const stageTasks = tasksByStage[stageName] || [];
                 
                 if (isCollapsing) {
-                    // Сворачиваем: создаем строку этапа и скрываем задачи
-                    // Находим первую задачу этапа для позиционирования
-                    const firstTaskRow = chartContainer.querySelector(`[data-task-id="${stageTasks[0].task.id}"]`);
-                    if (firstTaskRow) {
-                        // Удаляем старую строку этапа, если есть
-                        const oldStageRow = chartContainer.querySelector(`[data-stage-name="${stageName}"]`);
-                        if (oldStageRow) {
-                            oldStageRow.remove();
+                    // Сворачиваем: перерисовываем график для корректного отображения баров свернутых этапов
+                    // renderGantt() уже вызывается в toggleStageCollapse(), поэтому здесь просто создаем строку в таблице
+                    const firstTableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${stageTasks[0].task.id}"]`);
+                    if (firstTableRow) {
+                        const oldStageTableRow = document.querySelector(`#tasksTableBody tr[data-stage-name="${stageName}"]`);
+                        if (oldStageTableRow) {
+                            oldStageTableRow.remove();
                         }
-                        
-                        // Создаем новую строку этапа
-                        const stageRow = createStageRow(stageName, stageTasks, 0);
-                        
-                        // Вставляем строку этапа на место первой задачи СРАЗУ (до скрытия задач)
-                        if (firstTaskRow.parentNode) {
-                            firstTaskRow.parentNode.insertBefore(stageRow, firstTaskRow);
-                        } else {
-                            chartContainer.appendChild(stageRow);
-                        }
-                        
-                        // Создаем строку этапа в таблице задач
-                        const firstTableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${stageTasks[0].task.id}"]`);
-                        if (firstTableRow) {
-                            const oldStageTableRow = document.querySelector(`#tasksTableBody tr[data-stage-name="${stageName}"]`);
-                            if (oldStageTableRow) {
-                                oldStageTableRow.remove();
-                            }
-                            const stageTableRow = createStageTableRow(stageName, stageTasks);
-                            firstTableRow.parentNode.insertBefore(stageTableRow, firstTableRow);
-                        }
-                        
-                        // Теперь скрываем все задачи этапа одновременно (без задержки между ними)
-                        stageTasks.forEach(({ task }) => {
-                            // Скрываем строку в диаграмме Ганта
-                            const taskRow = chartContainer.querySelector(`[data-task-id="${task.id}"]`);
-                            if (taskRow && taskRow !== stageRow) {
-                                // Добавляем класс для анимации и сразу скрываем
-                                taskRow.classList.add('collapsing');
-                                // Скрываем быстро, чтобы не было пробелов
-                                setTimeout(() => {
-                                    taskRow.style.display = 'none';
-                                    taskRow.classList.remove('collapsing');
-                                }, 200);
-                            }
-                            
-                            // Скрываем строку в таблице задач
-                            const tableRow = document.querySelector(`#tasksTableBody tr[data-task-id="${task.id}"]`);
-                            if (tableRow) {
-                                // Добавляем класс для анимации и сразу скрываем
-                                tableRow.classList.add('collapsing');
-                                // Скрываем быстро, чтобы не было пробелов
-                                setTimeout(() => {
-                                    tableRow.style.display = 'none';
-                                    tableRow.classList.remove('collapsing');
-                                }, 200);
-                            }
-                        });
+                        const stageTableRow = createStageTableRow(stageName, stageTasks);
+                        firstTableRow.parentNode.insertBefore(stageTableRow, firstTableRow);
                     }
                 } else {
                     // Разворачиваем: удаляем строку этапа и показываем задачи
@@ -10358,6 +10580,25 @@
             setTimeout(() => {
                 updateVerticalScrollVisibility();
             }, 100);
+            
+            // Добавляем обработчик клика на фон графика для сброса выделения задач
+            // (только если клик был на фон, а не на задачу)
+            if (chartContainer && !chartContainer.hasAttribute('data-selection-handler')) {
+                chartContainer.setAttribute('data-selection-handler', 'true');
+                chartContainer.addEventListener('click', (event) => {
+                    // Проверяем, что клик был на фон (не на задачу, не на ячейку, не на бар)
+                    const target = event.target;
+                    if (target && 
+                        !target.closest('.gantt-row') && 
+                        !target.closest('.gantt-bar') && 
+                        !target.closest('.gantt-cell') &&
+                        !target.closest('.gantt-label') &&
+                        !target.closest('.gantt-details-cell')) {
+                        // Клик на фон - сбрасываем выделение задач
+                        clearSelection();
+                    }
+                });
+            }
         }
 
         // Функция для вычисления данных этапа (даты начала, окончания, рабочих дней)
@@ -12502,15 +12743,20 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
     // Контейнер для экспорта
     const exportWrapper = document.createElement('div');
-    exportWrapper.style.padding = '16px';
-    exportWrapper.style.paddingBottom = '40px'; // Увеличиваем отступ снизу, чтобы последняя строка не обрезалась
+    exportWrapper.style.width = '297mm'; // A3 landscape width
+    exportWrapper.style.maxWidth = '100%';
+    exportWrapper.style.margin = '0 auto'; // Центрирование контента
     exportWrapper.style.background = '#ffffff';
     exportWrapper.style.fontFamily = window.getComputedStyle(document.body).fontFamily || 'sans-serif';
     exportWrapper.style.fontSize = '10px';
     exportWrapper.style.color = '#000';
+    exportWrapper.style.visibility = 'visible';
+    exportWrapper.style.display = 'block';
+    exportWrapper.style.opacity = '1';
+    exportWrapper.style.boxSizing = 'border-box'; // Правильный расчет размеров с учетом padding
 
     // Функция создания шапки с логотипом
-    const createHeader = () => {
+    const createHeader = (isFirstPage = false) => {
         const header = document.createElement('div');
         header.style.display = 'flex';
         header.style.alignItems = 'center';
@@ -12531,7 +12777,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         const nameBlock = document.createElement('div');
         const title = document.createElement('div');
-        title.textContent = `График внедрения и обучения системы ${chartTypeContainerName}`;
+        title.textContent = `График внедрения и обучения`;
         title.style.fontSize = '14px';
         title.style.fontWeight = '600';
 
@@ -12547,19 +12793,361 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         nameBlock.appendChild(title);
         nameBlock.appendChild(company);
+        
+        // Добавляем название объекта только на первой странице
+        if (isFirstPage) {
+            // Получаем название объекта из элемента отображения
+            const objectNameDisplay = document.getElementById('companyObjectNameDisplay');
+            let objectName = '';
+            
+            if (objectNameDisplay && objectNameDisplay.style.display !== 'none') {
+                objectName = (objectNameDisplay.innerText || objectNameDisplay.textContent || '').trim();
+            }
+            
+            // Если не нашли в элементе, пробуем из переменной (если доступна)
+            if (!objectName && typeof companyObjectName !== 'undefined' && companyObjectName) {
+                objectName = String(companyObjectName).trim();
+            }
+            
+            if (objectName && objectName.length > 0) {
+                const object = document.createElement('div');
+                object.innerText = objectName;
+                object.style.marginTop = '4px';
+                object.style.fontSize = '11px';
+                object.style.fontWeight = '500';
+                object.style.color = '#2196f3';
+                nameBlock.appendChild(object);
+            }
+        }
+        
         header.appendChild(nameBlock);
         
         return header;
     };
 
-    // --- Шапка ---
-    exportWrapper.appendChild(createHeader());
+    // Функция создания секции с шапкой и разрывом страницы
+    const createPageSection = (isFirst = false) => {
+        const section = document.createElement('div');
+        section.className = 'pdf-page-section';
+        section.style.width = '100%';
+        section.style.padding = '16px';
+        section.style.paddingBottom = '20px';
+        section.style.background = '#ffffff';
+        section.style.pageBreakInside = 'avoid';
+        section.style.breakInside = 'avoid';
+        section.style.boxSizing = 'border-box'; // Правильный расчет размеров
+        section.style.margin = '0 auto'; // Центрирование секции
+        
+        if (!isFirst) {
+            // Разрыв страницы перед каждой новой секцией (кроме первой)
+            section.style.pageBreakBefore = 'always';
+            section.style.breakBefore = 'page';
+        }
+        
+        // Добавляем шапку в каждую секцию (полная информация только на первой странице)
+        section.appendChild(createHeader(isFirst));
+        
+        return section;
+    };
 
     // Функция для создания ячейки с границей
     const addCellBorder = (td) => {
         td.style.border = '1px solid #cccccc';
         td.style.padding = '2px 3px';
     };
+
+    // Локальная функция для форматирования даты в ключ YYYY-MM-DD
+    const formatDateKeyLocal = (date) => {
+        if (typeof date === 'string') {
+            return date;
+        }
+        if (!(date instanceof Date)) {
+            if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                return date;
+            }
+            const parsedDate = new Date(date);
+            if (isNaN(parsedDate.getTime())) {
+                return '';
+            }
+            date = parsedDate;
+        }
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    // Функция для подсчета метрик задач
+    const calculateTaskMetrics = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let completed = 0;
+        let overdue = 0;
+        let pending = 0;
+        
+        tasks.forEach(task => {
+            if (!task.dates || task.dates.length === 0) {
+                pending++;
+                return;
+            }
+            
+            const statuses = task.dateStatuses || {};
+            const workDays = task.dates.filter(d => {
+                const dateKey = formatDateKeyLocal(d);
+                return statuses[dateKey] !== 'weekend-manual';
+            });
+            
+            if (workDays.length === 0) {
+                pending++;
+                return;
+            }
+            
+            // Проверяем, все ли рабочие дни завершены
+            const allCompleted = workDays.every(d => {
+                const dateKey = formatDateKeyLocal(d);
+                return statuses[dateKey] === 'completed';
+            });
+            
+            if (allCompleted) {
+                completed++;
+            } else {
+                // Проверяем, просрочена ли задача
+                const endDate = task.endDate ? new Date(task.endDate) : null;
+                if (endDate) {
+                    endDate.setHours(0, 0, 0, 0);
+                    if (endDate < today) {
+                        overdue++;
+                    } else {
+                        pending++;
+                    }
+                } else {
+                    pending++;
+                }
+            }
+        });
+        
+        return { completed, overdue, pending };
+    };
+
+    // Функция создания титульного листа
+    const createTitlePage = () => {
+        const titleSection = document.createElement('div');
+        titleSection.className = 'pdf-page-section';
+        titleSection.style.width = '100%';
+        titleSection.style.padding = '60px 40px';
+        titleSection.style.background = '#ffffff';
+        titleSection.style.display = 'block';
+        titleSection.style.position = 'relative';
+        titleSection.style.overflow = 'visible';
+        titleSection.style.visibility = 'visible';
+        titleSection.style.opacity = '1';
+        // Убираем принудительный разрыв страницы после титульного листа
+        // Разрыв будет создан следующей секцией через pageBreakBefore
+        titleSection.style.pageBreakAfter = 'auto';
+        titleSection.style.breakAfter = 'auto';
+        titleSection.style.pageBreakInside = 'avoid';
+        titleSection.style.breakInside = 'avoid';
+        titleSection.style.height = 'auto';
+        titleSection.style.minHeight = '400px';
+        
+        // Контейнер для контента титульного листа
+        const contentWrapper = document.createElement('div');
+        contentWrapper.style.width = '100%';
+        contentWrapper.style.maxWidth = '600px';
+        contentWrapper.style.margin = '0 auto';
+        contentWrapper.style.display = 'block';
+        contentWrapper.style.textAlign = 'center';
+        contentWrapper.style.position = 'relative';
+        
+        // Логотип компании
+        if (logoEl && logoEl.src) {
+            const logoClone = document.createElement('img');
+            logoClone.src = logoEl.src;
+            logoClone.style.width = '200px';
+            logoClone.style.height = '200px';
+            logoClone.style.borderRadius = '12px';
+            logoClone.style.border = '2px solid #e0e0e0';
+            logoClone.style.objectFit = 'contain';
+            logoClone.style.background = '#fafafa';
+            logoClone.style.padding = '8px';
+            logoClone.style.display = 'block';
+            logoClone.style.margin = '0 auto 30px auto';
+            logoClone.style.visibility = 'visible';
+            logoClone.style.opacity = '1';
+            contentWrapper.appendChild(logoClone);
+        }
+        
+        // Название компании
+        const companyNameBlock = document.createElement('div');
+        companyNameBlock.style.textAlign = 'center';
+        companyNameBlock.style.marginBottom = '20px';
+        companyNameBlock.style.display = 'block';
+        companyNameBlock.style.width = '100%';
+        companyNameBlock.style.marginLeft = 'auto';
+        companyNameBlock.style.marginRight = 'auto';
+        
+        const currentNameText =
+            nameDisplay && nameDisplay.classList.contains('has-value')
+                ? (nameDisplay.innerText || nameDisplay.textContent)
+                : '';
+        const companyNameTitle = document.createElement('div');
+        companyNameTitle.textContent = currentNameText || 'Название компании';
+        companyNameTitle.style.fontSize = '28px';
+        companyNameTitle.style.fontWeight = '700';
+        companyNameTitle.style.color = '#333333';
+        companyNameTitle.style.marginBottom = '15px';
+        companyNameTitle.style.display = 'block';
+        companyNameTitle.style.textAlign = 'center';
+        companyNameTitle.style.marginLeft = 'auto';
+        companyNameTitle.style.marginRight = 'auto';
+        companyNameBlock.appendChild(companyNameTitle);
+        
+        // Название объекта
+        const objectNameDisplay = document.getElementById('companyObjectNameDisplay');
+        let objectName = '';
+        if (objectNameDisplay && objectNameDisplay.style.display !== 'none') {
+            objectName = (objectNameDisplay.innerText || objectNameDisplay.textContent || '').trim();
+        }
+        if (!objectName && typeof companyObjectName !== 'undefined' && companyObjectName) {
+            objectName = String(companyObjectName).trim();
+        }
+        
+        if (objectName && objectName.length > 0) {
+            const objectNameTitle = document.createElement('div');
+            objectNameTitle.textContent = objectName;
+            objectNameTitle.style.fontSize = '22px';
+            objectNameTitle.style.fontWeight = '600';
+            objectNameTitle.style.color = '#2196f3';
+            objectNameTitle.style.marginBottom = '15px';
+            objectNameTitle.style.display = 'block';
+            objectNameTitle.style.textAlign = 'center';
+            objectNameTitle.style.marginLeft = 'auto';
+            objectNameTitle.style.marginRight = 'auto';
+            companyNameBlock.appendChild(objectNameTitle);
+        }
+        
+        const chartTypeTitle = document.createElement('div');
+        chartTypeTitle.textContent = `График внедрения и обучения`;
+        chartTypeTitle.style.fontSize = '18px';
+        chartTypeTitle.style.fontWeight = '500';
+        chartTypeTitle.style.color = '#666666';
+        chartTypeTitle.style.display = 'block';
+        chartTypeTitle.style.textAlign = 'center';
+        chartTypeTitle.style.marginLeft = 'auto';
+        chartTypeTitle.style.marginRight = 'auto';
+        companyNameBlock.appendChild(chartTypeTitle);
+        
+        contentWrapper.appendChild(companyNameBlock);
+        
+        // Метрики
+        const metrics = calculateTaskMetrics();
+        const metricsContainer = document.createElement('table');
+        metricsContainer.style.width = '100%';
+        metricsContainer.style.margin = '40px auto 0 auto';
+        metricsContainer.style.borderCollapse = 'separate';
+        metricsContainer.style.borderSpacing = '15px';
+        metricsContainer.style.tableLayout = 'fixed';
+        
+        const metricsRow = document.createElement('tr');
+        
+        // Метрика: Закрыто
+        const completedCell = document.createElement('td');
+        completedCell.style.width = '33%';
+        completedCell.style.textAlign = 'center';
+        completedCell.style.padding = '20px';
+        completedCell.style.background = '#e8f5e9';
+        completedCell.style.borderRadius = '8px';
+        completedCell.style.border = '2px solid #4caf50';
+        completedCell.style.verticalAlign = 'middle';
+        
+        const completedLabel = document.createElement('div');
+        completedLabel.textContent = 'Закрыто';
+        completedLabel.style.fontSize = '14px';
+        completedLabel.style.color = '#666';
+        completedLabel.style.marginBottom = '8px';
+        completedCell.appendChild(completedLabel);
+        
+        const completedValue = document.createElement('div');
+        completedValue.textContent = String(metrics.completed);
+        completedValue.style.fontSize = '36px';
+        completedValue.style.fontWeight = '700';
+        completedValue.style.color = '#4caf50';
+        completedCell.appendChild(completedValue);
+        
+        metricsRow.appendChild(completedCell);
+        
+        // Метрика: Просрочено
+        const overdueCell = document.createElement('td');
+        overdueCell.style.width = '33%';
+        overdueCell.style.textAlign = 'center';
+        overdueCell.style.padding = '20px';
+        overdueCell.style.background = '#ffebee';
+        overdueCell.style.borderRadius = '8px';
+        overdueCell.style.border = '2px solid #f44336';
+        overdueCell.style.verticalAlign = 'middle';
+        
+        const overdueLabel = document.createElement('div');
+        overdueLabel.textContent = 'Просрочено';
+        overdueLabel.style.fontSize = '14px';
+        overdueLabel.style.color = '#666';
+        overdueLabel.style.marginBottom = '8px';
+        overdueCell.appendChild(overdueLabel);
+        
+        const overdueValue = document.createElement('div');
+        overdueValue.textContent = String(metrics.overdue);
+        overdueValue.style.fontSize = '36px';
+        overdueValue.style.fontWeight = '700';
+        overdueValue.style.color = '#f44336';
+        overdueCell.appendChild(overdueValue);
+        
+        metricsRow.appendChild(overdueCell);
+        
+        // Метрика: Предстоит
+        const pendingCell = document.createElement('td');
+        pendingCell.style.width = '33%';
+        pendingCell.style.textAlign = 'center';
+        pendingCell.style.padding = '20px';
+        pendingCell.style.background = '#e3f2fd';
+        pendingCell.style.borderRadius = '8px';
+        pendingCell.style.border = '2px solid #2196f3';
+        pendingCell.style.verticalAlign = 'middle';
+        
+        const pendingLabel = document.createElement('div');
+        pendingLabel.textContent = 'Предстоит';
+        pendingLabel.style.fontSize = '14px';
+        pendingLabel.style.color = '#666';
+        pendingLabel.style.marginBottom = '8px';
+        pendingCell.appendChild(pendingLabel);
+        
+        const pendingValue = document.createElement('div');
+        pendingValue.textContent = String(metrics.pending);
+        pendingValue.style.fontSize = '36px';
+        pendingValue.style.fontWeight = '700';
+        pendingValue.style.color = '#2196f3';
+        pendingCell.appendChild(pendingValue);
+        
+        metricsRow.appendChild(pendingCell);
+        
+        metricsContainer.appendChild(metricsRow);
+        contentWrapper.appendChild(metricsContainer);
+        titleSection.appendChild(contentWrapper);
+        
+        // Проверка, что контент создан
+        console.log('Титульный лист создан:', {
+            hasContent: contentWrapper.children.length > 0,
+            metrics: metrics,
+            companyName: currentNameText || 'Название компании',
+            objectName: objectName
+        });
+        
+        return titleSection;
+    };
+
+    // Создаем титульный лист первым
+    const titlePage = createTitlePage();
+    exportWrapper.appendChild(titlePage);
+    console.log('Титульный лист создан и добавлен', titlePage);
 
     let diagramRendered = false;
     const shouldIncludeDiagram = includeDiagram !== false;
@@ -12571,12 +13159,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         } else {
             diagramRendered = true;
             const scaleLabel = getExportScaleLabel(scaleMode);
-            const ganttTitle = document.createElement('div');
-            ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
-            ganttTitle.style.fontSize = '12px';
-            ganttTitle.style.fontWeight = '600';
-            ganttTitle.style.margin = '4px 0 6px 0';
-            exportWrapper.appendChild(ganttTitle);
 
             const statusColors = {
                 pending: '#1e88e5',
@@ -12588,21 +13170,38 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const unitsPerPage = scaleMode === 'day' ? 22 : scaleMode === 'week' ? 12 : 6;
             const chunks = [];
             for (let i = 0; i < timelineUnits.length; i += unitsPerPage) {
-                chunks.push(timelineUnits.slice(i, i + unitsPerPage));
+                const chunk = timelineUnits.slice(i, i + unitsPerPage);
+                // Добавляем только непустые chunks
+                if (chunk && chunk.length > 0) {
+                    chunks.push(chunk);
+                }
             }
 
-            chunks.forEach((chunk, chunkIdx) => {
-                if (chunkIdx > 0) {
-                    const spacer = document.createElement('div');
-                    spacer.style.height = '40px';
-                    exportWrapper.appendChild(spacer);
-                }
+            // Создаем секции только если есть chunks и задачи
+            if (chunks.length > 0 && tasks && tasks.length > 0) {
+                chunks.forEach((chunk, chunkIdx) => {
+                    // Создаем отдельную секцию для каждого chunk с собственной шапкой
+                    // Первая секция после титульного листа не должна иметь pageBreakBefore, чтобы не создавать пустой лист
+                    const isFirstAfterTitle = chunkIdx === 0;
+                    const section = createPageSection(isFirstAfterTitle);
+
+                // Добавляем заголовок диаграммы
+                const ganttTitle = document.createElement('div');
+                ganttTitle.textContent = `Диаграмма Ганта (${scaleLabel})`;
+                ganttTitle.style.fontSize = '12px';
+                ganttTitle.style.fontWeight = '600';
+                ganttTitle.style.margin = '4px 0 6px 0';
+                ganttTitle.style.textAlign = 'left'; // Выравнивание по левому краю в рамках секции
+                section.appendChild(ganttTitle);
 
                 const ganttTable = document.createElement('table');
                 ganttTable.style.borderCollapse = 'collapse';
                 ganttTable.style.width = '100%';
                 ganttTable.style.fontSize = '8px';
                 ganttTable.style.marginBottom = '20px';
+                ganttTable.style.marginLeft = 'auto';
+                ganttTable.style.marginRight = 'auto';
+                ganttTable.style.tableLayout = 'auto'; // Автоматический расчет ширины колонок
 
                 const headerTr = document.createElement('tr');
                 const baseHeaders = ['Задача', 'Ответственный', 'Дата начала', 'Дата окончания', 'Рабочих дней'];
@@ -12701,97 +13300,112 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     ganttTable.appendChild(tr);
                 });
 
-                exportWrapper.appendChild(ganttTable);
-            });
+                    // Добавляем секцию только если таблица содержит данные
+                    if (ganttTable.rows.length > 1) { // Больше 1, потому что есть заголовок
+                        section.appendChild(ganttTable);
+                        exportWrapper.appendChild(section);
+                    }
+                });
+            }
         }
-    }
-
-    if (diagramRendered) {
-        const separator = document.createElement('div');
-        separator.style.height = '60px';
-        exportWrapper.appendChild(separator);
     }
 
     // --- Детальная таблица задач с комментариями ---
-    const detailTitle = document.createElement('div');
-    detailTitle.textContent = 'Детальная таблица задач';
-    detailTitle.style.fontSize = '12px';
-    detailTitle.style.fontWeight = '600';
-    detailTitle.style.margin = '4px 0 6px 0';
-    exportWrapper.appendChild(detailTitle);
+    // Создаем отдельную секцию для детальной таблицы с собственной шапкой только если есть задачи
+    // Проверяем, была ли создана хотя бы одна секция диаграммы, чтобы не создавать pageBreakBefore для первой секции
+    const hasDiagramSections = exportWrapper.querySelectorAll('.pdf-page-section').length > 1; // Больше 1, потому что есть титульный лист
+    if (tasks && tasks.length > 0) {
+        // Если это первая секция после титульного листа (нет секций диаграммы), не создаем pageBreakBefore
+        const detailSection = createPageSection(hasDiagramSections ? false : true);
 
-    const detailTable = document.createElement('table');
-    detailTable.style.borderCollapse = 'collapse';
-    detailTable.style.width = '100%';
-    detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
+        const detailTitle = document.createElement('div');
+        detailTitle.textContent = 'Детальная таблица задач';
+        detailTitle.style.fontSize = '12px';
+        detailTitle.style.fontWeight = '600';
+        detailTitle.style.margin = '4px 0 6px 0';
+        detailTitle.style.textAlign = 'left'; // Выравнивание по левому краю в рамках секции
+        detailSection.appendChild(detailTitle);
 
-    // Заголовок таблицы
-    const detailHeaderTr = document.createElement('tr');
-    [
-        '№ п/п',
-        'Этап',
-        'Вид контроля',
-        'Мероприятие',
-        'Рабочих дней',
-        'Ответственный',
-        'Дата начала',
-        'Дата окончания',
-        'Комментарии по датам'
-    ].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.background = '#f5f5f5';
-        th.style.color = '#222222';
-        th.style.fontWeight = '600';
-        th.style.fontSize = '9px';
-        th.style.whiteSpace = 'nowrap';
-        addCellBorder(th);
-        detailHeaderTr.appendChild(th);
-    });
-    detailTable.appendChild(detailHeaderTr);
+        const detailTable = document.createElement('table');
+        detailTable.style.borderCollapse = 'collapse';
+        detailTable.style.width = '100%';
+        detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
+        detailTable.style.marginLeft = 'auto';
+        detailTable.style.marginRight = 'auto';
+        detailTable.style.tableLayout = 'auto'; // Автоматический расчет ширины колонок
 
-    // Строки задач
-    tasks.forEach((task, idx) => {
-        const tr = document.createElement('tr');
+        // Заголовок таблицы
+        const detailHeaderTr = document.createElement('tr');
+        [
+            '№ п/п',
+            'Этап',
+            'Вид контроля',
+            'Мероприятие',
+            'Рабочих дней',
+            'Ответственный',
+            'Дата начала',
+            'Дата окончания',
+            'Комментарии по датам'
+        ].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            th.style.background = '#f5f5f5';
+            th.style.color = '#222222';
+            th.style.fontWeight = '600';
+            th.style.fontSize = '9px';
+            th.style.whiteSpace = 'nowrap';
+            addCellBorder(th);
+            detailHeaderTr.appendChild(th);
+        });
+        detailTable.appendChild(detailHeaderTr);
 
-        let commentsSummary = '';
-        if (task.dateComments) {
-            const entries = Object.entries(task.dateComments)
-                .filter(([, text]) => text && String(text).trim().length > 0)
-                .sort(([d1], [d2]) => (d1 < d2 ? -1 : d1 > d2 ? 1 : 0))
-                .map(([date, text]) => `${date}: ${String(text).trim()}`);
-            commentsSummary = entries.join('; ');
-        }
+        // Строки задач
+        tasks.forEach((task, idx) => {
+            const tr = document.createElement('tr');
 
-        const cells = [
-            idx + 1,
-            task.stage || '',
-            task.control || '',
-            task.task || '',
-            task.days != null ? String(task.days) : '',
-            task.responsible || '',
-            task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
-            task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
-            commentsSummary
-        ];
-
-        cells.forEach((val, cellIdx) => {
-            const td = document.createElement('td');
-            td.textContent = val;
-            td.style.fontSize = '9px';
-            if (cellIdx === 3 || cellIdx === 8) {
-                td.style.whiteSpace = 'normal';
-            } else {
-                td.style.whiteSpace = 'nowrap';
+            let commentsSummary = '';
+            if (task.dateComments) {
+                const entries = Object.entries(task.dateComments)
+                    .filter(([, text]) => text && String(text).trim().length > 0)
+                    .sort(([d1], [d2]) => (d1 < d2 ? -1 : d1 > d2 ? 1 : 0))
+                    .map(([date, text]) => `${date}: ${String(text).trim()}`);
+                commentsSummary = entries.join('; ');
             }
-            addCellBorder(td);
-            tr.appendChild(td);
+
+            const cells = [
+                idx + 1,
+                task.stage || '',
+                task.control || '',
+                task.task || '',
+                task.days != null ? String(task.days) : '',
+                task.responsible || '',
+                task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
+                task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
+                commentsSummary
+            ];
+
+            cells.forEach((val, cellIdx) => {
+                const td = document.createElement('td');
+                td.textContent = val;
+                td.style.fontSize = '9px';
+                if (cellIdx === 3 || cellIdx === 8) {
+                    td.style.whiteSpace = 'normal';
+                } else {
+                    td.style.whiteSpace = 'nowrap';
+                }
+                addCellBorder(td);
+                tr.appendChild(td);
+            });
+
+            detailTable.appendChild(tr);
         });
 
-        detailTable.appendChild(tr);
-    });
-
-    exportWrapper.appendChild(detailTable);
+        // Добавляем секцию только если таблица содержит данные
+        if (detailTable.rows.length > 1) { // Больше 1, потому что есть заголовок
+            detailSection.appendChild(detailTable);
+            exportWrapper.appendChild(detailSection);
+        }
+    }
 
     // --- Генерация PDF ---
     
@@ -12811,47 +13425,133 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     loadingIndicator.style.fontWeight = '600';
     document.body.appendChild(loadingIndicator);
     
+    // Проверяем, что есть контент для экспорта
+    const sections = exportWrapper.querySelectorAll('.pdf-page-section');
+    if (sections.length === 0) {
+        console.error('Нет контента для экспорта в PDF');
+        if (loadingIndicator.parentNode) {
+            document.body.removeChild(loadingIndicator);
+        }
+        alert('Ошибка: нет данных для экспорта в PDF');
+        return;
+    }
+
+    // Проверяем, что все секции содержат контент (не пустые)
+    const validSections = Array.from(sections).filter(section => {
+        // Проверяем, что секция содержит видимый контент
+        const hasContent = section.children.length > 0 && 
+                          (section.textContent.trim().length > 0 || 
+                           section.querySelector('table') || 
+                           section.querySelector('img'));
+        if (!hasContent) {
+            console.warn('Обнаружена пустая секция, удаляем:', section);
+            section.remove();
+        }
+        return hasContent;
+    });
+
+    console.log(`Экспорт PDF: создано ${validSections.length} секций (проверено ${sections.length}, удалено ${sections.length - validSections.length} пустых)`);
+    
+    if (validSections.length === 0) {
+        console.error('Нет валидного контента для экспорта в PDF');
+        if (loadingIndicator.parentNode) {
+            document.body.removeChild(loadingIndicator);
+        }
+        alert('Ошибка: нет данных для экспорта в PDF');
+        if (exportWrapper.parentNode) {
+            document.body.removeChild(exportWrapper);
+        }
+        return;
+    }
+
+    // Добавляем CSS стили для разрывов страниц и центрирования
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            box-sizing: border-box;
+        }
+        .pdf-page-section {
+            width: 100% !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+        }
+        .pdf-page-section table {
+            margin-left: auto !important;
+            margin-right: auto !important;
+            width: 100% !important;
+        }
+        @media print {
+            .pdf-page-section {
+                page-break-before: always;
+                page-break-inside: avoid;
+                break-before: page;
+                break-inside: avoid;
+            }
+            .pdf-page-section:first-child {
+                page-break-before: auto;
+                break-before: auto;
+            }
+        }
+    `;
+    exportWrapper.appendChild(style);
+
     document.body.appendChild(exportWrapper);
 
-    const opt = {
-        margin: [10, 10, 20, 10], // [top, left, bottom, right] - увеличиваем нижний отступ
-        filename: generateExportFileName('pdf'),
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            windowWidth: exportWrapper.scrollWidth,
-            windowHeight: exportWrapper.scrollHeight
-        },
-        jsPDF: { 
-            orientation: 'landscape', 
-            unit: 'mm', 
-            format: 'a3'
-        }
-    };
+    // Даем время DOM обновиться перед экспортом
+    setTimeout(() => {
+        const opt = {
+            margin: [10, 15, 20, 15], // [top, left, bottom, right] - увеличены боковые отступы для центрирования
+            filename: generateExportFileName('pdf'),
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: exportWrapper.scrollWidth || 1200,
+                windowHeight: exportWrapper.scrollHeight || 800,
+                allowTaint: true,
+                x: 0, // Начало координат слева
+                y: 0  // Начало координат сверху
+            },
+            jsPDF: { 
+                orientation: 'landscape', 
+                unit: 'mm', 
+                format: 'a3'
+            },
+            pagebreak: { 
+                mode: ['avoid-all', 'css', 'legacy'],
+                before: '.pdf-page-section',
+                after: [],
+                avoid: []
+            }
+        };
 
-    html2pdf()
-        .set(opt)
-        .from(exportWrapper)
-        .save()
-        .then(() => {
-            document.body.removeChild(exportWrapper);
-            loadingIndicator.textContent = 'PDF готов!';
-            setTimeout(() => {
+        html2pdf()
+            .set(opt)
+            .from(exportWrapper)
+            .save()
+            .then(() => {
+                if (exportWrapper.parentNode) {
+                    document.body.removeChild(exportWrapper);
+                }
+                loadingIndicator.textContent = 'PDF готов!';
+                setTimeout(() => {
+                    if (loadingIndicator.parentNode) {
+                        document.body.removeChild(loadingIndicator);
+                    }
+                }, 3000); // 3 секунды
+            })
+            .catch((err) => {
+                console.error('Ошибка генерации PDF:', err);
+                if (exportWrapper.parentNode) {
+                    document.body.removeChild(exportWrapper);
+                }
                 if (loadingIndicator.parentNode) {
                     document.body.removeChild(loadingIndicator);
                 }
-            }, 3000); // 3 секунды
-        })
-        .catch((err) => {
-            console.error('Ошибка генерации PDF:', err);
-            document.body.removeChild(exportWrapper);
-            if (loadingIndicator.parentNode) {
-                document.body.removeChild(loadingIndicator);
-            }
-            alert('Произошла ошибка при генерации PDF');
-        });
+                alert('Произошла ошибка при генерации PDF: ' + (err.message || 'неизвестная ошибка'));
+            });
+    }, 100); // Небольшая задержка для обновления DOM
 }
 
         // Построение временной шкалы для экспорта в Excel (дни/недели/месяцы/годы)
@@ -13356,10 +14056,45 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             // Авто‑подбор ширины столбцов для табличного листа
             const wsCols = buildAutoColumnWidths(wsData);
-            // Столбцы "Дата начала" и "Дата окончания" (индексы 6 и 7) фиксируем в ширину 10
-            if (wsCols[6]) wsCols[6].wch = 10;
-            if (wsCols[7]) wsCols[7].wch = 10;
+            
+            // Настройка ширины столбцов для листа "Задачи"
+            // Столбец A (№ п/п) - ширина 7, выравнивание по центру
+            if (wsCols[0]) {
+                wsCols[0].wch = 7;
+            }
+            // Столбцы B, C, D (Этап, Вид контроля, Мероприятие) - по самой длинной строке (уже настроено автоматически)
+            // Столбец E (Рабочих дней) - ширина 13, выравнивание по центру
+            if (wsCols[4]) {
+                wsCols[4].wch = 13;
+            }
+            // Столбец F (Ответственный) - по самой длинной строке (уже настроено автоматически)
+            // Столбцы G, H (Дата начала, Дата окончания) - ширина 15
+            if (wsCols[6]) wsCols[6].wch = 15;
+            if (wsCols[7]) wsCols[7].wch = 15;
+            // Столбец I (Комментарии) - по самой длинной строке (уже настроено автоматически)
+            
             ws['!cols'] = wsCols;
+            
+            // Настройка выравнивания по центру для столбцов A и E
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            for (let row = 0; row <= range.e.r; row++) {
+                // Столбец A (№ п/п) - выравнивание по центру
+                const cellA = XLSX.utils.encode_cell({ c: 0, r: row });
+                if (ws[cellA]) {
+                    if (!ws[cellA].s) ws[cellA].s = {};
+                    if (!ws[cellA].s.alignment) ws[cellA].s.alignment = {};
+                    ws[cellA].s.alignment.horizontal = 'center';
+                    ws[cellA].s.alignment.vertical = 'center';
+                }
+                // Столбец E (Рабочих дней) - выравнивание по центру
+                const cellE = XLSX.utils.encode_cell({ c: 4, r: row });
+                if (ws[cellE]) {
+                    if (!ws[cellE].s) ws[cellE].s = {};
+                    if (!ws[cellE].s.alignment) ws[cellE].s.alignment = {};
+                    ws[cellE].s.alignment.horizontal = 'center';
+                    ws[cellE].s.alignment.vertical = 'center';
+                }
+            }
 
             XLSX.utils.book_append_sheet(wb, ws, 'Задачи');
 
@@ -13940,6 +14675,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const warningText = document.getElementById('scaleWarningText');
             if (!modal || !warningText) return;
             
+            // НЕ закрываем меню статуса при открытии предупреждения,
+            // чтобы currentStatusTarget не был сброшен
+            // Меню будет скрыто визуально, но currentStatusTarget останется сохраненным
+            
             // Формируем текст предупреждения в зависимости от источника
             if (fromTable) {
                 warningText.textContent = 'Вы собираетесь проставить статус для всего срока задачи. Вы уверены, что хотите это сделать?';
@@ -14039,6 +14778,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 }
             }
             pendingStatusAfterScaleWarning = null;
+            pendingStatusTargetAfterScaleWarning = null;
             pendingStatusFromTable = null;
             closeStatusMenu();
         }
@@ -14077,6 +14817,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             if (pendingStatusAfterScaleWarning) {
                 const status = pendingStatusAfterScaleWarning;
                 pendingStatusAfterScaleWarning = null;
+                
+                // Восстанавливаем currentStatusTarget из сохраненного
+                if (pendingStatusTargetAfterScaleWarning) {
+                    currentStatusTarget = pendingStatusTargetAfterScaleWarning;
+                    pendingStatusTargetAfterScaleWarning = null;
+                }
                 
                 // Применяем статус
                 // Если статус требует комментария, открываем модальное окно комментария
@@ -14739,6 +15485,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             modal.style.alignItems = '';
             modal.style.justifyContent = '';
             
+            // Проверяем, есть ли выделенные задачи (Shift+клик)
+            if (selectedTaskIds.size > 0) {
+                // Применяем статус ко всем выделенным задачам с комментарием
+                applyStatusToSelectedTasks(status, text);
+                return;
+            }
+            
             const targetSnapshot = window.__statusCommentTargetSnapshot || null;
             applyStatusToSelection(status, text, targetSnapshot);
         }
@@ -15232,18 +15985,31 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             const dateArray = Array.isArray(dateStrs) ? dateStrs : [dateStrs];
             currentStatusTarget = { taskId, dateStrs: dateArray };
             
+            console.log('📂 openStatusMenu вызвана:', { 
+                taskId, 
+                dateStrs: dateArray, 
+                currentStatusTarget,
+                targetElement: !!targetElement
+            });
+            
             // Сохраняем координаты для позиционирования модального окна комментария на мобильных
             lastClickCoordinates.x = x;
             lastClickCoordinates.y = y;
             
             const menu = document.getElementById('statusMenu');
-            if (!menu) return;
+            if (!menu) {
+                console.error('❌ Меню statusMenu не найдено в DOM!');
+                return;
+            }
+            
+            console.log('✅ Меню найдено:', menu);
             
             // Для мобильных и планшетов используем улучшенное позиционирование рядом с ячейкой
             const isMobile = window.innerWidth <= 1024;
             
             // Убеждаемся, что меню находится в body (не внутри других элементов с transform)
             if (menu.parentElement !== document.body) {
+                console.log('⚠️ Меню не в body, перемещаем...');
                 document.body.appendChild(menu);
             }
             
@@ -15255,11 +16021,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             menu.style.transform = '';
             menu.style.margin = '0';
             menu.style.padding = '';
-            
-            // Сначала показываем меню, чтобы получить правильные размеры
             menu.style.display = 'block';
+            menu.style.visibility = 'visible';
+            menu.style.opacity = '1';
             menu.style.position = 'fixed';
-            menu.style.zIndex = '200';
+            menu.style.zIndex = '99999'; // Очень высокий z-index
             
             // Получаем размеры меню и позиционируем его
             requestAnimationFrame(() => {
@@ -15267,207 +16033,106 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
                 
-                // Если передан targetElement, используем его координаты вместо координат события
+                // Если передан targetElement, используем его координаты для более точного позиционирования
                 let referenceX = x;
                 let referenceY = y;
+                let cellRect = null;
                 
                 if (targetElement) {
-                    const targetRect = targetElement.getBoundingClientRect();
-                    referenceX = targetRect.right; // Правая граница элемента
-                    referenceY = targetRect.top + targetRect.height / 2; // Центр по вертикали
-                    console.log('📍 Используем координаты элемента:', {
-                        elementRect: { left: targetRect.left, top: targetRect.top, right: targetRect.right, bottom: targetRect.bottom },
-                        referenceX,
-                        referenceY
+                    cellRect = targetElement.getBoundingClientRect();
+                    referenceX = cellRect.right; // Правый край ячейки
+                    referenceY = cellRect.top + cellRect.height / 2; // Центр ячейки по вертикали
+                    console.log('📍 Используем координаты ячейки:', { 
+                        cellRect: { left: cellRect.left, top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, width: cellRect.width, height: cellRect.height },
+                        referenceX, 
+                        referenceY 
                     });
-                }
-                
-                let left = referenceX;
-                let top = referenceY;
-                
-                console.log('📍 Клик на позиции:', { 
-                    clickX: x, 
-                    clickY: y,
-                    referenceX,
-                    referenceY,
-                    isMobile, 
-                    menuWidth: menuRect.width, 
-                    menuHeight: menuRect.height,
-                    viewport: { width: viewportWidth, height: viewportHeight }
-                });
-                
-                if (isMobile) {
-                    // На мобильных и планшетах показываем меню рядом с ячейкой
-                    const offset = 15; // чуть больше отступ, чтобы палец не закрывал
-                    
-                    // Проверяем, влезает ли меню справа от точки клика
-                    if (referenceX + menuRect.width + offset > viewportWidth) {
-                        // Показываем слева от точки клика
-                        left = Math.max(10, referenceX - menuRect.width - offset);
-                    } else {
-                        left = referenceX + offset;
-                    }
-                    
-                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
-                    const spaceBelow = viewportHeight - referenceY - offset;
-                    const spaceAbove = referenceY - offset;
-                    
-                    if (spaceBelow >= menuRect.height + 10) {
-                        // Есть место снизу - показываем меню ниже точки клика
-                        top = referenceY + offset;
-                    } else if (spaceAbove >= menuRect.height + 10) {
-                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
-                        top = referenceY - menuRect.height - offset;
-                    } else {
-                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
-                        if (spaceBelow > spaceAbove) {
-                            // Больше места снизу - показываем снизу, но с учетом границ
-                            top = Math.min(referenceY + offset, viewportHeight - menuRect.height - 10);
-                        } else {
-                            // Больше места сверху - показываем сверху, но с учетом границ
-                            top = Math.max(10, referenceY - menuRect.height - offset);
-                        }
-                    }
-                    
-                    // Финальная проверка: убеждаемся, что меню не выходит за границы
-                    if (top < 10) {
-                        top = 10;
-                    } else if (top + menuRect.height > viewportHeight - 10) {
-                        top = viewportHeight - menuRect.height - 10;
-                    }
-                    
-                    console.log('📱 Мобильная позиция меню:', { left, top, referenceX, referenceY, spaceBelow, spaceAbove });
                 } else {
-                    // На десктопе позиционируем меню рядом с точкой клика
-                    const offset = 5;
-                    
-                    // Проверяем, влезает ли меню справа
-                    if (referenceX + menuRect.width + offset > viewportWidth) {
-                        // Показываем слева от точки клика
-                        left = Math.max(10, referenceX - menuRect.width - offset);
+                    console.log('📍 Используем переданные координаты:', { x, y });
+                }
+                
+                console.log('📍 Начальные координаты:', { referenceX, referenceY, menuWidth: menuRect.width, menuHeight: menuRect.height });
+                
+                const offset = 8; // Отступ от ячейки
+                
+                // Позиционируем меню справа от ячейки, центрируя по вертикали
+                let left = referenceX + offset;
+                let top = referenceY - (menuRect.height / 2);
+                
+                // Если меню не влезает справа, показываем слева
+                if (left + menuRect.width > viewportWidth - 15) {
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
                     } else {
-                        // Показываем справа от точки клика
-                        left = referenceX + offset;
-                    }
-                    
-                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
-                    const spaceBelow = viewportHeight - referenceY - offset;
-                    const spaceAbove = referenceY - offset;
-                    
-                    if (spaceBelow >= menuRect.height + 10) {
-                        // Есть место снизу - показываем меню ниже точки клика
-                        top = referenceY + offset;
-                    } else if (spaceAbove >= menuRect.height + 10) {
-                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
-                        top = referenceY - menuRect.height - offset;
-                    } else {
-                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
-                        if (spaceBelow > spaceAbove) {
-                            // Больше места снизу - показываем снизу, но с учетом границ
-                            top = Math.min(referenceY + offset, viewportHeight - menuRect.height - 10);
-                        } else {
-                            // Больше места сверху - показываем сверху, но с учетом границ
-                            top = Math.max(10, referenceY - menuRect.height - offset);
-                        }
-                    }
-                    
-                    // Финальная проверка: убеждаемся, что меню не выходит за границы
-                    if (top < 10) {
-                        top = 10;
-                    } else if (top + menuRect.height > viewportHeight - 10) {
-                        top = viewportHeight - menuRect.height - 10;
+                        // Используем примерную ширину ячейки (обычно 30-60px в режиме дней)
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
                     }
                 }
-
-                // Устанавливаем позицию
+                
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
+                if (left < 15) {
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
+                        }
+                    } else {
+                        left = 15;
+                    }
+                }
+                
+                // Корректируем вертикальное положение, стараясь остаться как можно ближе к ячейке
+                if (top < 15) {
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.top + offset;
+                    } else {
+                        top = 15;
+                    }
+                } else if (top + menuRect.height > viewportHeight - 15) {
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (top < 15) {
+                            top = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        top = viewportHeight - menuRect.height - 15;
+                    }
+                }
+                
+                console.log('✅ Финальная позиция меню:', { left, top, referenceX, referenceY });
+                
+                // Устанавливаем позицию ОДИН РАЗ - рядом с ячейкой
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
+                menu.style.margin = '0';
+                menu.style.transform = 'none';
+                menu.style.display = 'block';
+                menu.style.visibility = 'visible';
+                menu.style.opacity = '1';
                 
-                // Двойной requestAnimationFrame для гарантии, что стили применены
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        const actualRect = menu.getBoundingClientRect();
-                        const scrollX = window.scrollX || window.pageXOffset;
-                        const scrollY = window.scrollY || window.pageYOffset;
-                        
-                        // Проверяем, не сдвинулось ли меню
-                        const topDiff = Math.abs(actualRect.top - top);
-                        const leftDiff = Math.abs(actualRect.left - left);
-                        
-                        console.log('✅ Финальная позиция меню:', { 
-                            left, 
-                            top, 
-                            menuWidth: menuRect.width, 
-                            menuHeight: menuRect.height,
-                            actualLeft: actualRect.left,
-                            actualTop: actualRect.top,
-                            scrollX,
-                            scrollY,
-                            topDiff,
-                            leftDiff,
-                            computedLeft: window.getComputedStyle(menu).left,
-                            computedTop: window.getComputedStyle(menu).top,
-                            computedPosition: window.getComputedStyle(menu).position,
-                            parentElement: menu.parentElement ? menu.parentElement.tagName : 'none',
-                            parentTransform: menu.parentElement ? window.getComputedStyle(menu.parentElement).transform : 'none'
-                        });
-                        
-                        // Если меню сдвинулось, корректируем позицию
-                        if (topDiff > 5 || leftDiff > 5) {
-                            console.warn('⚠️ Меню сдвинулось! Ожидалось:', { left, top }, 'Получилось:', { 
-                                left: actualRect.left, 
-                                top: actualRect.top 
-                            });
-                            
-                            // Корректируем позицию с учетом смещения
-                            // Вычисляем разницу и добавляем её к нужной позиции
-                            const topOffset = top - actualRect.top;
-                            const leftOffset = left - actualRect.left;
-                            const correctedTop = top + topOffset;
-                            const correctedLeft = left + leftOffset;
-                            
-                            console.log('🔧 Корректируем позицию:', { 
-                                correctedLeft, 
-                                correctedTop,
-                                topOffset,
-                                leftOffset,
-                                originalTop: top,
-                                actualTop: actualRect.top
-                            });
-                            menu.style.left = `${correctedLeft}px`;
-                            menu.style.top = `${correctedTop}px`;
-                            
-                            // Проверяем еще раз после коррекции
-                            requestAnimationFrame(() => {
-                                const finalRect = menu.getBoundingClientRect();
-                                const finalTopDiff = Math.abs(finalRect.top - top);
-                                const finalLeftDiff = Math.abs(finalRect.left - left);
-                                
-                                if (finalTopDiff > 5 || finalLeftDiff > 5) {
-                                    console.error('❌ Коррекция не помогла! Финальная позиция:', {
-                                        expected: { left, top },
-                                        actual: { left: finalRect.left, top: finalRect.top }
-                                    });
-                                    
-                                    // Последняя попытка: используем координаты напрямую с учетом прокрутки
-                                    const scrollY = window.scrollY || window.pageYOffset;
-                                    const scrollX = window.scrollX || window.pageXOffset;
-                                    
-                                    // Пробуем установить позицию относительно viewport без учета прокрутки
-                                    menu.style.position = 'fixed';
-                                    menu.style.left = `${left}px`;
-                                    menu.style.top = `${top}px`;
-                                    menu.style.margin = '0';
-                                    menu.style.transform = 'none';
-                                    
-                                    console.log('🔄 Последняя попытка коррекции:', { left, top, scrollX, scrollY });
-                                } else {
-                                    console.log('✅ Коррекция успешна!');
-                                }
-                            });
-                        }
+                // Дополнительная проверка через небольшую задержку
+                setTimeout(() => {
+                    const finalRect = menu.getBoundingClientRect();
+                    console.log('🔍 Финальная проверка меню:', {
+                        display: window.getComputedStyle(menu).display,
+                        visibility: window.getComputedStyle(menu).visibility,
+                        opacity: window.getComputedStyle(menu).opacity,
+                        position: window.getComputedStyle(menu).position,
+                        zIndex: window.getComputedStyle(menu).zIndex,
+                        rect: { left: finalRect.left, top: finalRect.top, width: finalRect.width, height: finalRect.height },
+                        isVisible: finalRect.width > 0 && finalRect.height > 0
                     });
-                });
+                }, 100);
+                
+                console.log('✅ Меню позиционировано:', { left, top, clickX: x, clickY: y });
             });
         }
 
@@ -15525,8 +16190,82 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             });
         }
 
+        // Открытие меню статуса для выделенных задач (Shift+клик)
+        function openStatusMenuForSelectedTasks(x, y, taskId, dateStrs, targetElement = null) {
+            // Создаем специальный target для выделенных задач
+            const selectedTasksArray = Array.from(selectedTaskIds);
+            currentStatusTarget = {
+                isSelectedTasks: true,
+                taskIds: selectedTasksArray
+            };
+            
+            // Сохраняем координаты для позиционирования модального окна комментария на мобильных
+            lastClickCoordinates.x = x;
+            lastClickCoordinates.y = y;
+            
+            const menu = document.getElementById('statusMenu');
+            if (!menu) return;
+            
+            // Используем ту же логику позиционирования, что и в openStatusMenu
+            const isMobile = window.innerWidth <= 1024;
+            
+            if (menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+            
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.transform = '';
+            menu.style.margin = '0';
+            
+            menu.style.display = 'block';
+            menu.style.position = 'fixed';
+            menu.style.zIndex = '200';
+            
+            requestAnimationFrame(() => {
+                const menuRect = menu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                // ВСЕГДА используем координаты клика (x, y) для позиционирования меню
+                let referenceX = x;
+                let referenceY = y;
+                
+                if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y) || x <= 0 || y <= 0) {
+                    if (targetElement) {
+                        const targetRect = targetElement.getBoundingClientRect();
+                        referenceX = targetRect.left + targetRect.width / 2;
+                        referenceY = targetRect.top + targetRect.height / 2;
+                    } else {
+                        return;
+                    }
+                }
+                
+                // ПРОСТАЯ ЛОГИКА: меню появляется рядом с местом клика
+                const offset = isMobile ? 10 : 5;
+                let left = referenceX + offset;
+                let top = referenceY + offset;
+                
+                if (left + menuRect.width > viewportWidth - 10) {
+                    left = referenceX - menuRect.width - offset;
+                }
+                
+                if (top + menuRect.height > viewportHeight - 10) {
+                    top = referenceY - menuRect.height - offset;
+                }
+                
+                left = Math.max(10, Math.min(left, viewportWidth - menuRect.width - 10));
+                top = Math.max(10, Math.min(top, viewportHeight - menuRect.height - 10));
+                
+                menu.style.left = `${left}px`;
+                menu.style.top = `${top}px`;
+            });
+        }
+
         // Открытие меню статуса для множественного выбора
-        function openStatusMenuForMultipleSelection(x, y) {
+        function openStatusMenuForMultipleSelection(x, y, targetElement = null) {
             // Создаем виртуальный target для множественного выбора
             // Собираем все выбранные ячейки
             const allSelectedCells = Array.from(selectedCells).map(cellKey => {
@@ -15580,81 +16319,81 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 const menuRect = menu.getBoundingClientRect();
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
-                let left = x;
-                let top = y;
-
-                if (isMobile) {
-                    // На мобильных и планшетах показываем меню рядом с точкой тапа
-                    const offset = 15; // чуть больше отступ, чтобы палец не закрывал
-                    
-                    // Проверяем, влезает ли меню справа от точки клика
-                    if (x + menuRect.width + offset > viewportWidth) {
-                        // Показываем слева от точки клика
-                        left = Math.max(10, x - menuRect.width - offset);
-                    } else {
-                        left = x + offset;
-                    }
-                    
-                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
-                    const spaceBelow = viewportHeight - y - offset;
-                    const spaceAbove = y - offset;
-                    
-                    if (spaceBelow >= menuRect.height + 10) {
-                        // Есть место снизу - показываем меню ниже точки клика
-                        top = y + offset;
-                    } else if (spaceAbove >= menuRect.height + 10) {
-                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
-                        top = y - menuRect.height - offset;
-                    } else {
-                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
-                        if (spaceBelow > spaceAbove) {
-                            // Больше места снизу - показываем снизу, но с учетом границ
-                            top = Math.min(y + offset, viewportHeight - menuRect.height - 10);
-                        } else {
-                            // Больше места сверху - показываем сверху, но с учетом границ
-                            top = Math.max(10, y - menuRect.height - offset);
-                        }
-                    }
-                    
-                    // Финальная проверка: убеждаемся, что меню не выходит за границы
-                    if (top < 10) {
-                        top = 10;
-                    } else if (top + menuRect.height > viewportHeight - 10) {
-                        top = viewportHeight - menuRect.height - 10;
-                    }
+                
+                // Если передан targetElement, используем его координаты для более точного позиционирования
+                let referenceX = x;
+                let referenceY = y;
+                let cellRect = null;
+                
+                if (targetElement) {
+                    cellRect = targetElement.getBoundingClientRect();
+                    referenceX = cellRect.right; // Правый край ячейки
+                    referenceY = cellRect.top + cellRect.height / 2; // Центр ячейки по вертикали
+                    console.log('📍 Используем координаты ячейки (множественный выбор):', { 
+                        cellRect: { left: cellRect.left, top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, width: cellRect.width, height: cellRect.height },
+                        referenceX, 
+                        referenceY 
+                    });
                 } else {
-                    const offset = 5;
-                    // Проверяем, влезает ли меню справа
-                    if (x + menuRect.width + offset > viewportWidth) {
-                        left = Math.max(10, x - menuRect.width - offset);
-                    } else {
-                        left = x + offset;
+                    // Проверяем валидность координат
+                    if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y) || x <= 0 || y <= 0) {
+                        console.error('❌ Некорректные координаты клика!');
+                        return;
                     }
-                    
-                    // Умное позиционирование по вертикали: проверяем, есть ли место снизу
-                    const spaceBelow = viewportHeight - y - offset;
-                    const spaceAbove = y - offset;
-                    
-                    if (spaceBelow >= menuRect.height + 10) {
-                        // Есть место снизу - показываем меню ниже точки клика
-                        top = y + offset;
-                    } else if (spaceAbove >= menuRect.height + 10) {
-                        // Нет места снизу, но есть место сверху - показываем меню выше точки клика
-                        top = y - menuRect.height - offset;
+                    console.log('📍 Используем переданные координаты (множественный выбор):', { x, y });
+                }
+                
+                const offset = 8; // Отступ от ячейки
+                
+                // Позиционируем меню справа от ячейки, центрируя по вертикали
+                let left = referenceX + offset;
+                let top = referenceY - (menuRect.height / 2);
+                
+                // Если меню не влезает справа, показываем слева
+                if (left + menuRect.width > viewportWidth - 15) {
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
                     } else {
-                        // Мало места и снизу, и сверху - позиционируем так, чтобы меню было видно
-                        if (spaceBelow > spaceAbove) {
-                            top = Math.min(y + offset, viewportHeight - menuRect.height - 10);
-                        } else {
-                            top = Math.max(10, y - menuRect.height - offset);
+                        // Используем примерную ширину ячейки
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
+                    }
+                }
+                
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
+                if (left < 15) {
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
                         }
+                    } else {
+                        left = 15;
                     }
-                    
-                    // Финальная проверка: убеждаемся, что меню не выходит за границы
-                    if (top < 10) {
-                        top = 10;
-                    } else if (top + menuRect.height > viewportHeight - 10) {
-                        top = viewportHeight - menuRect.height - 10;
+                }
+                
+                // Корректируем вертикальное положение, стараясь остаться как можно ближе к ячейке
+                if (top < 15) {
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.top + offset;
+                    } else {
+                        top = 15;
+                    }
+                } else if (top + menuRect.height > viewportHeight - 15) {
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (top < 15) {
+                            top = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        top = viewportHeight - menuRect.height - 15;
                     }
                 }
 
@@ -15751,7 +16490,27 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
         function applyStatusToSelection(status, commentText, targetOverride) {
             const target = targetOverride || currentStatusTarget;
-            if (!target) return;
+            
+            console.log('🔧 applyStatusToSelection вызвана:', { 
+                status, 
+                hasTarget: !!target, 
+                target: target,
+                currentStatusTarget: currentStatusTarget,
+                selectedTaskIds: Array.from(selectedTaskIds)
+            });
+            
+            // Проверяем, есть ли выделенные задачи (Shift+клик)
+            if (selectedTaskIds.size > 0 && (!target || !target.isMultiple || !target.cells)) {
+                // Применяем статус ко всем выделенным задачам
+                console.log('📋 Применяем статус к выделенным задачам');
+                applyStatusToSelectedTasks(status, commentText);
+                return;
+            }
+            
+            if (!target) {
+                console.error('❌ Нет target для применения статуса!');
+                return;
+            }
 
             // Сохраняем состояние в историю перед изменением статуса
             addToUndoHistory();
@@ -15764,9 +16523,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             }
 
             const { taskId, dateStrs } = target;
+            console.log('🎯 Применяем статус к задаче:', { taskId, dateStrs, status });
+            
             const taskIndex = tasks.findIndex(t => t.id === taskId);
             const task = tasks[taskIndex];
-            if (!task) return;
+            if (!task) {
+                console.error('❌ Задача не найдена!', { taskId, taskIndex, tasksLength: tasks.length });
+                return;
+            }
+            
+            console.log('✅ Задача найдена:', { taskId, taskIndex, taskName: task.task || task.name });
 
             // Убеждаемся, что у задачи есть объекты для статусов и комментариев по датам
             if (!task.dateStatuses) {
@@ -15825,9 +16591,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 // ВАЖНО: Применяем статус только к выбранным датам (не ко всей задаче)
                 // Каждая ячейка (день) обрабатывается отдельно
                 // Это позволяет краситься только выбранной ячейке, а не всей строке
+                console.log('🟠 Применяем статус "В работе" к датам:', targetDates.map(d => formatDateKey(d)));
                 targetDates.forEach(d => {
                     const key = formatDateKey(d);
                     task.dateStatuses[key] = 'in-progress';
+                    console.log('   ✅ Статус применен к дате:', key);
                     if (commentText && commentText.trim().length > 0) {
                         task.dateComments[key] = commentText.trim();
                     }
@@ -15851,6 +16619,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 // В остальных случаях оставляем общий статус как есть (не перекрашиваем всю строку)
             } else if (status === 'pending') {
                 // Возврат к статусу "Запланировано"
+                console.log('🔵 Применяем статус "Запланировано" к датам:', targetDates.map(d => formatDateKey(d)));
                 // Проверяем, были ли удалены выходные дни (weekend-manual)
                 const hadWeekendManual = targetDates.some(d => {
                     const key = formatDateKey(d);
@@ -15862,6 +16631,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     const key = formatDateKey(d);
                     // Удаляем любой статус для этой даты
                     if (task.dateStatuses && task.dateStatuses[key]) {
+                        console.log('   🗑️ Удаляем статус для даты:', key, 'старый статус:', task.dateStatuses[key]);
                         delete task.dateStatuses[key];
                     }
                     // Также удаляем комментарии для этой даты
@@ -15892,9 +16662,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 }
             } else if (status === 'weekend-manual') {
                 // Применяем статус ко всем датам периода
+                console.log('🟡 Применяем статус "Выходной" к датам:', targetDates.map(d => formatDateKey(d)));
                 targetDates.forEach(d => {
                     const key = formatDateKey(d);
                     task.dateStatuses[key] = 'weekend-manual';
+                    console.log('   ✅ Статус применен к дате:', key);
                 });
                 
                 // Пересчитываем даты задачи с учетом выходных дней
@@ -15906,6 +16678,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 recalculateFollowingTasks(taskIndex);
             }
 
+            console.log('📊 Статусы после применения:', task.dateStatuses);
+            console.log('🔄 Вызываем перерисовку графика...');
+            
             closeStatusMenu();
             
             // Сохраняем текущую позицию прокрутки и активный элемент перед перерисовкой
@@ -15966,6 +16741,126 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             // Немедленное сохранение для критических операций (статусы и комментарии)
             console.log('💾 Критическое изменение: статус/комментарий, сохраняем немедленно');
             saveFullGanttState(); // Сохраняем сразу, без задержки
+        }
+
+        // Применение статуса ко всем выделенным задачам (Shift+клик)
+        function applyStatusToSelectedTasks(status, commentText) {
+            if (selectedTaskIds.size === 0) return;
+
+            // Сохраняем состояние в историю перед изменением статуса
+            addToUndoHistory();
+
+            const affectedTaskIndices = new Set();
+
+            // Применяем статус ко всем выделенным задачам
+            selectedTaskIds.forEach(taskId => {
+                const taskIndex = tasks.findIndex(t => t.id === taskId);
+                const task = tasks[taskIndex];
+                if (!task) return;
+
+                affectedTaskIndices.add(taskIndex);
+
+                // Убеждаемся, что у задачи есть объекты для статусов и комментариев
+                if (!task.dateStatuses) {
+                    task.dateStatuses = {};
+                }
+                if (!task.dateComments) {
+                    task.dateComments = {};
+                }
+
+                // Применяем статус ко всем ячейкам задачи
+                // ВАЖНО: Даты окончания остаются по плану (не изменяются)
+                if (task.dates && task.dates.length > 0) {
+                    task.dates.forEach(date => {
+                        const key = formatDateKey(date);
+
+                        if (status === 'completed') {
+                            // Для "завершено" применяем ко всем датам задачи
+                            task.dateStatuses[key] = 'completed';
+                            if (commentText && commentText.trim().length > 0) {
+                                task.dateComments[key] = commentText.trim();
+                            }
+                        } else if (status === 'in-progress') {
+                            // Для "в работе" применяем ко всем датам задачи
+                            task.dateStatuses[key] = 'in-progress';
+                            if (commentText && commentText.trim().length > 0) {
+                                task.dateComments[key] = commentText.trim();
+                            }
+                        } else if (status === 'pending') {
+                            // Возврат к статусу "Запланировано"
+                            if (task.dateStatuses[key]) {
+                                delete task.dateStatuses[key];
+                            }
+                            if (task.dateComments[key]) {
+                                delete task.dateComments[key];
+                            }
+                        } else if (status === 'weekend-manual') {
+                            // Выходной день
+                            task.dateStatuses[key] = 'weekend-manual';
+                        }
+                    });
+
+                    // Устанавливаем общий статус задачи
+                    // ВАЖНО: Не изменяем даты начала и окончания - они остаются по плану
+                    if (status === 'completed') {
+                        task.status = 'completed';
+                    } else if (status === 'in-progress') {
+                        task.status = 'in-progress';
+                    } else if (status === 'pending') {
+                        task.status = 'pending';
+                    }
+                }
+            });
+
+            // Пересчитываем даты для всех затронутых задач
+            // ВАЖНО: Для массового выбора даты окончания остаются по плану
+            // Пересчитываем только для weekend-manual (выходные дни сдвигают даты)
+            affectedTaskIndices.forEach(taskIndex => {
+                const task = tasks[taskIndex];
+                if (task && status === 'weekend-manual') {
+                    recalculateTaskDatesWithWeekends(task);
+                }
+                // Для статусов completed, in-progress, pending даты остаются по плану
+            });
+
+            // Находим минимальный индекс затронутой задачи для пересчета последующих
+            // Пересчитываем только если были изменения дат (weekend-manual)
+            const minAffectedIndex = (status === 'weekend-manual' && affectedTaskIndices.size > 0)
+                ? Math.min(...Array.from(affectedTaskIndices))
+                : -1;
+            
+            if (minAffectedIndex >= 0) {
+                // Пересчитываем все задачи, начиная с минимального затронутого индекса
+                recalculateFollowingTasks(minAffectedIndex);
+            }
+
+            closeStatusMenu();
+            
+            // Сохраняем текущую позицию прокрутки перед перерисовкой
+            const scrollY = window.scrollY || window.pageYOffset;
+            const scrollX = window.scrollX || window.pageXOffset;
+            const chartContainer = document.getElementById('ganttChart');
+            const chartScrollTop = chartContainer ? chartContainer.scrollTop : 0;
+            const chartScrollLeft = chartContainer ? chartContainer.scrollLeft : 0;
+
+            updateStatistics();
+            
+            if (currentView === 'gantt') {
+                renderGantt();
+            }
+            renderTable();
+            
+            // Восстанавливаем позицию прокрутки
+            window.scrollTo(scrollX, scrollY);
+            const newChartContainer = document.getElementById('ganttChart');
+            if (newChartContainer) {
+                newChartContainer.scrollTop = chartScrollTop;
+                newChartContainer.scrollLeft = chartScrollLeft;
+            }
+            
+            // Немедленное сохранение
+            console.log('💾 Критическое изменение: статус применен к выделенным задачам, сохраняем немедленно');
+            saveFullGanttState();
         }
 
         // Применение статуса к множественному выбору ячеек
@@ -16170,14 +17065,53 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         const status = item.getAttribute('data-status');
                         const target = currentStatusTarget;
                         
+                        console.log('📌 Клик на пункт меню статуса:', { 
+                            status, 
+                            hasTarget: !!target, 
+                            target: target,
+                            selectedTaskIds: Array.from(selectedTaskIds)
+                        });
+                        
                         // Сбрасываем флаг, так как пользователь выбрал статус
                         statusMenuOpenedFromSelect = false;
                         
                         // Проверяем масштаб отображения - если неделя или месяц, показываем предупреждение
                         if (currentScaleMode === 'week' || currentScaleMode === 'month') {
+                            // Сохраняем currentStatusTarget перед открытием предупреждения
+                            if (currentStatusTarget) {
+                                // Создаем копию target для сохранения
+                                if (currentStatusTarget.isMultiple && currentStatusTarget.cells) {
+                                    pendingStatusTargetAfterScaleWarning = {
+                                        isMultiple: true,
+                                        cells: [...currentStatusTarget.cells],
+                                        groupedByTask: currentStatusTarget.groupedByTask ? { ...currentStatusTarget.groupedByTask } : null
+                                    };
+                                } else {
+                                    pendingStatusTargetAfterScaleWarning = {
+                                        taskId: currentStatusTarget.taskId,
+                                        dateStrs: Array.isArray(currentStatusTarget.dateStrs)
+                                            ? [...currentStatusTarget.dateStrs]
+                                            : [currentStatusTarget.dateStrs]
+                                    };
+                                }
+                            }
                             // Показываем предупреждение о масштабе
                             openScaleWarning(status, currentScaleMode);
                             return; // Не применяем статус сразу, ждём подтверждения
+                        }
+                        
+                        // Проверяем, есть ли выделенные задачи (Shift+клик)
+                        if (selectedTaskIds.size > 0 && (!target || !target.isMultiple || !target.cells)) {
+                            // Для выделенных задач всегда открываем модальное окно комментария
+                            // для статусов "В работе" и "Завершено"
+                            if (status === 'in-progress' || status === 'completed') {
+                                pendingStatusForComment = status;
+                                openStatusCommentModal();
+                            } else {
+                                // Для других статусов применяем сразу
+                                applyStatusToSelectedTasks(status, '');
+                            }
+                            return;
                         }
                         
                         // Проверяем, является ли это множественным выбором
@@ -16226,7 +17160,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             }
 
             const menu = document.getElementById('statusMenu');
+            // Проверяем, не открыто ли модальное окно предупреждения о масштабе
+            const scaleWarningModal = document.getElementById('scaleWarningModal');
+            const isScaleWarningOpen = scaleWarningModal && scaleWarningModal.style.display !== 'none' && scaleWarningModal.classList.contains('show');
+            
             if (menu && menu.style.display === 'block' && !menu.contains(target)) {
+                // Не закрываем меню, если открыто предупреждение о масштабе
+                if (isScaleWarningOpen) {
+                    return; // Не закрываем меню, пока открыто предупреждение
+                }
+                
                 // Не закрываем меню, если клик был на select статуса или его родительский элемент
                 const isStatusSelect = target.tagName === 'SELECT' && target.getAttribute('data-field') === 'status';
                 const isInsideStatusSelect = target.closest('select[data-field="status"]') !== null;
@@ -16293,9 +17236,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 cancelResetPlan();
             }
 
-
-            const scaleWarningModal = document.getElementById('scaleWarningModal');
-            if (target === scaleWarningModal) {
+            // Используем уже объявленную переменную scaleWarningModal из строки 17258
+            if (scaleWarningModal && target === scaleWarningModal) {
                 cancelScaleWarning();
             }
 
@@ -17836,7 +18778,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             badge.className = 'new-feature-badge';
             badge.textContent = '!';
             badge.title = 'Новая функция';
-            element.style.position = 'relative';
+            // Не изменяем position для кнопок с абсолютным позиционированием
+            // element.style.position = 'relative';
+            // Вместо этого убеждаемся, что элемент имеет position для корректного позиционирования бейджа
+            const computedPosition = window.getComputedStyle(element).position;
+            if (computedPosition === 'static') {
+                element.style.position = 'relative';
+            }
             element.appendChild(badge);
 
             // Удаляем бейдж при первом клике
@@ -18022,6 +18970,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                     <li><span class="help-key">Insert</span> — Добавить новую задачу под выделенной</li>
                     <li><span class="help-key">Delete</span> — Удалить выделенную задачу</li>
                     <li><span class="help-key">↑</span> / <span class="help-key">↓</span> — Навигация по задачам</li>
+                    <li><span class="help-key">Shift</span> + <span class="help-key">Клик</span> — Выделить несколько задач (диапазон от первой до последней выбранной задачи)</li>
                     <li><span class="help-key">Ctrl</span> + <span class="help-key">C</span> — Копировать задачу</li>
                     <li><span class="help-key">Ctrl</span> + <span class="help-key">V</span> — Вставить задачу после выделенной</li>
                     <li><span class="help-key">F2</span> — Задать базовый план</li>

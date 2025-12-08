@@ -1667,6 +1667,28 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Отдельный endpoint для cron-запросов (без редиректов, минимальный ответ)
+// Используйте этот endpoint в cron-сервисах для поддержания активности
+app.get('/cron-ping', (req, res) => {
+  // Опциональная проверка токена (если нужна защита)
+  const token = req.query.token;
+  const expectedToken = process.env.CRON_TOKEN;
+  
+  // Если токен настроен, проверяем его
+  if (expectedToken && token !== expectedToken) {
+    return res.status(401).json({ 
+      status: 'error', 
+      message: 'Invalid token' 
+    });
+  }
+  
+  // Возвращаем минимальный JSON-ответ без редиректов
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Глобальный обработчик ошибок для необработанных исключений
 process.on('uncaughtException', (error) => {
   console.error('❌ Необработанное исключение:', error);

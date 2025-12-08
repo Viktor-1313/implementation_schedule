@@ -1,0 +1,12 @@
+{
+  "chartType": "3",
+  "skeleton": [
+    {
+      "days": 1,
+      "stage": "тест",
+      "control": "тест",
+      "task": "тест"
+    }
+  ],
+  "updatedAt": "2025-12-03T07:07:34.195Z"
+}

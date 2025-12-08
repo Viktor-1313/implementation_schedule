@@ -1316,10 +1316,14 @@ app.delete('/api/users/:login', (req, res) => {
 // Обновление профиля пользователя
 app.put('/api/users/update', async (req, res) => {
   try {
-    const { oldLogin, newLogin, password } = req.body;
+    const { oldLogin, newLogin, name, password } = req.body;
 
     if (!oldLogin || !newLogin) {
       return res.status(400).json({ ok: false, error: 'Логин обязателен' });
+    }
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ ok: false, error: 'Имя пользователя обязательно' });
     }
 
     if (!fs.existsSync(USERS_FILE)) {
@@ -1339,6 +1343,12 @@ app.put('/api/users/update', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Пользователь с таким логином уже существует' });
     }
 
+    // Сохраняем старое имя для логирования
+    const oldName = users[userIndex].name || '';
+
+    // Обновляем имя пользователя
+    users[userIndex].name = name.trim();
+
     // Обновляем логин
     users[userIndex].login = newLogin.trim();
 
@@ -1354,6 +1364,9 @@ app.put('/api/users/update', async (req, res) => {
     // Логируем обновление профиля
     const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
     const changes = [];
+    if (oldName && oldName !== name.trim()) {
+      changes.push(`Имя: ${oldName} → ${name.trim()}`);
+    }
     if (newLogin !== oldLogin) {
       changes.push(`Логин: ${oldLogin} → ${newLogin}`);
     }

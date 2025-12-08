@@ -1101,6 +1101,12 @@
             animation-play-state: running;
         }
 
+        /* Класс для завершения анимации даже после ухода курсора */
+        .company-card.animating-border::before,
+        .company-card.animating-border::after {
+            animation-play-state: running !important;
+        }
+
         /* Drag and Drop стили */
         .company-card.draggable {
             cursor: grab;
@@ -3193,6 +3199,10 @@
             </div>
             <form id="profileForm">
                 <div class="profile-form-group">
+                    <label for="profileName">Имя пользователя:</label>
+                    <input type="text" id="profileName" required>
+                </div>
+                <div class="profile-form-group">
                     <label for="profileLogin">Логин:</label>
                     <input type="text" id="profileLogin" required>
                 </div>
@@ -3918,6 +3928,68 @@
                     wasDragStarted = false;
                     return false;
                 }, true);
+            });
+            
+            // Добавляем обработчики для завершения анимации при наведении на карточки компаний
+            container.querySelectorAll('.company-card').forEach(card => {
+                let completedAnimations = 0;
+                let animationEndHandler = null;
+                let animationTimeout = null;
+                
+                // Функция для очистки анимации
+                const cleanupAnimation = function() {
+                    card.classList.remove('animating-border');
+                    if (animationEndHandler) {
+                        card.removeEventListener('animationend', animationEndHandler);
+                        animationEndHandler = null;
+                    }
+                    if (animationTimeout) {
+                        clearTimeout(animationTimeout);
+                        animationTimeout = null;
+                    }
+                    completedAnimations = 0;
+                };
+                
+                // При наведении запускаем анимацию
+                card.addEventListener('mouseenter', function() {
+                    // Очищаем предыдущую анимацию, если она есть
+                    cleanupAnimation();
+                    
+                    // Небольшая задержка для сброса анимации перед запуском новой
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            // Добавляем класс для запуска анимации
+                            card.classList.add('animating-border');
+                            
+                            // Создаем обработчик завершения анимации
+                            animationEndHandler = function(e) {
+                                // Проверяем, что это завершение нужной анимации
+                                if (e.animationName === 'borderLeftFlow' || e.animationName === 'borderRightFlow') {
+                                    completedAnimations++;
+                                    
+                                    // Когда обе анимации завершились, удаляем класс
+                                    if (completedAnimations >= 2) {
+                                        cleanupAnimation();
+                                    }
+                                }
+                            };
+                            
+                            card.addEventListener('animationend', animationEndHandler);
+                            
+                            // Запасной таймаут на случай, если событие animationend не сработает
+                            // Длительность анимации 1.2 секунды, добавляем небольшой запас
+                            animationTimeout = setTimeout(function() {
+                                cleanupAnimation();
+                            }, 1500);
+                        });
+                    });
+                });
+                
+                // При уходе курсора не останавливаем анимацию - позволяем ей завершиться
+                card.addEventListener('mouseleave', function() {
+                    // Не удаляем класс сразу - анимация продолжит выполняться до завершения
+                    // Класс animating-border будет удален автоматически при завершении обеих анимаций
+                });
             });
             
             // Добавляем обработчики через делегирование
@@ -6654,12 +6726,14 @@
             console.log('🚀 openProfileModal вызвана');
             const modal = document.getElementById('profileModal');
             const modalContent = modal?.querySelector('.profile-modal-content');
+            const nameInput = document.getElementById('profileName');
             const loginInput = document.getElementById('profileLogin');
             
             console.log('🔍 Поиск элементов модального окна:', {
                 modal: !!modal,
                 modalElement: modal,
                 modalContent: !!modalContent,
+                nameInput: !!nameInput,
                 loginInput: !!loginInput,
                 currentUser: !!currentUser
             });
@@ -6675,8 +6749,8 @@
                 return;
             }
             
-            if (!loginInput) {
-                console.error('❌ Поле логина не найдено');
+            if (!nameInput || !loginInput) {
+                console.error('❌ Поля формы не найдены');
                 return;
             }
             
@@ -6684,6 +6758,7 @@
             
             // Заполняем поля, если пользователь загружен
             if (currentUser) {
+                nameInput.value = currentUser.name || '';
                 loginInput.value = currentUser.login || '';
             } else {
                 // Если пользователь не загружен, пытаемся получить из localStorage
@@ -6691,6 +6766,7 @@
                 if (userStr) {
                     try {
                         const user = JSON.parse(userStr);
+                        nameInput.value = user.name || '';
                         loginInput.value = user.login || '';
                     } catch (e) {
                         console.error('Ошибка парсинга данных пользователя:', e);
@@ -7433,6 +7509,10 @@
             
             if (!modal || !content) return;
             
+            // Сохраняем companyId и companyName в модальном окне для использования в экспорте
+            modal.dataset.companyId = companyId;
+            modal.dataset.companyName = companyName || companyId;
+            
             // Устанавливаем заголовок
             if (title) {
                 title.textContent = `Статистика: ${companyName || companyId}`;
@@ -7719,6 +7799,7 @@
         async function exportStatisticsToPDF() {
             const content = document.getElementById('statisticsContent');
             const title = document.getElementById('statisticsModalTitle');
+            const modal = document.getElementById('statisticsModal');
             
             if (!content) {
                 showMessage('Ошибка: содержимое статистики не найдено', 'error');
@@ -7729,6 +7810,35 @@
             if (content.innerHTML.includes('Загрузка статистики') || content.innerHTML.includes('Ошибка')) {
                 showMessage('Пожалуйста, дождитесь загрузки статистики', 'error');
                 return;
+            }
+            
+            // Получаем информацию о компании для формирования имени файла
+            let companyId = null;
+            let companyName = '';
+            let objectName = '';
+            
+            if (modal) {
+                companyId = modal.dataset.companyId;
+                companyName = modal.dataset.companyName || '';
+                
+                // Загружаем информацию о компании для получения objectName
+                if (companyId) {
+                    try {
+                        const infoResponse = await fetch(`/api/company-info?company=${encodeURIComponent(companyId)}`);
+                        if (infoResponse.ok) {
+                            const companyInfo = await infoResponse.json();
+                            if (companyInfo && companyInfo.objectName) {
+                                objectName = companyInfo.objectName;
+                            }
+                            // Если companyName не был сохранен, берем из companyInfo
+                            if (!companyName && companyInfo && companyInfo.name) {
+                                companyName = companyInfo.name;
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('Не удалось загрузить информацию о компании для имени файла:', error);
+                    }
+                }
             }
 
             // Загружаем библиотеку html2pdf.js перед использованием
@@ -7873,10 +7983,42 @@
                 exportWrapper.appendChild(style);
                 exportWrapper.appendChild(contentClone);
 
+                // Формируем имя файла: Статистика_ИмяКомпании_Объект_ДатаВремя.pdf
+                const sanitizeFileName = (str) => {
+                    if (!str) return '';
+                    return str.replace(/[^a-zA-ZА-Яа-я0-9\s]/g, '').replace(/\s+/g, '_').trim();
+                };
+                
+                const now = new Date();
+                const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+                const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS
+                const dateTimeStr = `${dateStr}_${timeStr}`;
+                
+                let fileName = 'Статистика';
+                
+                // Добавляем имя компании
+                if (companyName) {
+                    const cleanCompanyName = sanitizeFileName(companyName);
+                    if (cleanCompanyName) {
+                        fileName += `_${cleanCompanyName}`;
+                    }
+                }
+                
+                // Добавляем объект, если есть
+                if (objectName) {
+                    const cleanObjectName = sanitizeFileName(objectName);
+                    if (cleanObjectName) {
+                        fileName += `_${cleanObjectName}`;
+                    }
+                }
+                
+                // Добавляем дату и время
+                fileName += `_${dateTimeStr}.pdf`;
+                
                 // Настройки для экспорта
                 const opt = {
                     margin: [10, 10, 10, 10],
-                    filename: `Статистика_${title ? title.textContent.replace(/[^a-zA-Z0-9]/g, '_') : 'компании'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                    filename: fileName,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { 
                         scale: 2,
