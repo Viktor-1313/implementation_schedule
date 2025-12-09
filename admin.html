@@ -1330,6 +1330,34 @@
                 </table>
             </div>
         </div>
+
+        <!-- Бэкап компаний -->
+        <div class="panel-section" style="margin-top: 30px;">
+            <h2>Бэкап компаний</h2>
+            <p style="color: #64b5f6; margin-bottom: 20px; font-size: 0.95rem;">
+                Создайте резервную копию данных компании (график, задачи, статусы, даты, название, логотип) или восстановите из бэкапа.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="form-group">
+                    <label for="backupCompanySelect">Выберите компанию</label>
+                    <select id="backupCompanySelect" name="backupCompanySelect" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;">
+                        <option value="">-- Выберите компанию --</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="exportCompanyBackup()" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);">
+                        📥 Создать бэкап
+                    </button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('restoreBackupInput').click()" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);">
+                        📤 Восстановить из бэкапа
+                    </button>
+                    <input type="file" id="restoreBackupInput" accept=".json" style="display: none;" onchange="restoreCompanyBackup(event)">
+                </div>
+                <div id="backupStatus" style="display: none; padding: 15px; border-radius: 10px; margin-top: 10px;"></div>
+            </div>
+        </div>
+        <!-- Прозрачный отступ, чтобы блок бэкапа не прилипал к футеру -->
+        <div aria-hidden="true" style="width: 200px; height: 200px; opacity: 0; pointer-events: none;"></div>
     </div>
 
     <!-- Модальное окно подтверждения удаления пользователя -->
@@ -1343,6 +1371,21 @@
             <div class="delete-user-modal-actions">
                 <button class="btn btn-danger" onclick="confirmDeleteUser()">Да, удалить</button>
                 <button class="btn btn-secondary" onclick="cancelDeleteUser()">Нет</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения восстановления бэкапа -->
+    <div id="restoreBackupModal" class="delete-user-modal">
+        <div class="delete-user-modal-content">
+            <div class="delete-user-modal-header">
+                <h2>Восстановить бэкап?</h2>
+                <span class="delete-user-modal-close" onclick="cancelRestoreBackup()">&times;</span>
+            </div>
+            <p id="restoreBackupText">Вы собираетесь восстановить данные компании из бэкапа.</p>
+            <div class="delete-user-modal-actions">
+                <button class="btn btn-primary" onclick="confirmRestoreBackup()" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">Да, восстановить</button>
+                <button class="btn btn-secondary" onclick="cancelRestoreBackup()">Нет</button>
             </div>
         </div>
     </div>
@@ -1527,6 +1570,7 @@
         let currentCompanyId = '';
         let allCompanies = [];
         let allUsers = [];
+        let backupToRestore = null; // Данные бэкапа для восстановления
 
         // Показать сообщение
         function showMessage(text, type = 'success') {
@@ -1544,8 +1588,9 @@
                 const response = await fetch('/api/companies');
                 allCompanies = await response.json() || [];
                 const companySelectUsers = document.getElementById('companySelectUsers');
+                const backupCompanySelect = document.getElementById('backupCompanySelect');
                 
-                // Очищаем и заполняем список компаний
+                // Очищаем и заполняем список компаний для пользователей
                 if (companySelectUsers) {
                     companySelectUsers.innerHTML = '<option value="">Все компании</option>';
                     allCompanies.forEach(company => {
@@ -1553,6 +1598,17 @@
                         option.value = company.id;
                         option.textContent = `${company.name} (${company.id})`;
                         companySelectUsers.appendChild(option);
+                    });
+                }
+                
+                // Очищаем и заполняем список компаний для бэкапа
+                if (backupCompanySelect) {
+                    backupCompanySelect.innerHTML = '<option value="">-- Выберите компанию --</option>';
+                    allCompanies.forEach(company => {
+                        const option = document.createElement('option');
+                        option.value = company.id;
+                        option.textContent = `${company.name} (${company.id})`;
+                        backupCompanySelect.appendChild(option);
                     });
                 }
             } catch (error) {
@@ -2081,6 +2137,23 @@
             }
         });
 
+        // Закрытие модального окна восстановления бэкапа при клике вне его
+        document.getElementById('restoreBackupModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cancelRestoreBackup();
+            }
+        });
+
+        // Закрытие модального окна восстановления бэкапа по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const restoreModal = document.getElementById('restoreBackupModal');
+                if (restoreModal && restoreModal.classList.contains('show')) {
+                    cancelRestoreBackup();
+                }
+            }
+        });
+
         // Закрытие модального окна очистки логов при клике вне его
         const clearLogsModal = document.getElementById('clearLogsModal');
         if (clearLogsModal) {
@@ -2152,6 +2225,24 @@
                 console.error('Ошибка загрузки данных пользователя:', e);
                 window.location.href = 'auth.html';
                 return false;
+            }
+        }
+
+        // Получить данные текущего пользователя для передачи на сервер (логирование действий)
+        function getUserContext() {
+            try {
+                const storedUser = localStorage.getItem('gantt-user');
+                if (!storedUser) {
+                    return { name: null, login: null };
+                }
+                const parsed = JSON.parse(storedUser);
+                return {
+                    name: parsed.name || null,
+                    login: parsed.login || null
+                };
+            } catch (e) {
+                console.warn('Не удалось прочитать данные пользователя из localStorage:', e);
+                return { name: null, login: null };
             }
         }
 
@@ -2571,6 +2662,7 @@
             const chartType = chartTypesList.find(ct => ct.id === currentSkeletonType);
             const containerName = chartType ? chartType.containerName : '';
             const chartTypeName = chartType ? chartType.chartTypeName : '';
+            const { name: currentUserName, login: currentUserLogin } = getUserContext();
 
             try {
                 const response = await fetch('/api/gantt-skeleton', {
@@ -2583,7 +2675,9 @@
                         skeleton: currentSkeletonData,
                         columns: skeletonColumns,
                         containerName,
-                        chartTypeName
+                        chartTypeName,
+                        userName: currentUserName || currentUserLogin || 'Неизвестный пользователь',
+                        userLogin: currentUserLogin || null
                     })
                 });
 
@@ -2872,6 +2966,7 @@
             
             const containerName = document.getElementById('containerName').value.trim();
             const chartTypeName = document.getElementById('chartTypeName').value.trim();
+            const { name: currentUserName, login: currentUserLogin } = getUserContext();
             const messageEl = document.getElementById('createSkeletonMessage');
             
             if (!containerName || !chartTypeName) {
@@ -2890,7 +2985,9 @@
                     },
                     body: JSON.stringify({
                         containerName,
-                        chartTypeName
+                        chartTypeName,
+                        userName: currentUserName || currentUserLogin || 'Неизвестный пользователь',
+                        userLogin: currentUserLogin || null
                     })
                 });
                 
@@ -3156,13 +3253,8 @@
             }).join('');
         }
 
-<<<<<<< HEAD
         // Открыть модальное окно очистки логов
         function openClearLogsModal() {
-=======
-        // Показать модальное окно подтверждения очистки логов
-        function clearActivityLogs() {
->>>>>>> 7ad60ccab42dba402cffaadb5855d6ef6d20bfff
             const modal = document.getElementById('clearLogsModal');
             if (modal) {
                 modal.classList.add('show');
@@ -3660,6 +3752,235 @@
                 });
             }
         });
+
+        // Экспорт бэкапа компании
+        async function exportCompanyBackup() {
+            const companySelect = document.getElementById('backupCompanySelect');
+            const companyId = companySelect ? companySelect.value : '';
+            const statusDiv = document.getElementById('backupStatus');
+            
+            if (!companyId) {
+                showBackupStatus('Пожалуйста, выберите компанию для создания бэкапа', 'error');
+                return;
+            }
+            
+            try {
+                showBackupStatus('Создание бэкапа...', 'info');
+                
+                const response = await fetch(`/api/company-backup?company=${encodeURIComponent(companyId)}`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка создания бэкапа');
+                }
+                
+                const backup = await response.json();
+                
+                // Создаем blob и скачиваем файл
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup-${companyId}-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showBackupStatus(`✅ Бэкап компании "${companyId}" успешно создан и скачан`, 'success');
+                showMessage('Бэкап успешно создан', 'success');
+            } catch (error) {
+                console.error('Ошибка создания бэкапа:', error);
+                showBackupStatus(`❌ Ошибка создания бэкапа: ${error.message}`, 'error');
+                showMessage(`Ошибка создания бэкапа: ${error.message}`, 'error');
+            }
+        }
+
+        // Восстановление из бэкапа
+        async function restoreCompanyBackup(event) {
+            const file = event.target.files[0];
+            const statusDiv = document.getElementById('backupStatus');
+            
+            if (!file) {
+                return;
+            }
+            
+            // Проверяем расширение файла
+            if (!file.name.endsWith('.json')) {
+                showBackupStatus('❌ Неверный формат файла. Выберите JSON файл', 'error');
+                event.target.value = ''; // Сбрасываем input
+                return;
+            }
+            
+            try {
+                showBackupStatus('Чтение файла бэкапа...', 'info');
+                
+                const text = await file.text();
+                const backup = JSON.parse(text);
+                
+                // Проверяем структуру бэкапа
+                if (!backup.companyId || (!backup.ganttState && !backup.companyInfo)) {
+                    throw new Error('Неверный формат бэкапа: отсутствуют необходимые данные');
+                }
+                
+                // Сохраняем данные бэкапа для восстановления
+                backupToRestore = backup;
+                
+                // Формируем текст предупреждения
+                let warningText = `Вы собираетесь восстановить данные компании "${backup.companyId}" из бэкапа.\n\n`;
+                warningText += `Это действие перезапишет:\n`;
+                if (backup.ganttState) {
+                    warningText += `• График со всеми задачами, датами и статусами\n`;
+                }
+                if (backup.companyInfo) {
+                    warningText += `• Информацию о компании (название, логотип)\n`;
+                }
+                warningText += `\nПродолжить?`;
+                
+                // Показываем модальное окно подтверждения
+                const modal = document.getElementById('restoreBackupModal');
+                const textEl = document.getElementById('restoreBackupText');
+                
+                if (textEl) {
+                    textEl.textContent = warningText;
+                }
+                
+                if (modal) {
+                    modal.classList.add('show');
+                }
+                
+                // Сбрасываем input (файл уже прочитан)
+                event.target.value = '';
+            } catch (error) {
+                console.error('Ошибка восстановления бэкапа:', error);
+                showBackupStatus(`❌ Ошибка восстановления бэкапа: ${error.message}`, 'error');
+                showMessage(`Ошибка восстановления бэкапа: ${error.message}`, 'error');
+                event.target.value = ''; // Сбрасываем input
+            }
+        }
+
+        // Закрыть модальное окно восстановления бэкапа
+        function cancelRestoreBackup() {
+            const modal = document.getElementById('restoreBackupModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            backupToRestore = null;
+            // НЕ скрываем сообщение статуса - оно должно остаться видимым
+        }
+
+        // Подтвердить восстановление бэкапа
+        async function confirmRestoreBackup() {
+            if (!backupToRestore) {
+                cancelRestoreBackup();
+                return;
+            }
+
+            try {
+                showBackupStatus('Восстановление данных...', 'info');
+                
+                const response = await fetch('/api/company-restore', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(backupToRestore)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка восстановления бэкапа');
+                }
+                
+                const result = await response.json();
+                
+                console.log('Результат восстановления бэкапа:', result);
+                
+                // Проверяем, есть ли изменения
+                if (result.noChanges) {
+                    // Данные идентичны - показываем информационное сообщение
+                    let itemsText = [];
+                    if (result.restored && result.restored.ganttState) itemsText.push('график');
+                    if (result.restored && result.restored.companyInfo) itemsText.push('информацию о компании');
+                    
+                    const messageText = `ℹ️ Бэкап загружен для компании "${result.companyId}"\n` +
+                        `Изменений нет — загружена та же версия, что уже есть на сервере\n` +
+                        (itemsText.length > 0 ? `Проверено: ${itemsText.join(', ')}` : '');
+                    
+                    console.log('Показываем сообщение об отсутствии изменений:', messageText);
+                    showBackupStatus(messageText, 'info');
+                    showMessage(`Бэкап загружен. Изменений нет — данные идентичны текущим на сервере`, 'success');
+                } else {
+                    // Есть изменения - показываем сообщение об успешном восстановлении
+                    let restoredItems = [];
+                    if (result.restored && result.restored.ganttState) restoredItems.push('график');
+                    if (result.restored && result.restored.companyInfo) restoredItems.push('информацию о компании');
+                    
+                    const messageText = `✅ Бэкап успешно восстановлен для компании "${result.companyId}"\n` +
+                        `Восстановлено: ${restoredItems.join(', ')}`;
+                    
+                    console.log('Показываем сообщение об успешном восстановлении:', messageText);
+                    showBackupStatus(messageText, 'success');
+                    showMessage(`Бэкап успешно восстановлен для компании "${result.companyId}"`, 'success');
+                }
+                
+                // Обновляем список компаний
+                await loadCompanies();
+                
+                // Закрываем модальное окно
+                cancelRestoreBackup();
+            } catch (error) {
+                console.error('Ошибка восстановления бэкапа:', error);
+                showBackupStatus(`❌ Ошибка восстановления бэкапа: ${error.message}`, 'error');
+                showMessage(`Ошибка восстановления бэкапа: ${error.message}`, 'error');
+                cancelRestoreBackup();
+            }
+        }
+
+        // Показать статус бэкапа
+        function showBackupStatus(message, type) {
+            const statusDiv = document.getElementById('backupStatus');
+            if (!statusDiv) {
+                console.error('Элемент backupStatus не найден!');
+                return;
+            }
+            
+            console.log('showBackupStatus вызвана:', { message, type });
+            
+            if (!message) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+            
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            
+            // Убираем предыдущие классы
+            statusDiv.className = '';
+            
+            // Добавляем стили в зависимости от типа
+            if (type === 'success') {
+                statusDiv.style.background = 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)';
+                statusDiv.style.color = '#2e7d32';
+                statusDiv.style.border = '2px solid #4caf50';
+            } else if (type === 'error') {
+                statusDiv.style.background = 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)';
+                statusDiv.style.color = '#c62828';
+                statusDiv.style.border = '2px solid #ef5350';
+            } else {
+                // info или любой другой тип
+                statusDiv.style.background = 'linear-gradient(135deg, #bbdefb 0%, #90caf9 100%)';
+                statusDiv.style.color = '#1565c0';
+                statusDiv.style.border = '2px solid #2196f3';
+            }
+            
+            statusDiv.style.whiteSpace = 'pre-line';
+            statusDiv.style.padding = '15px';
+            statusDiv.style.borderRadius = '10px';
+            statusDiv.style.marginTop = '10px';
+            
+            console.log('Сообщение статуса установлено, элемент видим:', statusDiv.style.display);
+        }
     </script>
     
     <footer class="footer">

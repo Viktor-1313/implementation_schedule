@@ -1234,13 +1234,19 @@ app.post('/api/users', async (req, res) => {
 // Удалить пользователя
 app.delete('/api/users/:login', (req, res) => {
   try {
+    console.log('🗑️ DELETE /api/users/:login вызван');
+    console.log('   Исходный параметр login:', req.params.login);
+    console.log('   Тип параметра:', typeof req.params.login);
+    
     let login = req.params.login;
     
     // Декодируем логин из URL
     try {
       login = decodeURIComponent(login);
+      console.log('   Декодированный login:', login);
     } catch (e) {
       console.error('Ошибка декодирования логина:', e);
+      // Продолжаем с исходным значением
     }
     
     // Валидация логина
@@ -1282,9 +1288,19 @@ app.delete('/api/users/:login', (req, res) => {
     }
 
     // Получаем информацию об удаляемом пользователе для лога ДО удаления
-    const deletedUser = users.find(u => u.login === login);
+    console.log('   Ищем пользователя с логином:', login);
+    console.log('   Всего пользователей в файле:', users.length);
+    
+    const deletedUser = users.find(u => {
+      const match = u.login === login;
+      if (match) {
+        console.log('   Найден пользователь:', u.name || u.login);
+      }
+      return match;
+    });
     
     if (!deletedUser) {
+      console.log('   Пользователь не найден');
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
 
@@ -1292,14 +1308,28 @@ app.delete('/api/users/:login', (req, res) => {
     users = users.filter(u => u.login !== login);
 
     if (users.length === initialLength) {
+      console.log('   Пользователь не был удален из массива');
       return res.status(404).json({ ok: false, error: 'Пользователь не найден' });
     }
     
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+    console.log('   Пользователь удален из массива. Было:', initialLength, 'Стало:', users.length);
     
-    // Логируем удаление пользователя
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
-    addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
+    try {
+      fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+      console.log('   Файл users.json успешно обновлен');
+    } catch (writeError) {
+      console.error('   Ошибка записи файла users.json:', writeError);
+      return res.status(500).json({ ok: false, error: 'Ошибка сохранения данных', details: writeError.message });
+    }
+    
+    // Логируем удаление пользователя (оборачиваем в try-catch, чтобы ошибка логирования не прервала удаление)
+    try {
+      const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
+      addLog(userName, 'Удалил пользователя', `Пользователь: ${deletedUser.name || deletedUser.login} (${login})`, null);
+    } catch (logError) {
+      console.error('Ошибка при логировании удаления пользователя (не критично):', logError);
+      // Продолжаем выполнение, даже если логирование не удалось
+    }
     
     res.json({ ok: true });
   } catch (e) {
@@ -1316,10 +1346,14 @@ app.delete('/api/users/:login', (req, res) => {
 // Обновление профиля пользователя
 app.put('/api/users/update', async (req, res) => {
   try {
-    const { oldLogin, newLogin, password } = req.body;
+    const { oldLogin, newLogin, name, password } = req.body;
 
     if (!oldLogin || !newLogin) {
       return res.status(400).json({ ok: false, error: 'Логин обязателен' });
+    }
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ ok: false, error: 'Имя пользователя обязательно' });
     }
 
     if (!fs.existsSync(USERS_FILE)) {
@@ -1339,6 +1373,12 @@ app.put('/api/users/update', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Пользователь с таким логином уже существует' });
     }
 
+    // Сохраняем старое имя для логирования
+    const oldName = users[userIndex].name || '';
+
+    // Обновляем имя пользователя
+    users[userIndex].name = name.trim();
+
     // Обновляем логин
     users[userIndex].login = newLogin.trim();
 
@@ -1354,6 +1394,9 @@ app.put('/api/users/update', async (req, res) => {
     // Логируем обновление профиля
     const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
     const changes = [];
+    if (oldName && oldName !== name.trim()) {
+      changes.push(`Имя: ${oldName} → ${name.trim()}`);
+    }
     if (newLogin !== oldLogin) {
       changes.push(`Логин: ${oldLogin} → ${newLogin}`);
     }
@@ -1764,6 +1807,231 @@ app.delete('/api/activity-logs', (req, res) => {
   } catch (e) {
     console.error('Ошибка очистки логов:', e);
     res.status(500).json({ ok: false, error: 'clear_failed' });
+  }
+});
+
+// ========== API ДЛЯ БЭКАПА КОМПАНИЙ ==========
+
+// Экспорт данных компании (бэкап)
+app.get('/api/company-backup', (req, res) => {
+  try {
+    const companyId = req.query.company;
+    
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+
+    const dataFile = getCompanyDataFile(companyId);
+    const infoFile = getCompanyInfoFile(companyId);
+    
+    // Читаем данные графика
+    let ganttState = null;
+    if (fs.existsSync(dataFile)) {
+      const raw = fs.readFileSync(dataFile, 'utf8');
+      ganttState = JSON.parse(raw);
+    }
+    
+    // Читаем информацию о компании
+    let companyInfo = null;
+    if (fs.existsSync(infoFile)) {
+      const raw = fs.readFileSync(infoFile, 'utf8');
+      companyInfo = JSON.parse(raw);
+    }
+    
+    // Формируем объект бэкапа
+    const backup = {
+      version: '1.0',
+      companyId: companyId,
+      exportedAt: new Date().toISOString(),
+      ganttState: ganttState,
+      companyInfo: companyInfo
+    };
+    
+    // Отправляем как JSON файл для скачивания
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="backup-${companyId}-${new Date().toISOString().split('T')[0]}.json"`);
+    res.json(backup);
+    
+    console.log(`✅ Бэкап компании ${companyId} экспортирован`);
+  } catch (e) {
+    console.error('Ошибка экспорта бэкапа:', e);
+    res.status(500).json({ ok: false, error: 'export_failed', message: e.message });
+  }
+});
+
+// Импорт данных компании (восстановление из бэкапа)
+app.post('/api/company-restore', (req, res) => {
+  try {
+    const backup = req.body;
+    
+    if (!backup || !backup.companyId) {
+      return res.status(400).json({ ok: false, error: 'Неверный формат бэкапа: отсутствует ID компании' });
+    }
+    
+    const companyId = backup.companyId;
+    
+    if (!isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Неверный ID компании в бэкапе' });
+    }
+    
+    // Проверяем наличие данных для восстановления
+    if (!backup.ganttState && !backup.companyInfo) {
+      return res.status(400).json({ ok: false, error: 'Бэкап не содержит данных для восстановления' });
+    }
+    
+    // Сравниваем данные с текущими на сервере
+    const dataFile = getCompanyDataFile(companyId);
+    const infoFile = getCompanyInfoFile(companyId);
+    
+    let currentGanttState = null;
+    let currentCompanyInfo = null;
+    
+    if (fs.existsSync(dataFile)) {
+      const raw = fs.readFileSync(dataFile, 'utf8');
+      currentGanttState = JSON.parse(raw);
+    }
+    
+    if (fs.existsSync(infoFile)) {
+      const raw = fs.readFileSync(infoFile, 'utf8');
+      currentCompanyInfo = JSON.parse(raw);
+    }
+    
+    // Функция для глубокого сравнения объектов (игнорируя порядок ключей)
+    function deepEqual(obj1, obj2) {
+      // Строгое равенство
+      if (obj1 === obj2) return true;
+      
+      // Проверка на null/undefined
+      if (obj1 == null || obj2 == null) return obj1 === obj2;
+      
+      // Проверка типов
+      if (typeof obj1 !== typeof obj2) return false;
+      
+      // Примитивные типы
+      if (typeof obj1 !== 'object') return obj1 === obj2;
+      
+      // Массивы
+      if (Array.isArray(obj1) && Array.isArray(obj2)) {
+        if (obj1.length !== obj2.length) return false;
+        for (let i = 0; i < obj1.length; i++) {
+          if (!deepEqual(obj1[i], obj2[i])) return false;
+        }
+        return true;
+      }
+      
+      // Если один массив, а другой нет
+      if (Array.isArray(obj1) || Array.isArray(obj2)) return false;
+      
+      // Объекты
+      const keys1 = Object.keys(obj1).sort();
+      const keys2 = Object.keys(obj2).sort();
+      
+      if (keys1.length !== keys2.length) return false;
+      
+      for (let key of keys1) {
+        if (!keys2.includes(key)) return false;
+        if (!deepEqual(obj1[key], obj2[key])) return false;
+      }
+      
+      return true;
+    }
+    
+    // Проверяем, есть ли изменения
+    let ganttStateChanged = false;
+    let companyInfoChanged = false;
+    
+    if (backup.ganttState) {
+      ganttStateChanged = !deepEqual(backup.ganttState, currentGanttState);
+      console.log(`📊 Сравнение графика для ${companyId}:`, {
+        hasBackup: !!backup.ganttState,
+        hasCurrent: !!currentGanttState,
+        changed: ganttStateChanged
+      });
+    }
+    
+    if (backup.companyInfo) {
+      companyInfoChanged = !deepEqual(backup.companyInfo, currentCompanyInfo);
+      console.log(`📊 Сравнение информации о компании для ${companyId}:`, {
+        hasBackup: !!backup.companyInfo,
+        hasCurrent: !!currentCompanyInfo,
+        changed: companyInfoChanged
+      });
+    }
+    
+    const hasChanges = ganttStateChanged || companyInfoChanged;
+    
+    console.log(`📊 Результат сравнения для ${companyId}:`, {
+      ganttStateChanged,
+      companyInfoChanged,
+      hasChanges
+    });
+    
+    // Если изменений нет, возвращаем информацию об этом
+    if (!hasChanges) {
+      console.log(`✅ Данные идентичны для компании ${companyId}, возвращаем noChanges: true`);
+      return res.json({ 
+        ok: true, 
+        message: 'Данные идентичны текущим на сервере',
+        noChanges: true,
+        companyId: companyId,
+        restored: {
+          ganttState: !!backup.ganttState,
+          companyInfo: !!backup.companyInfo
+        }
+      });
+    }
+    
+    // Восстанавливаем график (только если есть изменения)
+    if (backup.ganttState && ganttStateChanged) {
+      const dir = path.dirname(dataFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(dataFile, JSON.stringify(backup.ganttState, null, 2), 'utf8');
+      console.log(`✅ График компании ${companyId} восстановлен из бэкапа`);
+    }
+    
+    // Восстанавливаем информацию о компании (только если есть изменения)
+    if (backup.companyInfo && companyInfoChanged) {
+      const dir = path.dirname(infoFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(infoFile, JSON.stringify(backup.companyInfo, null, 2), 'utf8');
+      console.log(`✅ Информация о компании ${companyId} восстановлена из бэкапа`);
+    }
+    
+    // Проверяем, существует ли компания в списке компаний
+    let companies = [];
+    if (fs.existsSync(COMPANIES_FILE)) {
+      const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = JSON.parse(raw);
+    }
+    
+    const companyExists = companies.some(c => c.id === companyId);
+    if (!companyExists && backup.companyInfo) {
+      // Добавляем компанию в список, если её нет
+      companies.push({
+        id: companyId,
+        name: backup.companyInfo.name || companyId,
+        createdAt: new Date().toISOString()
+      });
+      fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
+      console.log(`✅ Компания ${companyId} добавлена в список компаний`);
+    }
+    
+    res.json({ 
+      ok: true, 
+      message: 'Бэкап успешно восстановлен',
+      companyId: companyId,
+      restored: {
+        ganttState: !!backup.ganttState,
+        companyInfo: !!backup.companyInfo
+      }
+    });
+  } catch (e) {
+    console.error('Ошибка восстановления бэкапа:', e);
+    res.status(500).json({ ok: false, error: 'restore_failed', message: e.message });
   }
 });
 

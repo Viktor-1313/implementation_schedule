@@ -165,3 +165,6 @@ git push origin main
 # Проверить удаленный репозиторий
 git remote -v
 ```
+
+
+
