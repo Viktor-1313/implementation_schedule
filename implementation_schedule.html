@@ -10727,6 +10727,16 @@
                         stageHeight = isStageCollapsed ? 35 : (stageTasks.length * 35);
                     }
                     
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                    // Если реальная позиция не найдена, используем накопленную позицию
+                    if (actualTopForLabel === accumulatedTop && stageIndex > 0) {
+                        // Для последующих этапов используем накопленную позицию
+                        actualTopForLabel = accumulatedTop;
+                    }
+                    
+>>>>>>> 32de8b3 (54)
                     // Добавляем разделительную полосу перед текущим этапом (используя позицию предыдущего этапа)
                     if (stageIndex > 0 && prevStageTop !== null && prevStageHeight !== null) {
                         const divider = document.createElement('div');
@@ -16292,6 +16302,339 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             
             // Получаем размеры меню и позиционируем его
             requestAnimationFrame(() => {
+<<<<<<< HEAD
+                const menuRect = menu.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const scrollY = window.scrollY || window.pageYOffset;
+                const scrollX = window.scrollX || window.pageXOffset;
+                
+                console.log('📊 Контекст прокрутки:', { scrollY, scrollX, viewportHeight, viewportWidth });
+                
+                // Если передан targetElement, используем его координаты для более точного позиционирования
+                let referenceX = x;
+                let referenceY = y;
+                let cellRect = null;
+                
+                if (targetElement) {
+                    cellRect = targetElement.getBoundingClientRect();
+                    referenceX = cellRect.right; // Правый край ячейки
+                    referenceY = cellRect.top + cellRect.height / 2; // Центр ячейки по вертикали
+=======
+<<<<<<< HEAD
+                requestAnimationFrame(() => {
+                    const menuRect = menu.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+>>>>>>> 32de8b3 (54)
+                    
+                    // Получаем координаты ячейки относительно документа (с учетом прокрутки)
+                    const cellTop = cellRect.top + scrollY;
+                    const cellHeight = cellRect.height;
+                    const cellCenter = cellTop + cellHeight / 2;
+                    
+                    console.log('📍 Используем актуальные координаты ячейки (с учетом прокрутки):', { 
+                        cellRect: { left: cellRect.left, top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, width: cellRect.width, height: cellRect.height },
+                        scrollY, 
+                        scrollX,
+                        viewportHeight,
+                        viewportWidth,
+                        cellTop,
+                        cellHeight,
+                        cellCenter,
+                        referenceX, 
+                        referenceY 
+                    });
+                } else {
+                    console.log('📍 Используем переданные координаты:', { x, y, scrollY, scrollX });
+                }
+                
+                console.log('📍 Начальные координаты:', { referenceX, referenceY, menuWidth: menuRect.width, menuHeight: menuRect.height });
+                
+                const offset = 8; // Отступ от ячейки
+                
+                // Вычисляем координаты меню относительно viewport (для position: fixed)
+                // cellRect.getBoundingClientRect() уже возвращает координаты относительно viewport!
+                let topForFixed = null;
+                let leftForFixed = null;
+                
+                if (targetElement && cellRect) {
+                    // Используем координаты ячейки напрямую (они уже относительно viewport)
+                    const cellCenterY = cellRect.top + cellRect.height / 2;
+                    topForFixed = cellCenterY - menuRect.height / 2;
+                    leftForFixed = cellRect.right + offset;
+                    
+                    console.log('📍 Используем координаты ячейки для позиционирования (относительно viewport):', {
+                        cellRectTop: cellRect.top,
+                        cellRectHeight: cellRect.height,
+                        cellCenterY,
+                        topForFixed,
+                        leftForFixed,
+                        menuHeight: menuRect.height,
+                        scrollY
+                    });
+                } else {
+                    // Если нет targetElement, используем переданные координаты (они тоже относительно viewport)
+                    topForFixed = referenceY - (menuRect.height / 2);
+                    leftForFixed = referenceX + offset;
+                    
+                    console.log('📍 Используем переданные координаты (относительно viewport):', {
+                        referenceX,
+                        referenceY,
+                        topForFixed,
+                        leftForFixed,
+                        scrollY
+                    });
+                }
+                
+                // Позиционируем меню справа от ячейки
+                let left = leftForFixed !== null ? leftForFixed : (referenceX + offset);
+                
+                // Если меню не влезает справа, показываем слева
+                if (left + menuRect.width > viewportWidth - 15) {
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
+                    } else {
+                        // Используем примерную ширину ячейки (обычно 30-60px в режиме дней)
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
+                    }
+                }
+                
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
+                if (left < 15) {
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
+                        }
+                    } else {
+                        left = 15;
+                    }
+                }
+                
+                // Корректируем вертикальное положение, используя координаты относительно viewport
+                if (topForFixed === null) {
+                    topForFixed = referenceY - (menuRect.height / 2);
+                }
+                
+                if (topForFixed < 15) {
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        topForFixed = cellRect.top + offset;
+                    } else {
+                        topForFixed = 15;
+                    }
+                } else if (topForFixed + menuRect.height > viewportHeight - 15) {
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        topForFixed = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (topForFixed < 15) {
+                            topForFixed = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        topForFixed = viewportHeight - menuRect.height - 15;
+                    }
+                }
+                
+                console.log('✅ Показываем меню рядом с ячейкой:', { 
+                    topForFixed, 
+                    menuHeight: menuRect.height, 
+                    scrollY 
+                });
+                console.log('✅ Финальная позиция меню:', { left, top, topForFixed, referenceX, referenceY, scrollY, viewportHeight });
+                
+                // Устанавливаем позицию ОДИН РАЗ - рядом с ячейкой
+                // Для position: fixed используем координаты относительно viewport
+                console.log('🎯 УСТАНОВКА ПОЗИЦИИ МЕНЮ:', {
+                    left,
+                    topForFixed,
+                    topInDocument: top,
+                    scrollY,
+                    clickX: x,
+                    clickY: y,
+                    cellRect: cellRect ? {
+                        top: cellRect.top,
+                        left: cellRect.left,
+                        right: cellRect.right,
+                        bottom: cellRect.bottom
+                    } : null
+                });
+                
+                // Убеждаемся, что меню находится в body (не внутри других элементов с transform)
+                // Это критично для корректной работы position: fixed
+                if (menu.parentElement !== document.body) {
+                    document.body.appendChild(menu);
+                }
+                
+                menu.style.left = `${left}px`;
+                menu.style.top = `${topForFixed}px`;
+                menu.style.margin = '0';
+                menu.style.padding = '8px 0';
+                menu.style.transform = 'none';
+                menu.style.display = 'block';
+                menu.style.visibility = 'visible';
+                menu.style.opacity = '1';
+                menu.style.position = 'fixed';
+                menu.style.zIndex = '99999';
+                
+                console.log('✅ Стили установлены:', {
+                    left: menu.style.left,
+                    top: menu.style.top,
+                    position: menu.style.position,
+                    display: menu.style.display
+                });
+                
+                // СИНХРОННАЯ проверка сразу после установки позиции
+                const checkRect = menu.getBoundingClientRect();
+                const actualTop = checkRect.top;
+                const expectedTop = topForFixed;
+                const difference = Math.abs(actualTop - expectedTop);
+                
+                console.log('🔍 СИНХРОННАЯ проверка сразу после установки позиции:', {
+                    position: window.getComputedStyle(menu).position,
+                    expectedTop,
+                    actualTop,
+                    difference,
+                    scrollY,
+                    isInBody: menu.parentElement === document.body,
+                    menuStyleTop: menu.style.top,
+                    computedTop: window.getComputedStyle(menu).top,
+                    rect: {
+                        left: checkRect.left,
+                        top: checkRect.top,
+                        width: checkRect.width,
+                        height: checkRect.height
+                    }
+                });
+                
+                // Если разница слишком большая, сразу переключаемся на absolute
+                if (difference > 5) {
+                    console.warn('▲▲ Обнаружена проблема: position: fixed не работает! Используем position: absolute с коррекцией scrollY');
+                    
+                    // Убеждаемся, что меню в body
+                    if (menu.parentElement !== document.body) {
+                        document.body.appendChild(menu);
+                    }
+                    
+                    // Переключаемся на position: absolute с учетом scrollY
+                    menu.style.position = 'absolute';
+                    menu.style.top = `${topForFixed + scrollY}px`;
+                    
+                    // Немедленная проверка после переключения
+                    const correctedRect = menu.getBoundingClientRect();
+                    const correctedActualTop = correctedRect.top;
+                    const correctedDifference = Math.abs(correctedActualTop - expectedTop);
+                    
+                    console.log('🔍 Немедленная проверка после использования position: absolute:', {
+                        expectedTop,
+                        actualTop: correctedActualTop,
+                        difference: correctedDifference,
+                        scrollY,
+                        position: 'absolute',
+                        success: correctedDifference < 5,
+                        menuStyleTop: menu.style.top,
+                        computedTop: window.getComputedStyle(menu).top
+                    });
+                }
+                
+                // Дополнительная проверка через requestAnimationFrame (после применения стилей браузером)
+                requestAnimationFrame(() => {
+                    const rafRect = menu.getBoundingClientRect();
+                    const rafActualTop = rafRect.top;
+                    const rafDifference = Math.abs(rafActualTop - expectedTop);
+                    
+                    console.log('🔍 Проверка через requestAnimationFrame (после применения стилей):', {
+                        expectedTop,
+                        rafActualTop,
+                        rafDifference,
+                        scrollY,
+                        position: window.getComputedStyle(menu).position,
+                        success: rafDifference < 5
+                    });
+                    
+                    // Если позиция не совпадает, переключаемся на absolute
+                    if (rafDifference > 5) {
+                        console.warn('▲▲ Обнаружена проблема: position: fixed не работает корректно! Используем position: absolute с коррекцией scrollY');
+                        
+                        // Убеждаемся, что меню в body
+                        if (menu.parentElement !== document.body) {
+                            document.body.appendChild(menu);
+                        }
+                        
+                        // Переключаемся на position: absolute
+                        // Для absolute координаты должны быть относительно документа (с учетом scrollY)
+                        menu.style.position = 'absolute';
+                        menu.style.top = `${topForFixed + scrollY}px`;
+                        
+                        setTimeout(() => {
+                            const correctedRect = menu.getBoundingClientRect();
+                            const correctedActualTop = correctedRect.top;
+                            const correctedDifference = Math.abs(correctedActualTop - expectedTop);
+                            
+                            console.log('🔍 Проверка после переключения на position: absolute:', {
+                                expectedTop,
+                                correctedActualTop,
+                                correctedDifference,
+                                scrollY,
+                                success: correctedDifference < 5,
+                                menuStyleTop: menu.style.top,
+                                computedTop: window.getComputedStyle(menu).top
+                            });
+                            
+                            if (correctedDifference > 5) {
+                                console.error('►Х КРИТИЧЕСКАЯ ОШИБКА: Позиция все еще не совпадает после переключения на absolute!', {
+                                    expectedTop,
+                                    actualTop: correctedActualTop,
+                                    difference: correctedDifference,
+                                    scrollY
+                                });
+                            } else {
+                                console.log('✅ Позиция исправлена успешно после переключения на absolute!');
+                            }
+                        }, 10);
+                    } else {
+                        console.log('✅ Позиция совпадает! position: fixed работает корректно.');
+                    }
+                });
+                
+                // Дополнительная проверка через небольшую задержку
+                setTimeout(() => {
+                    const finalRect = menu.getBoundingClientRect();
+                    const finalScrollY = window.scrollY || window.pageYOffset;
+                    const finalPosition = window.getComputedStyle(menu).position;
+                    // Сравниваем координаты относительно viewport (и expectedTop, и finalRect.top относительно viewport)
+                    const finalTop = finalRect.top;
+                    const expectedTop = topForFixed;
+                    const finalDifference = Math.abs(finalTop - expectedTop);
+                    
+                    console.log('🔍 Финальная проверка меню после установки позиции:', {
+                        display: window.getComputedStyle(menu).display,
+                        visibility: window.getComputedStyle(menu).visibility,
+                        opacity: window.getComputedStyle(menu).opacity,
+                        position: finalPosition,
+                        zIndex: window.getComputedStyle(menu).zIndex,
+                        rect: { 
+                            left: finalRect.left, 
+                            top: finalRect.top, 
+                            width: finalRect.width, 
+                            height: finalRect.height 
+                        },
+                        expectedTop,
+                        finalTop,
+                        difference: finalDifference,
+                        scrollY: finalScrollY,
+                        isVisible: finalRect.width > 0 && finalRect.height > 0,
+                        success: finalDifference < 5
+                    });
+<<<<<<< HEAD
+=======
+=======
                 const menuRect = menu.getBoundingClientRect();
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
@@ -16614,6 +16957,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         isVisible: finalRect.width > 0 && finalRect.height > 0,
                         success: finalDifference < 5
                     });
+>>>>>>> 32de8b3 (54)
                 }, 100);
                 
                 console.log('✅ Меню позиционировано:', { 
@@ -16627,6 +16971,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         top: cellRect.top,
                         left: cellRect.left
                     } : null
+<<<<<<< HEAD
+=======
+>>>>>>> 1826c36 (54)
+>>>>>>> 32de8b3 (54)
                 });
             });
         }
@@ -16840,6 +17188,63 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 
                 const offset = 8; // Отступ от ячейки
                 
+<<<<<<< HEAD
+                // Позиционируем меню справа от ячейки, центрируя по вертикали
+=======
+<<<<<<< HEAD
+                // Позиционируем меню справа от ячейки
+>>>>>>> 32de8b3 (54)
+                let left = referenceX + offset;
+                let top = referenceY - (menuRect.height / 2);
+                
+                // Если меню не влезает справа, показываем слева
+                if (left + menuRect.width > viewportWidth - 15) {
+                    // Пытаемся показать слева от ячейки
+                    if (cellRect) {
+                        // Используем реальную ширину ячейки
+                        left = cellRect.left - menuRect.width - offset;
+                    } else {
+                        // Используем примерную ширину ячейки
+                        const estimatedCellWidth = 50;
+                        left = referenceX - estimatedCellWidth - menuRect.width - offset;
+                    }
+                }
+                
+                // Если слева тоже не влезает или выходит за левый край, позиционируем максимально близко к ячейке
+                if (left < 15) {
+                    // Пытаемся показать справа, даже если немного выходит за правый край
+                    if (cellRect) {
+                        left = cellRect.right + offset;
+                        // Если все равно не влезает, показываем максимально близко к правому краю
+                        if (left + menuRect.width > viewportWidth - 15) {
+                            left = viewportWidth - menuRect.width - 15;
+                        }
+                    } else {
+                        left = 15;
+                    }
+                }
+                
+                // Корректируем вертикальное положение, стараясь остаться как можно ближе к ячейке
+                if (top < 15) {
+                    // Если меню не влезает сверху, показываем максимально близко к верхнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.top + offset;
+                    } else {
+                        top = 15;
+                    }
+                } else if (top + menuRect.height > viewportHeight - 15) {
+                    // Если меню не влезает снизу, показываем максимально близко к нижнему краю ячейки
+                    if (cellRect) {
+                        top = cellRect.bottom - menuRect.height - offset;
+                        // Если все равно не влезает, показываем максимально близко к нижнему краю экрана
+                        if (top < 15) {
+                            top = viewportHeight - menuRect.height - 15;
+                        }
+                    } else {
+                        top = viewportHeight - menuRect.height - 15;
+                    }
+                }
+=======
                 // Позиционируем меню справа от ячейки, центрируя по вертикали
                 let left = referenceX + offset;
                 let top = referenceY - (menuRect.height / 2);
@@ -16891,6 +17296,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                         top = viewportHeight - menuRect.height - 15;
                     }
                 }
+>>>>>>> 1826c36 (54)
 
                 menu.style.left = `${left}px`;
                 menu.style.top = `${top}px`;
@@ -16994,9 +17400,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 selectedTaskIds: Array.from(selectedTaskIds)
             });
             
+<<<<<<< HEAD
             // Убрана возможность массового применения статуса к выделенным задачам
             // Выделение задач остается для других операций (копирование, вставка, перетаскивание)
             // Статус применяется только к одной задаче или к множественному выбору ячеек
+=======
+<<<<<<< HEAD
+            // УБРАНО: Массовое проставление статуса к выделенным задачам
+            // Теперь статус применяется только к одной ячейке, на которую кликнули
+            // Массовое выделение задач через Shift остается для других операций (копирование, вставка и т.д.)
+>>>>>>> 32de8b3 (54)
             
             if (!target) {
                 console.error('❌ Нет target для применения статуса!');
@@ -17616,9 +18029,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                             return; // Не применяем статус сразу, ждём подтверждения
                         }
                         
+<<<<<<< HEAD
                         // Убрана возможность массового применения статуса к выделенным задачам
                         // Выделение задач остается для других операций (копирование, вставка, перетаскивание)
                         // Статус применяется только к одной задаче или к множественному выбору ячеек
+=======
+<<<<<<< HEAD
+                        // УБРАНО: Массовое проставление статуса к выделенным задачам
+                        // Теперь статус применяется только к одной ячейке, на которую кликнули
+                        // Массовое выделение задач через Shift остается для других операций (копирование, вставка и т.д.)
+>>>>>>> 32de8b3 (54)
                         
                         // Проверяем, является ли это множественным выбором
                         if (target && target.isMultiple && target.cells) {

@@ -1107,6 +1107,12 @@
             animation-play-state: running !important;
         }
 
+        /* Класс для завершения анимации даже после ухода курсора */
+        .company-card.animating-border::before,
+        .company-card.animating-border::after {
+            animation-play-state: running !important;
+        }
+
         /* Drag and Drop стили */
         .company-card.draggable {
             cursor: grab;
