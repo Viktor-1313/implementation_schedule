@@ -1,0 +1,232 @@
+admin.html:3159: leftover conflict marker
+admin.html:3162: leftover conflict marker
+admin.html:3165: leftover conflict marker
+implementation_schedule.html:4453: leftover conflict marker
+implementation_schedule.html:4455: leftover conflict marker
+implementation_schedule.html:4457: leftover conflict marker
+implementation_schedule.html:4869: trailing whitespace.
+[32m+[m[32m                    <input[m[41m [m
+implementation_schedule.html:4870: trailing whitespace.
+[32m+[m[32m                        type="text"[m[41m [m
+implementation_schedule.html:4871: trailing whitespace.
+[32m+[m[32m                        id="searchInput"[m[41m [m
+implementation_schedule.html:4902: trailing whitespace.
+[32m+[m[32m                    <button[m[41m [m
+implementation_schedule.html:4927: trailing whitespace.
+[32m+[m[32m                    <span[m[41m [m
+implementation_schedule.html:4936: trailing whitespace.
+[32m+[m[32m                    <button[m[41m [m
+implementation_schedule.html:5440: trailing whitespace.
+[32m+[m[41m            [m
+implementation_schedule.html:5445: trailing whitespace.
+[32m+[m[41m            [m
+implementation_schedule.html:5455: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:5461: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:5606: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:5625: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:5631: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:5637: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:5641: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:5644: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:5649: trailing whitespace.
+[32m+[m[32m                        headers: {[m[41m [m
+implementation_schedule.html:6761: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:6771: trailing whitespace.
+[32m+[m[41m                                [m
+implementation_schedule.html:6785: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:7415: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:7423: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:7425: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:7868: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:7871: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:8452: trailing whitespace.
+[32m+[m[41m            [m
+implementation_schedule.html:8457: trailing whitespace.
+[32m+[m[41m            [m
+implementation_schedule.html:9924: leftover conflict marker
+implementation_schedule.html:9931: leftover conflict marker
+implementation_schedule.html:9936: leftover conflict marker
+implementation_schedule.html:10768: leftover conflict marker
+implementation_schedule.html:10781: leftover conflict marker
+implementation_schedule.html:10789: leftover conflict marker
+implementation_schedule.html:10800: leftover conflict marker
+implementation_schedule.html:10802: leftover conflict marker
+implementation_schedule.html:10805: leftover conflict marker
+implementation_schedule.html:10827: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:10847: trailing whitespace.
+[32m+[m[41m                            [m
+implementation_schedule.html:12835: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:14689: trailing whitespace.
+[32m+[m[41m            [m
+implementation_schedule.html:14693: trailing whitespace.
+[32m+[m[41m        [m
+implementation_schedule.html:14701: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:14710: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:14717: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:15856: leftover conflict marker
+implementation_schedule.html:15860: leftover conflict marker
+implementation_schedule.html:15863: leftover conflict marker
+implementation_schedule.html:16450: leftover conflict marker
+implementation_schedule.html:16921: leftover conflict marker
+implementation_schedule.html:16927: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16929: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16934: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16939: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:16944: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:16945: trailing whitespace.
+[32m+[m[32m                    console.log('📍 Используем актуальные координаты ячейки (с учетом прокрутки):', {[m[41m [m
+implementation_schedule.html:16947: trailing whitespace.
+[32m+[m[32m                        scrollY,[m[41m [m
+implementation_schedule.html:16954: trailing whitespace.
+[32m+[m[32m                        referenceX,[m[41m [m
+implementation_schedule.html:16955: trailing whitespace.
+[32m+[m[32m                        referenceY[m[41m [m
+implementation_schedule.html:16960: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16962: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16964: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16969: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:16975: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:16989: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:16998: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17001: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17014: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17028: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17033: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17053: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17054: trailing whitespace.
+[32m+[m[32m                console.log('✅ Показываем меню рядом с ячейкой:', {[m[41m [m
+implementation_schedule.html:17055: trailing whitespace.
+[32m+[m[32m                    topForFixed,[m[41m [m
+implementation_schedule.html:17056: trailing whitespace.
+[32m+[m[32m                    menuHeight: menuRect.height,[m[41m [m
+implementation_schedule.html:17057: trailing whitespace.
+[32m+[m[32m                    scrollY[m[41m [m
+implementation_schedule.html:17060: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17077: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17083: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17094: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17101: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17107: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17124: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17128: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17133: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17137: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17142: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17154: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17160: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17169: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17173: trailing whitespace.
+[32m+[m[41m                        [m
+implementation_schedule.html:17178: trailing whitespace.
+[32m+[m[41m                        [m
+implementation_schedule.html:17183: trailing whitespace.
+[32m+[m[41m                        [m
+implementation_schedule.html:17188: trailing whitespace.
+[32m+[m[41m                            [m
+implementation_schedule.html:17198: trailing whitespace.
+[32m+[m[41m                            [m
+implementation_schedule.html:17214: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17224: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:17231: trailing whitespace.
+[32m+[m[32m                        rect: {[m[41m [m
+implementation_schedule.html:17232: trailing whitespace.
+[32m+[m[32m                            left: finalRect.left,[m[41m [m
+implementation_schedule.html:17233: trailing whitespace.
+[32m+[m[32m                            top: finalRect.top,[m[41m [m
+implementation_schedule.html:17234: trailing whitespace.
+[32m+[m[32m                            width: finalRect.width,[m[41m [m
+implementation_schedule.html:17235: trailing whitespace.
+[32m+[m[32m                            height: finalRect.height[m[41m [m
+implementation_schedule.html:17245: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17246: trailing whitespace.
+[32m+[m[32m                console.log('✅ Меню позиционировано:', {[m[41m [m
+implementation_schedule.html:17247: trailing whitespace.
+[32m+[m[32m                    left,[m[41m [m
+implementation_schedule.html:17249: trailing whitespace.
+[32m+[m[32m                    clickX: x,[m[41m [m
+implementation_schedule.html:17250: trailing whitespace.
+[32m+[m[32m                    clickY: y,[m[41m [m
+implementation_schedule.html:17257: leftover conflict marker
+implementation_schedule.html:17617: leftover conflict marker
+implementation_schedule.html:17694: leftover conflict marker
+implementation_schedule.html:17698: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17711: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17725: trailing whitespace.
+[32m+[m[41m                [m
+implementation_schedule.html:17746: leftover conflict marker
+implementation_schedule.html:17850: leftover conflict marker
+implementation_schedule.html:17854: leftover conflict marker
+implementation_schedule.html:17858: leftover conflict marker
+implementation_schedule.html:18009: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:18016: trailing whitespace.
+[32m+[m[41m                        [m
+implementation_schedule.html:18023: trailing whitespace.
+[32m+[m[32m                                const isInTaskRange = taskStartDate && taskEndDate &&[m[41m [m
+implementation_schedule.html:18025: trailing whitespace.
+[32m+[m[41m                                [m
+implementation_schedule.html:18033: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:18490: leftover conflict marker
+implementation_schedule.html:18494: leftover conflict marker
+implementation_schedule.html:18498: leftover conflict marker
+implementation_schedule.html:19409: trailing whitespace.
+[32m+[m[41m                    [m
+implementation_schedule.html:19414: trailing whitespace.
+[32m+[m[41m                    [m
