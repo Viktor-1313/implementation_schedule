@@ -852,6 +852,407 @@
             color: rgba(176, 176, 176, 0.7);
         }
 
+        /* Темная тема для графика Ганта */
+        [data-theme="dark"] .gantt-chart {
+            background: var(--color-surface);
+        }
+
+        [data-theme="dark"] .gantt-chart::-webkit-scrollbar-thumb {
+            background: #64b5f6;
+        }
+
+        [data-theme="dark"] .gantt-chart::-webkit-scrollbar-track {
+            background: #2e2e2e;
+        }
+
+        [data-theme="dark"] .gantt-chart {
+            scrollbar-color: #64b5f6 #2e2e2e;
+        }
+
+        [data-theme="dark"] .gantt-header {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .gantt-header-first-row {
+            background: var(--color-surface);
+        }
+
+        [data-theme="dark"] .gantt-header-label {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .gantt-details-cell {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .gantt-details-input {
+            background: var(--color-bg);
+            color: var(--color-text);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .gantt-details-input:focus {
+            background: var(--color-surface);
+            border-color: var(--color-primary);
+        }
+
+        [data-theme="dark"] body.view-mode .gantt-details-input[readonly],
+        [data-theme="dark"] body.view-mode .gantt-details-input[data-field="startDate"],
+        [data-theme="dark"] body.view-mode .gantt-details-input[data-field="endDate"],
+        [data-theme="dark"] body.view-mode .gantt-details-input[data-field="days"],
+        [data-theme="dark"] body.view-mode .gantt-details-input[disabled] {
+            background-color: var(--color-bg);
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .stage-row-collapsed .gantt-details-cell.link-cell select[disabled],
+        [data-theme="dark"] .stage-row-collapsed .gantt-details-cell.responsible-cell {
+            background-color: var(--color-bg);
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .gantt-cell {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .gantt-weekend {
+            background: #4a2c2c;
+        }
+
+        [data-theme="dark"] .gantt-holiday {
+            background: #4a4a2c;
+        }
+
+        [data-theme="dark"] .gantt-future-header {
+            background: #2e2e2e;
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .gantt-future-cell {
+            background: #1a1a1a;
+        }
+
+        [data-theme="dark"] .gantt-cell.drag-target {
+            background: rgba(66, 165, 245, 0.2) !important;
+            box-shadow: inset 0 0 0 2px #42a5f5;
+        }
+
+        [data-theme="dark"] .gantt-cell.resize-target {
+            background: rgba(102, 187, 106, 0.2) !important;
+            box-shadow: inset 0 0 0 2px #66bb6a;
+        }
+
+        /* Темная тема для таблицы задач */
+        [data-theme="dark"] .task-table {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .task-table th {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .task-table td {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .task-table tr:hover {
+            background: var(--color-bg);
+        }
+
+        [data-theme="dark"] .task-table input,
+        [data-theme="dark"] .task-table select {
+            background: var(--color-bg);
+            color: var(--color-text);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .task-table input:focus,
+        [data-theme="dark"] .task-table select:focus {
+            background: var(--color-surface);
+            border-color: var(--color-primary);
+        }
+
+        [data-theme="dark"] .task-table input[readonly],
+        [data-theme="dark"] .task-table input[disabled] {
+            background-color: var(--color-bg);
+            color: var(--color-text-secondary);
+        }
+
+        [data-theme="dark"] .table-row.selected {
+            background: rgba(66, 165, 245, 0.2) !important;
+        }
+
+        [data-theme="dark"] .table-row.stage-filtered {
+            background: rgba(100, 181, 246, 0.1);
+        }
+
+        [data-theme="dark"] .table-row.stage-filtered.selected {
+            background: rgba(66, 165, 245, 0.3) !important;
+        }
+
+        /* Темная тема для контейнера графика */
+        [data-theme="dark"] .chart-container {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        /* Темная тема для меток этапов */
+        [data-theme="dark"] .stage-marker {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        /* Темная тема для строк этапов */
+        [data-theme="dark"] .stage-row-collapsed {
+            background: var(--color-bg);
+        }
+
+        [data-theme="dark"] .stage-row-collapsed td {
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        /* Темная тема для контейнера кнопок этапов */
+        [data-theme="dark"] .stage-tabs-buttons {
+            background: transparent;
+        }
+
+        /* Темная тема для кнопок этапов */
+        [data-theme="dark"] .stage-tab-btn {
+            background: rgba(66, 165, 245, 0.15);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        [data-theme="dark"] .stage-tab-btn:hover {
+            background: rgba(66, 165, 245, 0.25);
+            border-color: var(--color-primary-hover);
+        }
+
+        [data-theme="dark"] .stage-tab-btn.active {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+            color: #ffffff;
+            border-color: var(--color-primary);
+        }
+
+        /* Темная тема для контейнера управления этапами */
+        [data-theme="dark"] .stage-controls-buttons {
+            background: transparent;
+        }
+
+        /* Темная тема для контейнера кнопок сворачивания/разворачивания этапов */
+        [data-theme="dark"] .gantt-stage-controls {
+            background: rgba(66, 165, 245, 0.1);
+            border-right-color: var(--color-primary);
+            border-bottom-color: rgba(66, 165, 245, 0.3);
+        }
+
+        /* Темная тема для кнопок сворачивания/разворачивания этапов */
+        [data-theme="dark"] .gantt-stage-control-btn {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .gantt-stage-control-btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        /* Темная тема для меток этапов */
+        [data-theme="dark"] .gantt-stage-label {
+            background: rgba(66, 165, 245, 0.1);
+            border-right-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        [data-theme="dark"] .gantt-stage-label:hover {
+            background: rgba(66, 165, 245, 0.25);
+            border-right-color: var(--color-primary-hover);
+        }
+
+        /* Темная тема для свернутых строк этапов */
+        [data-theme="dark"] .gantt-row.stage-row-collapsed,
+        [data-theme="dark"] #tasksTableBody tr.stage-row-collapsed {
+            background: rgba(66, 165, 245, 0.05);
+        }
+
+        [data-theme="dark"] .gantt-row.stage-row-collapsed:hover,
+        [data-theme="dark"] #tasksTableBody tr.stage-row-collapsed:hover {
+            background: rgba(66, 165, 245, 0.15);
+        }
+
+        [data-theme="dark"] .gantt-row.stage-row-collapsed .gantt-label span,
+        [data-theme="dark"] #tasksTableBody tr.stage-row-collapsed td span {
+            color: var(--color-primary);
+        }
+
+        /* Темная тема для разделительной полосы между этапами */
+        [data-theme="dark"] .gantt-stage-divider {
+            background: var(--color-primary);
+        }
+
+        /* Темная тема для кнопки настроек этапов */
+        [data-theme="dark"] .stage-settings-btn {
+            background: rgba(66, 165, 245, 0.15);
+            border-color: var(--color-primary);
+        }
+
+        [data-theme="dark"] .stage-settings-btn:hover {
+            background: rgba(66, 165, 245, 0.25);
+            border-color: var(--color-primary-hover);
+        }
+
+        /* Темная тема для контейнера этапов */
+        [data-theme="dark"] .stage-tabs-container {
+            background: transparent;
+        }
+
+        /* Темная тема для выделенных строк в графике */
+        [data-theme="dark"] .gantt-row.selected {
+            background: rgba(66, 165, 245, 0.2) !important;
+            box-shadow: inset 0 0 0 2px var(--color-primary), 0 2px 8px rgba(66, 165, 245, 0.3) !important;
+        }
+
+        [data-theme="dark"] .gantt-row.selected .gantt-label,
+        [data-theme="dark"] .gantt-row.selected .gantt-details-cell {
+            background: rgba(66, 165, 245, 0.2) !important;
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] .gantt-row.selected .gantt-label span {
+            color: var(--color-text) !important;
+        }
+
+        /* Темная тема для выделенных строк в таблице */
+        [data-theme="dark"] tr.selected {
+            background: rgba(66, 165, 245, 0.2) !important;
+        }
+
+        [data-theme="dark"] tr.selected td {
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] tr.selected .tasks-table-input {
+            color: var(--color-text) !important;
+        }
+
+        /* Темная тема для hover строк */
+        [data-theme="dark"] .gantt-row:hover {
+            background: var(--color-bg);
+        }
+
+        [data-theme="dark"] tr:hover {
+            background: var(--color-bg);
+        }
+
+        /* Темная тема для активных строк при фильтрации */
+        [data-theme="dark"] .gantt-row.stage-active {
+            background: rgba(66, 165, 245, 0.1);
+        }
+
+        [data-theme="dark"] tr.stage-active {
+            background: rgba(66, 165, 245, 0.1);
+        }
+
+        /* Темная тема для контейнера графика */
+        [data-theme="dark"] .chart-container.view-active {
+            background-color: var(--color-surface) !important;
+            box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.3), var(--shadow-md) !important;
+        }
+
+        /* Темная тема для меток задач */
+        [data-theme="dark"] .gantt-label {
+            background: var(--color-surface);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .gantt-label span {
+            color: var(--color-text);
+        }
+
+        /* Темная тема для четных строк таблицы */
+        [data-theme="dark"] tr:nth-child(even) {
+            background: var(--color-bg);
+        }
+
+        /* Темная тема для всех ячеек таблицы */
+        [data-theme="dark"] .task-table td {
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] .task-table td .tasks-table-input {
+            color: var(--color-text) !important;
+        }
+
+        /* Темная тема для текста в метках задач */
+        [data-theme="dark"] .gantt-label,
+        [data-theme="dark"] .gantt-label * {
+            color: var(--color-text) !important;
+        }
+
+        /* Темная тема для контейнера controls */
+        [data-theme="dark"] .controls {
+            background: var(--color-surface) !important;
+            border-color: var(--color-border) !important;
+        }
+
+        /* Темная тема для элементов управления */
+        [data-theme="dark"] .controls {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .zoom-controls {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        /* Темная тема для подсказок */
+        [data-theme="dark"] .gantt-bar[data-tooltip]::after {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+        }
+
+        /* Темная тема для селектов в детальной таблице */
+        [data-theme="dark"] .gantt-details-cell select {
+            background: var(--color-bg);
+            color: var(--color-text);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .gantt-details-cell select:focus {
+            background: var(--color-surface);
+            border-color: var(--color-primary);
+        }
+
+        /* Темная тема для временной шкалы */
+        [data-theme="dark"] .gantt-time-scale {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .gantt-time-scale-cell {
+            background: var(--color-surface);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+
+        /* Темная тема для заголовков временной шкалы */
+        [data-theme="dark"] .gantt-time-scale-header {
+            background: var(--color-surface);
+            color: var(--color-text);
+        }
+
         .profile-form-actions {
             display: flex;
             gap: 15px;

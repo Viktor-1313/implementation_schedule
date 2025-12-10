@@ -1256,6 +1256,10 @@
             color: var(--color-text-secondary);
         }
 
+        [data-theme="dark"] .form-group small {
+            color: #64b5f6;
+        }
+
         [data-theme="dark"] .logout-admin-btn {
             background: rgba(66, 165, 245, 0.1);
             border-color: var(--color-primary);
@@ -1295,8 +1299,23 @@
             color: var(--color-text);
         }
 
+        [data-theme="dark"] .company-checkbox label {
+            color: #64b5f6 !important;
+        }
+
         [data-theme="dark"] .company-checkbox input[type="checkbox"] {
             accent-color: var(--color-primary);
+        }
+
+        [data-theme="dark"] #userCompaniesList,
+        [data-theme="dark"] #editUserCompaniesList {
+            background: var(--color-surface) !important;
+            border-color: var(--color-border) !important;
+        }
+
+        [data-theme="dark"] #userCompaniesList p,
+        [data-theme="dark"] #editUserCompaniesList p {
+            color: #64b5f6 !important;
         }
 
         [data-theme="dark"] .message {
