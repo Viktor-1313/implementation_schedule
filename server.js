@@ -82,13 +82,20 @@ function writeLogs(logs) {
 // Добавление лога
 function addLog(userName, action, details, companyId = null, detailedChanges = null) {
   try {
+    // Более жесткая проверка: не логируем, если пользователь не определен
+    const validUserName = userName && userName !== 'Неизвестный пользователь' && userName.trim() !== '';
+    if (!validUserName) {
+      console.warn('⚠️ addLog: пропускаем логирование - пользователь не определен', { userName, action });
+      return; // Не логируем действие, если пользователь не определен
+    }
+    
     console.log('📝 addLog вызвана:', { userName, action, details, companyId, detailedChanges: detailedChanges ? detailedChanges.length : 0 });
     const logs = readLogs();
     console.log('   Текущее количество логов:', logs.length);
     
     const logEntry = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      userName: userName || 'Неизвестный пользователь',
+      userName: userName.trim(), // Используем проверенное имя пользователя
       action: action,
       details: details,
       companyId: companyId,
@@ -188,9 +195,11 @@ app.post('/api/companies', (req, res) => {
     // Сохраняем
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
     
-    // Логируем создание компании
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    addLog(userName, 'Создал компанию', `Компания: ${name} (ID: ${id})`, id);
+    // Логируем создание компании (только если пользователь определен)
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
+    if (userName) {
+      addLog(userName, 'Создал компанию', `Компания: ${name} (ID: ${id})`, id);
+    }
     
     res.json({ ok: true, company: newCompany });
   } catch (e) {
@@ -294,16 +303,18 @@ app.put('/api/companies/:id', (req, res) => {
 
     fs.writeFileSync(COMPANIES_FILE, JSON.stringify(companies, null, 2), 'utf8');
     
-    // Логируем изменение компании
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    const changes = [];
-    if (newCompanyId && newCompanyId !== oldCompanyId) {
-      changes.push(`ID: ${oldCompanyId} → ${newCompanyId}`);
+    // Логируем изменение компании (только если пользователь определен)
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
+    if (userName) {
+      const changes = [];
+      if (newCompanyId && newCompanyId !== oldCompanyId) {
+        changes.push(`ID: ${oldCompanyId} → ${newCompanyId}`);
+      }
+      if (name) {
+        changes.push(`Название: ${name}`);
+      }
+      addLog(userName, 'Изменил компанию', changes.join(', ') || 'Изменения не указаны', newCompanyId || oldCompanyId);
     }
-    if (name) {
-      changes.push(`Название: ${name}`);
-    }
-    addLog(userName, 'Изменил компанию', changes.join(', ') || 'Изменения не указаны', newCompanyId || oldCompanyId);
     
     res.json({ ok: true, company: companies[companyIndex] });
   } catch (e) {
@@ -397,15 +408,15 @@ app.delete('/api/companies/:id', (req, res) => {
       return res.status(500).json({ ok: false, error: 'Ошибка сохранения данных' });
     }
     
-    // Логируем удаление компании
+    // Логируем удаление компании (только если пользователь определен)
     console.log('   📝 Логирование удаления компании...');
     try {
-      const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-      const logResult = addLog(userName, 'Удалил компанию', `Компания: ${deletedCompany.name || companyId} (ID: ${companyId})`, companyId);
-      if (logResult) {
+      const userName = req.body.userName || req.headers['x-user-name'] || null;
+      if (userName) {
+        addLog(userName, 'Удалил компанию', `Компания: ${deletedCompany.name || companyId} (ID: ${companyId})`, companyId);
         console.log('   ✅ Лог добавлен успешно');
       } else {
-        console.warn('   ⚠️ Не удалось добавить лог, но это не критично');
+        console.warn('   ⚠️ Пропускаем логирование - пользователь не определен');
       }
     } catch (logError) {
       console.error('   ⚠️ Ошибка логирования (не критично):', logError);
@@ -491,12 +502,12 @@ app.post('/api/companies/:id/archive', (req, res) => {
     // Логируем архивирование компании
     console.log('   📝 Логирование архивирования компании...');
     try {
-      const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-      const logResult = addLog(userName, 'Архивировал компанию', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
-      if (logResult) {
+      const userName = req.body.userName || req.headers['x-user-name'] || null;
+      if (userName) {
+        addLog(userName, 'Архивировал компанию', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
         console.log('   ✅ Лог добавлен успешно');
       } else {
-        console.warn('   ⚠️ Не удалось добавить лог, но это не критично');
+        console.warn('   ⚠️ Пропускаем логирование - пользователь не определен');
       }
     } catch (logError) {
       console.error('   ⚠️ Ошибка логирования (не критично):', logError);
@@ -587,12 +598,12 @@ app.post('/api/companies/:id/restore', (req, res) => {
     // Логируем восстановление компании
     console.log('   📝 Логирование восстановления компании...');
     try {
-      const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-      const logResult = addLog(userName, 'Восстановил компанию из архива', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
-      if (logResult) {
+      const userName = req.body.userName || req.headers['x-user-name'] || null;
+      if (userName) {
+        addLog(userName, 'Восстановил компанию из архива', `Компания: ${company.name || companyId} (ID: ${companyId})`, companyId);
         console.log('   ✅ Лог добавлен успешно');
       } else {
-        console.warn('   ⚠️ Не удалось добавить лог, но это не критично');
+        console.warn('   ⚠️ Пропускаем логирование - пользователь не определен');
       }
     } catch (logError) {
       console.error('   ⚠️ Ошибка логирования (не критично):', logError);
@@ -752,12 +763,14 @@ app.post('/api/gantt-state', (req, res) => {
       userName = userLogin; // Используем логин как имя пользователя
     }
     
-    // Если и userName, и userLogin не определены, это проблема
+    // Если и userName, и userLogin не определены, это проблема - не логируем
     if (userName === 'Неизвестный пользователь' && !userLogin) {
-      console.error('❌ КРИТИЧЕСКАЯ ПРОБЛЕМА: Пользователь не определен!');
+      console.error('❌ КРИТИЧЕСКАЯ ПРОБЛЕМА: Пользователь не определен! Пропускаем логирование.');
       console.error('   req.body.userName:', req.body.userName);
       console.error('   req.headers[x-user-name]:', req.headers['x-user-name']);
       console.error('   req.body.userLogin:', req.body.userLogin);
+      // Не логируем, если пользователь не определен - просто возвращаем успешный ответ
+      return res.json({ ok: true, saved: true, skippedLog: true });
     }
     
     // Получаем название компании для лога
@@ -898,9 +911,11 @@ app.post('/api/gantt-skeleton', (req, res) => {
     fs.writeFileSync(skeletonFile, JSON.stringify(dataToSave, null, 2), 'utf8');
     console.log(`✅ Скелет для ${chartType} сохранён, задач:`, skeleton.length);
     
-    // Логируем сохранение скелета
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    addLog(userName, 'Сохранил скелет графика', `Тип: ${chartType}, задач: ${skeleton.length}`, null);
+    // Логируем сохранение скелета (только если пользователь определен)
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
+    if (userName) {
+      addLog(userName, 'Сохранил скелет графика', `Тип: ${chartType}, задач: ${skeleton.length}`, null);
+    }
     
     res.json({ ok: true, chartType, taskCount: skeleton.length });
   } catch (e) {
@@ -991,9 +1006,11 @@ app.post('/api/chart-types', (req, res) => {
     chartTypes.push(newChartType);
     fs.writeFileSync(CHART_TYPES_FILE, JSON.stringify(chartTypes, null, 2), 'utf8');
     
-    // Логируем создание типа графика
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    addLog(userName, 'Создал тип графика', `Тип: ${chartTypeName} (${chartTypeId}), контейнер: ${containerName}`, null);
+    // Логируем создание типа графика (только если пользователь определен)
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
+    if (userName) {
+      addLog(userName, 'Создал тип графика', `Тип: ${chartTypeName} (${chartTypeId}), контейнер: ${containerName}`, null);
+    }
     
     // Создаём пустой скелет для нового типа
     const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartTypeId}.json`);
@@ -1049,9 +1066,9 @@ app.delete('/api/chart-types/:id', (req, res) => {
     
     console.log(`✅ Тип графика ${chartTypeId} удалён`);
     
-    // Логируем удаление типа графика
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
-    if (deletedType) {
+    // Логируем удаление типа графика (только если пользователь определен)
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
+    if (deletedType && userName) {
       addLog(userName, 'Удалил тип графика', `Тип: ${deletedType.chartTypeName || chartTypeId} (${chartTypeId})`, null);
     }
     
@@ -1105,8 +1122,8 @@ app.post('/api/company-info', (req, res) => {
     
     fs.writeFileSync(infoFile, JSON.stringify(req.body, null, 2), 'utf8');
     
-    // Логируем изменение информации о компании
-    const userName = req.body.userName || req.headers['x-user-name'] || 'Неизвестный пользователь';
+    // Логируем изменение информации о компании (только если пользователь определен)
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
     const changes = [];
     if (req.body.name && (!oldInfo || oldInfo.name !== req.body.name)) {
       changes.push(`Название: ${oldInfo?.name || '(не было)'} → ${req.body.name}`);
@@ -1121,7 +1138,7 @@ app.post('/api/company-info', (req, res) => {
     if (req.body.chartType && (!oldInfo || oldInfo.chartType !== req.body.chartType)) {
       changes.push(`Тип графика: ${oldInfo?.chartType || '(не было)'} → ${req.body.chartType}`);
     }
-    if (changes.length > 0) {
+    if (changes.length > 0 && userName) {
       addLog(userName, 'Изменил информацию о компании', changes.join(', '), companyId);
     }
     

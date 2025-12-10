@@ -2233,15 +2233,33 @@
             try {
                 const storedUser = localStorage.getItem('gantt-user');
                 if (!storedUser) {
+                    console.warn('⚠️ getUserContext: localStorage не содержит gantt-user');
                     return { name: null, login: null };
                 }
+                
                 const parsed = JSON.parse(storedUser);
+                
+                // Более жесткая проверка: должны быть хотя бы name или login
+                if (!parsed || (typeof parsed !== 'object')) {
+                    console.warn('⚠️ getUserContext: parsed не является объектом', parsed);
+                    return { name: null, login: null };
+                }
+                
+                const name = parsed.name ? String(parsed.name).trim() : null;
+                const login = parsed.login ? String(parsed.login).trim() : null;
+                
+                // Если оба поля пустые или null, это ошибка
+                if (!name && !login) {
+                    console.error('❌ getUserContext: и name, и login пустые!', parsed);
+                    return { name: null, login: null };
+                }
+                
                 return {
-                    name: parsed.name || null,
-                    login: parsed.login || null
+                    name: name || null,
+                    login: login || null
                 };
             } catch (e) {
-                console.warn('Не удалось прочитать данные пользователя из localStorage:', e);
+                console.error('❌ getUserContext: ошибка парсинга localStorage:', e);
                 return { name: null, login: null };
             }
         }
@@ -2664,6 +2682,12 @@
             const chartTypeName = chartType ? chartType.chartTypeName : '';
             const { name: currentUserName, login: currentUserLogin } = getUserContext();
 
+            // Если пользователь не определен, не логируем действие
+            const userName = currentUserName || currentUserLogin;
+            if (!userName) {
+                console.warn('⚠️ saveSkeleton: пользователь не определен, пропускаем логирование');
+            }
+
             try {
                 const response = await fetch('/api/gantt-skeleton', {
                     method: 'POST',
@@ -2676,7 +2700,7 @@
                         columns: skeletonColumns,
                         containerName,
                         chartTypeName,
-                        userName: currentUserName || currentUserLogin || 'Неизвестный пользователь',
+                        userName: userName || null, // Отправляем null вместо 'Неизвестный пользователь'
                         userLogin: currentUserLogin || null
                     })
                 });
@@ -2977,6 +3001,12 @@
                 return;
             }
             
+            // Если пользователь не определен, не логируем действие
+            const userName = currentUserName || currentUserLogin;
+            if (!userName) {
+                console.warn('⚠️ createSkeletonForm: пользователь не определен, пропускаем логирование');
+            }
+            
             try {
                 const response = await fetch('/api/chart-types', {
                     method: 'POST',
@@ -2986,7 +3016,7 @@
                     body: JSON.stringify({
                         containerName,
                         chartTypeName,
-                        userName: currentUserName || currentUserLogin || 'Неизвестный пользователь',
+                        userName: userName || null, // Отправляем null вместо 'Неизвестный пользователь'
                         userLogin: currentUserLogin || null
                     })
                 });
@@ -3520,6 +3550,22 @@
                                 change.newName || '—'
                             ]);
                         }
+                        
+                        // Изменения статусов отдельных дней (dateStatusChanges)
+                        if (change.dateStatusChanges && Array.isArray(change.dateStatusChanges) && change.dateStatusChanges.length > 0) {
+                            change.dateStatusChanges.forEach(dateStatusChange => {
+                                rows.push([
+                                    userName,
+                                    dateTime,
+                                    action,
+                                    companyName,
+                                    taskName,
+                                    `Статус дня (${formatDateForExport(dateStatusChange.date)})`,
+                                    dateStatusChange.oldStatusName || '—',
+                                    dateStatusChange.newStatusName || '—'
+                                ]);
+                            });
+                        }
                     });
                 } else {
                     // Если нет детальных изменений, выводим общую информацию
@@ -3692,7 +3738,9 @@
             const statusNames = {
                 'pending': 'Запланирована',
                 'in-progress': 'В работе',
-                'completed': 'Завершено'
+                'completed': 'Завершено',
+                'holiday': 'Праздник',
+                'weekend': 'Выходной'
             };
             return statusNames[status] || status || '—';
         }
