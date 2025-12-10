@@ -217,11 +217,11 @@
 
         /* Анимация переключения темы */
         .theme-toggle-btn.animating {
-            animation: themeTogglePulse 1.2s ease-in-out;
+            animation: themeTogglePulse 0.8s ease-in-out;
         }
 
         .theme-toggle-btn.animating::before {
-            animation: themeIconRotate 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: themeIconRotate 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes themeTogglePulse {
@@ -229,7 +229,7 @@
                 transform: scale(1);
             }
             50% {
-                transform: scale(1.2);
+                transform: scale(1.08);
             }
             100% {
                 transform: scale(1);
@@ -242,8 +242,8 @@
                 opacity: 1;
             }
             50% {
-                transform: rotate(180deg) scale(0.5);
-                opacity: 0.3;
+                transform: rotate(180deg) scale(0.7);
+                opacity: 0.5;
             }
             100% {
                 transform: rotate(360deg) scale(1);
@@ -1251,6 +1251,52 @@
         [data-theme="dark"] .gantt-time-scale-header {
             background: var(--color-surface);
             color: var(--color-text);
+        }
+
+        /* Темная тема для поиска по задачам */
+        [data-theme="dark"] #searchInput {
+            background: var(--color-bg) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] #searchInput:focus {
+            background: var(--color-surface) !important;
+            border-color: var(--color-primary) !important;
+        }
+
+        [data-theme="dark"] #searchInput::placeholder {
+            color: rgba(100, 181, 246, 0.6) !important;
+        }
+
+        [data-theme="dark"] .search-icon {
+            color: #64b5f6 !important;
+            opacity: 0.8 !important;
+        }
+
+        [data-theme="dark"] #searchPrevBtn,
+        [data-theme="dark"] #searchNextBtn {
+            background: var(--color-surface) !important;
+            border-color: var(--color-primary) !important;
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] #searchPrevBtn:hover,
+        [data-theme="dark"] #searchNextBtn:hover {
+            background: var(--color-bg) !important;
+            border-color: var(--color-primary-hover) !important;
+            color: var(--color-primary-hover) !important;
+        }
+
+        [data-theme="dark"] #searchPrevBtn:active,
+        [data-theme="dark"] #searchNextBtn:active {
+            background: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+            color: white !important;
+        }
+
+        [data-theme="dark"] #searchCounter {
+            color: #64b5f6 !important;
         }
 
         .profile-form-actions {
@@ -15855,11 +15901,13 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
                 // Стили при фокусе
                 searchInput.addEventListener('focus', () => {
-                    searchInput.style.borderColor = '#2196f3';
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    searchInput.style.borderColor = isDark ? '#42a5f5' : '#2196f3';
                 });
 
                 searchInput.addEventListener('blur', () => {
-                    searchInput.style.borderColor = '#e0e0e0';
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    searchInput.style.borderColor = isDark ? 'var(--color-border)' : '#e0e0e0';
                 });
             }
 
