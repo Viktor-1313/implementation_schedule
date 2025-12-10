@@ -2112,25 +2112,6 @@
         }
 
         /* Кастомная подсказка для меток этапов */
-        .stage-label-tooltip {
-            position: fixed !important;
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: rgba(0, 0, 0, 0.85) !important;
-            color: #fff !important;
-            font-size: 11px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-            z-index: 10000 !important;
-            display: block !important;
-            visibility: visible !important;
-        }
-
-        .stage-label-tooltip.show {
-            opacity: 1 !important;
-        }
 
         /* Свернутое состояние метки этапа (горизонтальное) */
         .gantt-stage-label.collapsed {
@@ -5483,6 +5464,10 @@
                 <button class="profile-modal-close" onclick="closeProfileModal()">&times;</button>
             </div>
             <form id="profileForm">
+                <div class="profile-form-group">
+                    <label for="profileName">Имя пользователя:</label>
+                    <input type="text" id="profileName" required>
+                </div>
                 <div class="profile-form-group">
                     <label for="profileLogin">Логин:</label>
                     <input type="text" id="profileLogin" required>
@@ -10739,189 +10724,6 @@
             }
 
             // После создания всех задач создаем метки этапов с правильным позиционированием
-            // Глобальная переменная для подсказки меток этапов
-            let stageLabelTooltip = null;
-            let stageLabelTooltipTimeout = null;
-            let currentStageLabelElement = null; // Сохраняем ссылку на элемент метки этапа (как в меню статусов)
-            let isTooltipVisible = false;
-            let currentMouseX = 0; // Текущая позиция курсора по X
-            let currentMouseY = 0; // Текущая позиция курсора по Y
-
-            // Функция для создания и управления подсказкой меток этапов
-            function createStageLabelTooltip() {
-                if (!stageLabelTooltip) {
-                    stageLabelTooltip = document.createElement('div');
-                    stageLabelTooltip.className = 'stage-label-tooltip';
-                    document.body.appendChild(stageLabelTooltip);
-                }
-                return stageLabelTooltip;
-            }
-
-            function showStageLabelTooltip(text, event) {
-                if (!event || !event.currentTarget) {
-                    return;
-                }
-                
-                const tooltip = createStageLabelTooltip();
-                tooltip.textContent = text;
-                
-                // Сохраняем ссылку на элемент метки этапа
-                currentStageLabelElement = event.currentTarget || event.target;
-                
-                if (!currentStageLabelElement) {
-                    return;
-                }
-                
-                // Сохраняем координаты курсора (относительно viewport)
-                currentMouseX = event.clientX || 0;
-                currentMouseY = event.clientY || 0;
-                
-                // ВАЖНО: Убеждаемся, что подсказка в body
-                if (tooltip.parentElement !== document.body) {
-                    document.body.appendChild(tooltip);
-                }
-                
-                // Устанавливаем стили сразу
-                tooltip.style.position = 'fixed';
-                tooltip.style.zIndex = '10000';
-                tooltip.style.display = 'block';
-                tooltip.style.visibility = 'visible';
-                tooltip.style.opacity = '0';
-                tooltip.classList.remove('show');
-                
-                // Добавляем глобальный обработчик движения мыши для отслеживания курсора
-                const mouseMoveHandler = (e) => {
-                    currentMouseX = e.clientX;
-                    currentMouseY = e.clientY;
-                    if (isTooltipVisible) {
-                        updateStageLabelTooltipPosition();
-                    }
-                };
-                
-                // Сохраняем обработчик для последующего удаления
-                if (!stageLabelTooltip._mouseMoveHandler) {
-                    stageLabelTooltip._mouseMoveHandler = mouseMoveHandler;
-                    document.addEventListener('mousemove', mouseMoveHandler, true);
-                }
-                
-                // Сразу обновляем позицию, чтобы подсказка была готова к показу
-                updateStageLabelTooltipPosition();
-                
-                // Показываем с задержкой (300ms)
-                clearTimeout(stageLabelTooltipTimeout);
-                stageLabelTooltipTimeout = setTimeout(() => {
-                    if (!currentStageLabelElement || !currentStageLabelElement.isConnected) {
-                        return;
-                    }
-                    
-                    // Обновляем позицию ПЕРЕД показом (относительно текущей позиции курсора)
-                    updateStageLabelTooltipPosition();
-                    
-                    // Показываем подсказку
-                    tooltip.style.opacity = '1';
-                    tooltip.classList.add('show');
-                    isTooltipVisible = true;
-                }, 300);
-            }
-
-            function hideStageLabelTooltip() {
-                if (stageLabelTooltip) {
-                    clearTimeout(stageLabelTooltipTimeout);
-                    stageLabelTooltip.classList.remove('show');
-                    stageLabelTooltip.style.opacity = '0';
-                    stageLabelTooltip.style.visibility = 'hidden';
-                    isTooltipVisible = false;
-                    currentStageLabelElement = null;
-                    
-                    // Удаляем обработчик движения мыши
-                    if (stageLabelTooltip._mouseMoveHandler) {
-                        document.removeEventListener('mousemove', stageLabelTooltip._mouseMoveHandler, true);
-                        stageLabelTooltip._mouseMoveHandler = null;
-                    }
-                }
-            }
-
-            function updateStageLabelTooltipPosition() {
-                if (!stageLabelTooltip) {
-                    return;
-                }
-                
-                // Убеждаемся, что подсказка в body
-                if (stageLabelTooltip.parentElement !== document.body) {
-                    document.body.appendChild(stageLabelTooltip);
-                }
-                
-                // Устанавливаем position: fixed если еще не установлен
-                if (window.getComputedStyle(stageLabelTooltip).position !== 'fixed') {
-                    stageLabelTooltip.style.position = 'fixed';
-                    stageLabelTooltip.style.zIndex = '10000';
-                }
-                
-                // Получаем размеры подсказки
-                // Убеждаемся, что подсказка видима для получения размеров (даже если прозрачная)
-                const wasHidden = stageLabelTooltip.style.visibility === 'hidden' || 
-                                 window.getComputedStyle(stageLabelTooltip).visibility === 'hidden';
-                if (wasHidden) {
-                    stageLabelTooltip.style.visibility = 'visible';
-                    stageLabelTooltip.style.opacity = '0';
-                }
-                
-                let tooltipRect = stageLabelTooltip.getBoundingClientRect();
-                
-                // Если размеры все еще нулевые, используем примерные
-                if (tooltipRect.width === 0 || tooltipRect.height === 0) {
-                    // Используем примерные размеры на основе текста
-                    const textLength = stageLabelTooltip.textContent.length;
-                    tooltipRect = {
-                        width: Math.max(100, textLength * 7 + 20),
-                        height: 30
-                    };
-                }
-                
-                const offsetX = 15; // Отступ справа от курсора
-                
-                // Позиционируем подсказку справа от курсора
-                let left = currentMouseX + offsetX;
-                // Выравниваем по вертикали относительно курсора
-                let top = currentMouseY;
-                
-                // Если подсказка еще не имеет размеров (первый вызов), используем примерную высоту
-                const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : 30;
-                const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : 200;
-                
-                // Центрируем подсказку по вертикали относительно курсора
-                top = top - (tooltipHeight / 2);
-                
-                // Корректируем позицию, чтобы подсказка всегда была видна в пределах viewport
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                
-                // Если подсказка не влезает справа, показываем слева от курсора
-                if (left + tooltipWidth > viewportWidth - 15) {
-                    left = currentMouseX - tooltipWidth - offsetX;
-                }
-                
-                // Если слева тоже не влезает, показываем максимально близко к правому краю
-                if (left < 15) {
-                    left = Math.max(15, viewportWidth - tooltipWidth - 15);
-                }
-                
-                // Корректируем вертикальное положение, чтобы подсказка всегда была в пределах viewport
-                if (top < 15) {
-                    top = 15;
-                } else if (top + tooltipHeight > viewportHeight - 15) {
-                    top = viewportHeight - tooltipHeight - 15;
-                }
-                
-                // Устанавливаем позицию с !important для гарантии применения
-                stageLabelTooltip.style.setProperty('left', left + 'px', 'important');
-                stageLabelTooltip.style.setProperty('top', top + 'px', 'important');
-            }
-
-            // Обработчик скролла больше не нужен, так как позиция подсказки теперь зависит от курсора
-            // Координаты курсора (clientX, clientY) всегда относительно viewport, поэтому при скролле
-            // подсказка автоматически остается на месте относительно курсора
-
             function createStageLabels() {
                 // Находим контейнеры заново (на случай, если DOM изменился)
                 const currentChartContainerParent = chartContainer.closest('.chart-container');
@@ -11069,29 +10871,6 @@
                         toggleStageCollapse(stageName);
                     });
                     
-                    // Добавляем обработчики для кастомной подсказки
-                    stageLabel.addEventListener('mouseenter', (e) => {
-                        e.stopPropagation();
-                        showStageLabelTooltip(stageName, e);
-                    });
-                    
-                    stageLabel.addEventListener('mousemove', (e) => {
-                        e.stopPropagation();
-                        // Обновляем координаты курсора при движении мыши
-                        currentMouseX = e.clientX || 0;
-                        currentMouseY = e.clientY || 0;
-                        // Обновляем позицию подсказки относительно курсора
-                        if (isTooltipVisible) {
-                            requestAnimationFrame(() => {
-                                updateStageLabelTooltipPosition();
-                            });
-                        }
-                    });
-                    
-                    stageLabel.addEventListener('mouseleave', (e) => {
-                        e.stopPropagation();
-                        hideStageLabelTooltip();
-                    });
                     
                     currentStageLabelsContainer.appendChild(stageLabel);
                     
@@ -18744,8 +18523,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         function openProfileModal() {
             const modal = document.getElementById('profileModal');
             const modalContent = modal?.querySelector('.profile-modal-content');
+            const nameInput = document.getElementById('profileName');
             const loginInput = document.getElementById('profileLogin');
-            if (modal && currentUser && loginInput) {
+            if (modal && currentUser && loginInput && nameInput) {
+                nameInput.value = currentUser.name || '';
                 loginInput.value = currentUser.login || '';
                 document.getElementById('profilePassword').value = '';
                 document.getElementById('profilePasswordConfirm').value = '';
@@ -18776,14 +18557,29 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         async function saveProfile(event) {
             event.preventDefault();
             
+            const nameInput = document.getElementById('profileName');
             const loginInput = document.getElementById('profileLogin');
             const passwordInput = document.getElementById('profilePassword');
             const passwordConfirmInput = document.getElementById('profilePasswordConfirm');
             const messageEl = document.getElementById('profileMessage');
             
+            const newName = nameInput.value.trim();
             const newLogin = loginInput.value.trim();
             const newPassword = passwordInput.value;
             const passwordConfirm = passwordConfirmInput.value;
+
+            // Проверка обязательных полей
+            if (!newName) {
+                messageEl.textContent = 'Имя пользователя не может быть пустым';
+                messageEl.className = 'profile-message error show';
+                return;
+            }
+
+            if (!newLogin) {
+                messageEl.textContent = 'Логин не может быть пустым';
+                messageEl.className = 'profile-message error show';
+                return;
+            }
 
             // Проверка паролей
             if (newPassword && newPassword !== passwordConfirm) {
@@ -18798,16 +18594,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 return;
             }
 
-            if (!newLogin) {
-                messageEl.textContent = 'Логин не может быть пустым';
-                messageEl.className = 'profile-message error show';
-                return;
-            }
-
             try {
                 const updateData = {
                     oldLogin: currentUser.login,
                     newLogin: newLogin,
+                    name: newName,
                     password: newPassword || null
                 };
 
@@ -18823,6 +18614,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
                 if (result.ok) {
                     // Обновляем данные пользователя в localStorage
+                    currentUser.name = newName;
                     currentUser.login = newLogin;
                     localStorage.setItem('gantt-user', JSON.stringify(currentUser));
                     
@@ -19785,7 +19577,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             {
                 element: '#companiesBottomBtn',
                 title: 'Компании',
-                text: 'Кнопка для возврата к списку компаний из архива.',
+                text: 'Возврат к списку компаний.',
                 position: 'bottom',
                 temporaryShow: true
             },
@@ -20052,9 +19844,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         // Запуск тура из модального окна приветствия
         function startTourFromWelcome() {
             closeWelcomeModal();
-            setTimeout(() => {
+            // Используем requestAnimationFrame для немедленного показа первой подсказки
+            requestAnimationFrame(() => {
                 startTour();
-            }, 300);
+            });
         }
 
         // Открытие модального окна справки
