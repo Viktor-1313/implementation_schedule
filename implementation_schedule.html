@@ -1112,6 +1112,34 @@
             border-color: var(--color-primary-hover);
         }
 
+        /* Темная тема для кнопок "Связь", "Базовый план", "Ответственный" и "Детальный вид" */
+        [data-theme="dark"] .link-toggle-btn,
+        [data-theme="dark"] .baseline-toggle-btn,
+        [data-theme="dark"] .baseline-set-btn,
+        [data-theme="dark"] .responsible-toggle-btn,
+        [data-theme="dark"] .gantt-style-toggle-btn {
+            background: rgba(66, 165, 245, 0.15);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        [data-theme="dark"] .link-toggle-btn:hover,
+        [data-theme="dark"] .baseline-toggle-btn:hover,
+        [data-theme="dark"] .baseline-set-btn:hover,
+        [data-theme="dark"] .responsible-toggle-btn:hover,
+        [data-theme="dark"] .gantt-style-toggle-btn:hover {
+            background: rgba(66, 165, 245, 0.25);
+            border-color: var(--color-primary-hover);
+        }
+
+        [data-theme="dark"] .link-toggle-btn.active,
+        [data-theme="dark"] .baseline-toggle-btn.active,
+        [data-theme="dark"] .gantt-style-toggle-btn.active {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+            color: #ffffff;
+            border-color: var(--color-primary);
+        }
+
         /* Темная тема для контейнера этапов */
         [data-theme="dark"] .stage-tabs-container {
             background: transparent;
@@ -4497,6 +4525,38 @@
                 font-size: 0.85rem;
             }
 
+            /* Кнопки отменить и повторить - круглые, одинакового размера, под другими кнопками */
+            .stage-tabs-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stage-tabs {
+                order: 1;
+                width: 100%;
+            }
+
+            /* Контейнер для кнопок undo/redo - горизонтальное расположение */
+            .stage-tabs-container > .undo-btn,
+            .stage-tabs-container > .redo-btn {
+                order: 2;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                padding: 0 !important;
+                border-radius: 50% !important;
+                margin-top: 8px;
+                margin-right: 8px;
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .stage-tabs-container > .redo-btn {
+                margin-right: 0;
+            }
+
             /* Модальные окна */
             .modal-content {
                 width: 95%;
@@ -4767,10 +4827,31 @@
                 width: 100%;
             }
 
-            .undo-btn {
+            /* Кнопки отменить и повторить - круглые, одинакового размера, под другими кнопками */
+            .stage-tabs-container > .undo-btn,
+            .stage-tabs-container > .redo-btn {
                 order: 2;
-                width: 100%;
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                padding: 0 !important;
+                border-radius: 50% !important;
                 margin-top: 8px;
+                margin-right: 8px;
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .stage-tabs-container > .redo-btn {
+                margin-right: 0;
+            }
+            
+            /* Контейнер для кнопок undo/redo - горизонтальное расположение */
+            .stage-tabs-container > .undo-btn,
+            .stage-tabs-container > .redo-btn {
+                display: inline-flex;
             }
 
             .stage-tab {
@@ -5271,6 +5352,43 @@
             font-family: monospace;
             font-size: 0.9em;
             margin: 0 2px;
+        }
+
+        /* Темная тема для модального окна справки */
+        [data-theme="dark"] .help-modal-content {
+            background: var(--color-surface);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .help-modal-header {
+            border-bottom: 2px solid rgba(224, 224, 224, 0.2);
+        }
+
+        [data-theme="dark"] .help-modal-header h2 {
+            color: #64b5f6;
+        }
+
+        [data-theme="dark"] .help-modal-close {
+            color: #b0b0b0;
+        }
+
+        [data-theme="dark"] .help-modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .help-section h3 {
+            color: #64b5f6;
+        }
+
+        [data-theme="dark"] .help-section li {
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .help-key {
+            background: var(--color-bg);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            color: var(--color-text);
         }
 
         /* Всплывающие подсказки для новых функций */
