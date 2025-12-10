@@ -572,7 +572,7 @@
             <form id="auth-form">
                 <div id="auth-error" class="auth-error" style="display: none;"></div>
                 <div class="form-group">
-                    <input type="text" id="auth-login" class="form-input" placeholder="Введите ваш логин..." autocomplete="username" required>
+                    <input type="text" id="auth-login" class="form-input" placeholder="Введите ваш логин..." autocomplete="username" autofocus required>
                 </div>
                 <div class="form-group">
                     <div class="password-input-wrapper">
@@ -1254,6 +1254,15 @@
             initFireflies();
             initLogoTilt();
             checkViewModeButtonVisibility();
+            
+            // Устанавливаем фокус на поле логина для удобства
+            const loginInput = document.getElementById('auth-login');
+            if (loginInput) {
+                // Небольшая задержка на случай, если анимации еще загружаются
+                setTimeout(() => {
+                    loginInput.focus();
+                }, 100);
+            }
         });
     </script>
     

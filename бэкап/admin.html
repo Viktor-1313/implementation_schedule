@@ -3550,6 +3550,22 @@
                                 change.newName || '—'
                             ]);
                         }
+                        
+                        // Изменения статусов отдельных дней (dateStatusChanges)
+                        if (change.dateStatusChanges && Array.isArray(change.dateStatusChanges) && change.dateStatusChanges.length > 0) {
+                            change.dateStatusChanges.forEach(dateStatusChange => {
+                                rows.push([
+                                    userName,
+                                    dateTime,
+                                    action,
+                                    companyName,
+                                    taskName,
+                                    `Статус дня (${formatDateForExport(dateStatusChange.date)})`,
+                                    dateStatusChange.oldStatusName || '—',
+                                    dateStatusChange.newStatusName || '—'
+                                ]);
+                            });
+                        }
                     });
                 } else {
                     // Если нет детальных изменений, выводим общую информацию
@@ -3722,7 +3738,9 @@
             const statusNames = {
                 'pending': 'Запланирована',
                 'in-progress': 'В работе',
-                'completed': 'Завершено'
+                'completed': 'Завершено',
+                'holiday': 'Праздник',
+                'weekend': 'Выходной'
             };
             return statusNames[status] || status || '—';
         }

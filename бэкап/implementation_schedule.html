@@ -2112,25 +2112,6 @@
         }
 
         /* Кастомная подсказка для меток этапов */
-        .stage-label-tooltip {
-            position: fixed !important;
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: rgba(0, 0, 0, 0.85) !important;
-            color: #fff !important;
-            font-size: 11px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-            z-index: 10000 !important;
-            display: block !important;
-            visibility: visible !important;
-        }
-
-        .stage-label-tooltip.show {
-            opacity: 1 !important;
-        }
 
         /* Свернутое состояние метки этапа (горизонтальное) */
         .gantt-stage-label.collapsed {
@@ -5484,6 +5465,10 @@
             </div>
             <form id="profileForm">
                 <div class="profile-form-group">
+                    <label for="profileName">Имя пользователя:</label>
+                    <input type="text" id="profileName" required>
+                </div>
+                <div class="profile-form-group">
                     <label for="profileLogin">Логин:</label>
                     <input type="text" id="profileLogin" required>
                 </div>
@@ -7177,6 +7162,41 @@
                     taskChanges.push(`Ответственный: ${oldTask.responsible || '—'} → ${newTask.responsible || '—'}`);
                 }
                 
+                // Проверяем изменения статусов отдельных дней (dateStatuses)
+                const oldDateStatuses = oldTask.dateStatuses || {};
+                const newDateStatuses = newTask.dateStatuses || {};
+                const allDateKeys = new Set([...Object.keys(oldDateStatuses), ...Object.keys(newDateStatuses)]);
+                const dateStatusChanges = [];
+                
+                allDateKeys.forEach(dateKey => {
+                    const oldStatus = oldDateStatuses[dateKey];
+                    const newStatus = newDateStatuses[dateKey];
+                    
+                    // Если статус изменился или был добавлен/удален
+                    if (oldStatus !== newStatus) {
+                        const statusNames = {
+                            'pending': 'Запланирована',
+                            'in-progress': 'В работе',
+                            'completed': 'Завершено',
+                            'holiday': 'Праздник',
+                            'weekend': 'Выходной'
+                        };
+                        const oldStatusName = oldStatus ? (statusNames[oldStatus] || oldStatus) : '—';
+                        const newStatusName = newStatus ? (statusNames[newStatus] || newStatus) : '—';
+                        dateStatusChanges.push({
+                            date: dateKey,
+                            oldStatus: oldStatus || null,
+                            newStatus: newStatus || null,
+                            oldStatusName: oldStatusName,
+                            newStatusName: newStatusName
+                        });
+                    }
+                });
+                
+                if (dateStatusChanges.length > 0) {
+                    taskChanges.push(`Статусы дней: изменено ${dateStatusChanges.length} дат`);
+                }
+                
                 if (taskChanges.length > 0) {
                     const taskName = (newTask.name || newTask.task || `Задача ${i + 1}`).substring(0, 40);
                     changes.push(`${taskName}: ${taskChanges.join(', ')}`);
@@ -7186,7 +7206,7 @@
                         if (!snapshot.detailedChanges) {
                             snapshot.detailedChanges = [];
                         }
-                        snapshot.detailedChanges.push({
+                        const changeEntry = {
                         taskIndex: i,
                         taskName: newTask.name || newTask.task || `Задача ${i + 1}`,
                         oldStartDate: oldTask.startDate || null,
@@ -7203,7 +7223,14 @@
                         newResponsible: newTask.responsible || null,
                         oldName: oldTask.name || oldTask.task || null,
                         newName: newTask.name || newTask.task || null
-                        });
+                        };
+                        
+                        // Добавляем изменения статусов отдельных дней
+                        if (dateStatusChanges.length > 0) {
+                            changeEntry.dateStatusChanges = dateStatusChanges;
+                        }
+                        
+                        snapshot.detailedChanges.push(changeEntry);
                     }
                 }
             }
@@ -10697,247 +10724,6 @@
             }
 
             // После создания всех задач создаем метки этапов с правильным позиционированием
-            // Глобальная переменная для подсказки меток этапов
-            let stageLabelTooltip = null;
-            let stageLabelTooltipTimeout = null;
-            let currentStageLabelElement = null; // Сохраняем ссылку на элемент метки этапа (как в меню статусов)
-            let isTooltipVisible = false;
-
-            // Функция для создания и управления подсказкой меток этапов
-            function createStageLabelTooltip() {
-                if (!stageLabelTooltip) {
-                    stageLabelTooltip = document.createElement('div');
-                    stageLabelTooltip.className = 'stage-label-tooltip';
-                    document.body.appendChild(stageLabelTooltip);
-                }
-                return stageLabelTooltip;
-            }
-
-            function showStageLabelTooltip(text, event) {
-                if (!event || !event.currentTarget) {
-                    return;
-                }
-                
-                const tooltip = createStageLabelTooltip();
-                tooltip.textContent = text;
-                
-                // Сохраняем ссылку на элемент метки этапа (как в меню статусов)
-                // Это позволяет получать актуальные координаты при скролле
-                currentStageLabelElement = event.currentTarget || event.target;
-                
-                if (!currentStageLabelElement) {
-                    return;
-                }
-                
-                // ВАЖНО: Убеждаемся, что подсказка в body (как в меню статусов)
-                if (tooltip.parentElement !== document.body) {
-                    document.body.appendChild(tooltip);
-                }
-                
-                // Устанавливаем стили сразу
-                tooltip.style.position = 'fixed';
-                tooltip.style.zIndex = '10000';
-                tooltip.style.display = 'block';
-                tooltip.style.visibility = 'visible';
-                tooltip.style.opacity = '0';
-                tooltip.classList.remove('show');
-                
-                // Убеждаемся, что обработчики скролла добавлены для всех контейнеров
-                addScrollListeners();
-                
-                // Сразу обновляем позицию, чтобы подсказка была готова к показу
-                updateStageLabelTooltipPosition();
-                
-                // Показываем с задержкой (300ms)
-                clearTimeout(stageLabelTooltipTimeout);
-                stageLabelTooltipTimeout = setTimeout(() => {
-                    if (!currentStageLabelElement || !currentStageLabelElement.isConnected) {
-                        return;
-                    }
-                    
-                    // Обновляем позицию ПЕРЕД показом (с учетом текущей прокрутки)
-                    updateStageLabelTooltipPosition();
-                    
-                    // Показываем подсказку
-                    tooltip.style.opacity = '1';
-                    tooltip.classList.add('show');
-                    isTooltipVisible = true;
-                }, 300);
-            }
-
-            function hideStageLabelTooltip() {
-                if (stageLabelTooltip) {
-                    clearTimeout(stageLabelTooltipTimeout);
-                    stageLabelTooltip.classList.remove('show');
-                    stageLabelTooltip.style.opacity = '0';
-                    stageLabelTooltip.style.visibility = 'hidden';
-                    isTooltipVisible = false;
-                    currentStageLabelElement = null;
-                }
-            }
-
-            function updateStageLabelTooltipPosition() {
-                if (!stageLabelTooltip || !currentStageLabelElement) {
-                    return;
-                }
-                
-                // ВАЖНО: Получаем актуальные координаты метки этапа СЕЙЧАС (как в меню статусов)
-                // getBoundingClientRect() возвращает координаты относительно viewport
-                // Это гарантирует правильное позиционирование даже при прокрутке страницы
-                if (!currentStageLabelElement.isConnected) {
-                    // Элемент больше не в DOM - скрываем подсказку
-                    if (isTooltipVisible) {
-                        hideStageLabelTooltip();
-                    }
-                    return;
-                }
-                
-                // Убеждаемся, что подсказка в body
-                if (stageLabelTooltip.parentElement !== document.body) {
-                    document.body.appendChild(stageLabelTooltip);
-                }
-                
-                // Устанавливаем position: fixed если еще не установлен
-                if (window.getComputedStyle(stageLabelTooltip).position !== 'fixed') {
-                    stageLabelTooltip.style.position = 'fixed';
-                    stageLabelTooltip.style.zIndex = '10000';
-                }
-                
-                // Получаем координаты метки этапа
-                const labelRect = currentStageLabelElement.getBoundingClientRect();
-                
-                // Проверяем, что метка этапа видима
-                if (labelRect.width === 0 && labelRect.height === 0) {
-                    // Метка скрыта - скрываем подсказку
-                    if (isTooltipVisible) {
-                        hideStageLabelTooltip();
-                    }
-                    return;
-                }
-                
-                // Получаем размеры подсказки
-                // Убеждаемся, что подсказка видима для получения размеров (даже если прозрачная)
-                const wasHidden = stageLabelTooltip.style.visibility === 'hidden' || 
-                                 window.getComputedStyle(stageLabelTooltip).visibility === 'hidden';
-                if (wasHidden) {
-                    stageLabelTooltip.style.visibility = 'visible';
-                    stageLabelTooltip.style.opacity = '0';
-                }
-                
-                let tooltipRect = stageLabelTooltip.getBoundingClientRect();
-                
-                // Если размеры все еще нулевые, используем примерные
-                if (tooltipRect.width === 0 || tooltipRect.height === 0) {
-                    // Используем примерные размеры на основе текста
-                    const textLength = stageLabelTooltip.textContent.length;
-                    tooltipRect = {
-                        width: Math.max(100, textLength * 7 + 20),
-                        height: 30
-                    };
-                }
-                
-                const offsetX = 15; // Отступ справа от метки этапа
-                
-                // Позиционируем подсказку справа от метки этапа, по центру по вертикали
-                let left = labelRect.right + offsetX;
-                // Используем центр метки этапа по вертикали для выравнивания подсказки
-                let top = labelRect.top + (labelRect.height / 2);
-                
-                // Если подсказка еще не имеет размеров (первый вызов), используем примерную высоту
-                const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : 30;
-                top = top - (tooltipHeight / 2);
-                
-                // Корректируем позицию, чтобы подсказка всегда была видна в пределах viewport
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                
-                // Если подсказка не влезает справа, показываем слева
-                const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : 200;
-                if (left + tooltipWidth > viewportWidth - 15) {
-                    left = labelRect.left - tooltipWidth - offsetX;
-                }
-                
-                // Если слева тоже не влезает, показываем максимально близко к правому краю
-                if (left < 15) {
-                    left = Math.max(15, viewportWidth - tooltipWidth - 15);
-                }
-                
-                // Корректируем вертикальное положение, чтобы подсказка всегда была в пределах viewport
-                if (top < 15) {
-                    top = 15;
-                } else if (top + tooltipHeight > viewportHeight - 15) {
-                    top = viewportHeight - tooltipHeight - 15;
-                }
-                
-                // Устанавливаем позицию с !important для гарантии применения
-                stageLabelTooltip.style.setProperty('left', left + 'px', 'important');
-                stageLabelTooltip.style.setProperty('top', top + 'px', 'important');
-            }
-
-            // Обработчик скролла для обновления позиции подсказки при скролле
-            // Используем ту же логику, что и в меню статусов
-            let scrollAnimationFrame = null;
-            const handleScroll = () => {
-                if (currentStageLabelElement) {
-                    // Отменяем предыдущий requestAnimationFrame для оптимизации
-                    if (scrollAnimationFrame) {
-                        cancelAnimationFrame(scrollAnimationFrame);
-                    }
-                    // Обновляем позицию через requestAnimationFrame для плавности
-                    // Обновляем даже если подсказка еще не видна, чтобы она появилась в правильном месте
-                    scrollAnimationFrame = requestAnimationFrame(() => {
-                        updateStageLabelTooltipPosition();
-                    });
-                }
-            };
-            // Добавляем обработчик на window для захвата всех событий скролла
-            window.addEventListener('scroll', handleScroll, true);
-            // Также обрабатываем скролл внутри всех прокручиваемых контейнеров
-            const scrollListenersAdded = new WeakSet();
-            const addScrollListeners = () => {
-                // Контейнер диаграммы
-                const ganttContainer = document.querySelector('.gantt-container');
-                if (ganttContainer && !scrollListenersAdded.has(ganttContainer)) {
-                    ganttContainer.addEventListener('scroll', handleScroll, true);
-                    scrollListenersAdded.add(ganttContainer);
-                }
-                // Контейнер графика
-                const chartContainerEl = document.getElementById('ganttChart');
-                if (chartContainerEl && !scrollListenersAdded.has(chartContainerEl)) {
-                    chartContainerEl.addEventListener('scroll', handleScroll, true);
-                    scrollListenersAdded.add(chartContainerEl);
-                }
-                // Контейнер таблицы
-                const tableContainer = document.querySelector('.table-section');
-                if (tableContainer && !scrollListenersAdded.has(tableContainer)) {
-                    tableContainer.addEventListener('scroll', handleScroll, true);
-                    scrollListenersAdded.add(tableContainer);
-                }
-                // Родительский контейнер
-                const chartContainerParent = document.querySelector('.chart-container');
-                if (chartContainerParent && !scrollListenersAdded.has(chartContainerParent)) {
-                    chartContainerParent.addEventListener('scroll', handleScroll, true);
-                    scrollListenersAdded.add(chartContainerParent);
-                }
-                // Основной контейнер страницы
-                const mainContainer = document.querySelector('main') || document.body;
-                if (mainContainer && !scrollListenersAdded.has(mainContainer)) {
-                    mainContainer.addEventListener('scroll', handleScroll, true);
-                    scrollListenersAdded.add(mainContainer);
-                }
-            };
-            // Добавляем обработчики при инициализации
-            addScrollListeners();
-            // Также добавляем обработчики после перерисовки графика
-            const originalRenderGantt = window.renderGantt;
-            if (originalRenderGantt) {
-                window.renderGantt = function() {
-                    const result = originalRenderGantt.apply(this, arguments);
-                    setTimeout(addScrollListeners, 100);
-                    return result;
-                };
-            }
-
             function createStageLabels() {
                 // Находим контейнеры заново (на случай, если DOM изменился)
                 const currentChartContainerParent = chartContainer.closest('.chart-container');
@@ -11085,28 +10871,6 @@
                         toggleStageCollapse(stageName);
                     });
                     
-                    // Добавляем обработчики для кастомной подсказки
-                    stageLabel.addEventListener('mouseenter', (e) => {
-                        e.stopPropagation();
-                        showStageLabelTooltip(stageName, e);
-                    });
-                    
-                    stageLabel.addEventListener('mousemove', (e) => {
-                        e.stopPropagation();
-                        // Обновляем позицию подсказки при движении мыши по метке этапа
-                        if (currentStageLabelElement) {
-                            // Обновляем ссылку на элемент, если она изменилась
-                            currentStageLabelElement = e.currentTarget || e.target;
-                            requestAnimationFrame(() => {
-                                updateStageLabelTooltipPosition();
-                            });
-                        }
-                    });
-                    
-                    stageLabel.addEventListener('mouseleave', (e) => {
-                        e.stopPropagation();
-                        hideStageLabelTooltip();
-                    });
                     
                     currentStageLabelsContainer.appendChild(stageLabel);
                     
@@ -18759,8 +18523,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         function openProfileModal() {
             const modal = document.getElementById('profileModal');
             const modalContent = modal?.querySelector('.profile-modal-content');
+            const nameInput = document.getElementById('profileName');
             const loginInput = document.getElementById('profileLogin');
-            if (modal && currentUser && loginInput) {
+            if (modal && currentUser && loginInput && nameInput) {
+                nameInput.value = currentUser.name || '';
                 loginInput.value = currentUser.login || '';
                 document.getElementById('profilePassword').value = '';
                 document.getElementById('profilePasswordConfirm').value = '';
@@ -18791,14 +18557,29 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         async function saveProfile(event) {
             event.preventDefault();
             
+            const nameInput = document.getElementById('profileName');
             const loginInput = document.getElementById('profileLogin');
             const passwordInput = document.getElementById('profilePassword');
             const passwordConfirmInput = document.getElementById('profilePasswordConfirm');
             const messageEl = document.getElementById('profileMessage');
             
+            const newName = nameInput.value.trim();
             const newLogin = loginInput.value.trim();
             const newPassword = passwordInput.value;
             const passwordConfirm = passwordConfirmInput.value;
+
+            // Проверка обязательных полей
+            if (!newName) {
+                messageEl.textContent = 'Имя пользователя не может быть пустым';
+                messageEl.className = 'profile-message error show';
+                return;
+            }
+
+            if (!newLogin) {
+                messageEl.textContent = 'Логин не может быть пустым';
+                messageEl.className = 'profile-message error show';
+                return;
+            }
 
             // Проверка паролей
             if (newPassword && newPassword !== passwordConfirm) {
@@ -18813,16 +18594,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 return;
             }
 
-            if (!newLogin) {
-                messageEl.textContent = 'Логин не может быть пустым';
-                messageEl.className = 'profile-message error show';
-                return;
-            }
-
             try {
                 const updateData = {
                     oldLogin: currentUser.login,
                     newLogin: newLogin,
+                    name: newName,
                     password: newPassword || null
                 };
 
@@ -18838,6 +18614,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
 
                 if (result.ok) {
                     // Обновляем данные пользователя в localStorage
+                    currentUser.name = newName;
                     currentUser.login = newLogin;
                     localStorage.setItem('gantt-user', JSON.stringify(currentUser));
                     
@@ -19800,7 +19577,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
             {
                 element: '#companiesBottomBtn',
                 title: 'Компании',
-                text: 'Кнопка для возврата к списку компаний из архива.',
+                text: 'Возврат к списку компаний.',
                 position: 'bottom',
                 temporaryShow: true
             },
@@ -20067,9 +19844,10 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         // Запуск тура из модального окна приветствия
         function startTourFromWelcome() {
             closeWelcomeModal();
-            setTimeout(() => {
+            // Используем requestAnimationFrame для немедленного показа первой подсказки
+            requestAnimationFrame(() => {
                 startTour();
-            }, 300);
+            });
         }
 
         // Открытие модального окна справки

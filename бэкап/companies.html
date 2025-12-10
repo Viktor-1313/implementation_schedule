@@ -1512,6 +1512,39 @@
             opacity: 1;
             pointer-events: auto;
         }
+        
+        /* Приветственное окно должно быть поверх всех остальных модальных окон */
+        #welcomeModal.show {
+            display: flex !important;
+            z-index: 999999 !important;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(5px) !important;
+            align-items: center !important;
+            justify-content: center !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            overflow-y: auto !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* Убеждаемся, что содержимое модального окна видно */
+        #welcomeModal.show .modal-content {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 100004 !important;
+            background: white !important;
+            min-width: 300px !important;
+            min-height: 200px !important;
+        }
 
         /* Модальное окно удаления компании */
         .delete-modal {
@@ -1698,6 +1731,22 @@
         }
 
         .modal-close:hover {
+            color: #1565c0;
+        }
+
+        .modal-header .close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
+            padding: 0;
+            margin: 0;
+        }
+
+        .modal-header .close:hover {
             color: #1565c0;
         }
 
@@ -3228,6 +3277,28 @@
                     <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Отмена</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно приветствия для новых пользователей -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Добро пожаловать!</h2>
+                <span class="close" onclick="closeWelcomeModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <p style="margin-bottom: 15px; line-height: 1.6; color: var(--color-text); font-size: 1.1rem;">
+                    Добро пожаловать в систему планирования <span style="color: #4FC3F7; font-size: 1.15em; font-weight: 600;">DeadLinePro</span>!
+                </p>
+                <p style="margin-bottom: 20px; line-height: 1.6; color: var(--color-text-secondary);">
+                    Здесь вы можете управлять компаниями, создавать графики внедрения и отслеживать прогресс проектов. 
+                    Мы подготовили для вас краткий тур по интерфейсу, который поможет быстро освоиться.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                <button class="btn btn-primary" onclick="closeWelcomeModal()">Начать работу</button>
+            </div>
         </div>
     </div>
 
@@ -6193,42 +6264,94 @@
             }
         }
 
-        // Шаги подсказок для первого входа
-        const firstVisitSteps = [
-            {
-                element: '#profileBtn',
-                text: 'Для редактирования профиля нажмите сюда',
-                position: 'left'
-            },
-            {
-                element: '#logoutBtn',
-                text: 'Для выхода из системы жмём сюда',
-                position: 'left'
-            },
-            {
-                element: '#companiesBottomBtn',
-                text: 'Кнопка для возврата к списку компаний из архива',
-                position: 'left'
-            },
-            {
-                element: '.company-card',
-                text: 'Чтобы войти в график нажмите на плитку или "Открыть график"',
-                position: 'bottom',
-                selector: 'first'
-            },
-            {
-                element: '.btn-copy-link',
-                text: 'Поделитесь графиком, если пользователь не зарегистрирован, то он сможет войти только в режиме просмотра',
-                position: 'top',
-                selector: 'first'
-            },
-            {
-                element: '.statistics-company-btn',
-                text: 'Это статистика сроков внедрения',
-                position: 'right',
-                selector: 'first'
+        // Получить шаги подсказок для первого входа (с учетом роли пользователя)
+        function getFirstVisitSteps() {
+            const baseSteps = [
+                {
+                    element: '#profileBtn',
+                    text: 'Для редактирования профиля нажмите сюда',
+                    position: 'left'
+                },
+                {
+                    element: '#logoutBtn',
+                    text: 'Для выхода из системы жмём сюда',
+                    position: 'left'
+                },
+                {
+                    element: '#archiveBtn',
+                    text: 'Кнопка архива - здесь хранятся архивированные компании',
+                    position: 'left',
+                    adminOnly: true
+                },
+                {
+                    element: '.company-card',
+                    text: 'Чтобы войти в график нажмите на плитку или "Открыть график"',
+                    position: 'bottom',
+                    selector: 'first'
+                },
+                {
+                    element: '.btn-copy-link',
+                    text: 'Поделитесь графиком, если пользователь не зарегистрирован, то он сможет войти только в режиме просмотра',
+                    position: 'top',
+                    selector: 'first'
+                },
+                {
+                    element: '.statistics-company-btn',
+                    text: 'Это статистика сроков внедрения',
+                    position: 'right',
+                    selector: 'first'
+                }
+            ];
+            
+            // Проверяем, является ли пользователь администратором
+            const userStr = localStorage.getItem('gantt-user');
+            let isAdmin = false;
+            
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    isAdmin = user.role === 'admin' || user.Role === 'admin';
+                } catch (e) {
+                    console.error('Ошибка проверки роли:', e);
+                }
             }
-        ];
+            
+            // Если пользователь админ, добавляем дополнительные шаги
+            if (isAdmin) {
+                baseSteps.push(
+                    {
+                        element: '#adminPanelLink',
+                        text: 'Админ-панель - управление пользователями и настройками системы',
+                        position: 'left',
+                        adminOnly: true
+                    },
+                    {
+                        element: '#themeToggleBtn',
+                        text: 'Переключение темы - светлая или темная тема интерфейса',
+                        position: 'left',
+                        adminOnly: true
+                    },
+                    {
+                        element: '.copy-company-btn',
+                        text: 'Копировать график - создание копии компании со всеми данными',
+                        position: 'right',
+                        selector: 'first',
+                        adminOnly: true
+                    }
+                );
+            }
+            
+            // Фильтруем шаги: для не-админов убираем шаги с adminOnly: true
+            return baseSteps.filter(step => {
+                if (step.adminOnly && !isAdmin) {
+                    return false;
+                }
+                return true;
+            });
+        }
+        
+        // Шаги подсказок для первого входа (будет заполнен динамически)
+        let firstVisitSteps = [];
 
         let currentFirstVisitStep = 0;
         let firstVisitActive = false;
@@ -6245,7 +6368,7 @@
             let element = null;
 
             // Пытаемся найти элемент с несколькими попытками для динамических элементов
-            const isDynamicElement = step.element.includes('company-card') || step.element.includes('btn-') || step.element.includes('copy-link') || step.element.includes('statistics-company');
+            const isDynamicElement = step.element.includes('company-card') || step.element.includes('btn-') || step.element.includes('copy-link') || step.element.includes('statistics-company') || step.element.includes('copy-company-btn') || step.element.includes('adminPanelLink') || step.element.includes('themeToggleBtn');
             
             if (isDynamicElement) {
                 // Для динамических элементов ждем их загрузки
@@ -6295,7 +6418,7 @@
                     return;
                 }
                 
-                // Проверяем видимость элемента (для кнопки компаний, которая может быть скрыта)
+                // Проверяем видимость элемента (для кнопки компаний и архива, которые могут быть скрыты)
                 const style = window.getComputedStyle(element);
                 const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
                 
@@ -6307,8 +6430,77 @@
                     element.dataset.originalDisplay = 'none';
                 }
                 
-                if (!isVisible && step.element !== '#companiesBottomBtn') {
-                    // Если элемент скрыт (и это не кнопка компаний), пропускаем шаг
+                // Для кнопки архива временно показываем её, если она скрыта (только для админов)
+                if (step.element === '#archiveBtn' && !isVisible) {
+                    const userStr = localStorage.getItem('gantt-user');
+                    if (userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            const isAdmin = user.role === 'admin' || user.Role === 'admin';
+                            if (isAdmin) {
+                                console.log('👁️ Временно показываем кнопку архива для подсказки');
+                                element.style.display = 'flex';
+                                // Сохраняем исходное состояние, чтобы вернуть его после подсказки
+                                element.dataset.originalDisplay = 'none';
+                            } else {
+                                // Если пользователь не админ, пропускаем шаг
+                                console.log('⚠️ Пользователь не админ, пропускаем шаг архива');
+                                setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('Ошибка проверки роли:', e);
+                            setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                            return;
+                        }
+                    } else {
+                        // Если пользователь не авторизован, пропускаем шаг
+                        console.log('⚠️ Пользователь не авторизован, пропускаем шаг архива');
+                        setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                        return;
+                    }
+                }
+                
+                // Для кнопки админ-панели, темы и копирования компании - проверяем роль и видимость
+                if ((step.element === '#adminPanelLink' || step.element === '#themeToggleBtn' || step.element === '.copy-company-btn') && !isVisible) {
+                    const userStr = localStorage.getItem('gantt-user');
+                    if (userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            const isAdmin = user.role === 'admin' || user.Role === 'admin';
+                            if (isAdmin) {
+                                // Для админ-панели и темы временно показываем, если скрыты
+                                if (step.element === '#adminPanelLink' || step.element === '#themeToggleBtn') {
+                                    console.log(`👁️ Временно показываем ${step.element} для подсказки`);
+                                    element.style.display = 'flex';
+                                    element.dataset.originalDisplay = 'none';
+                                } else {
+                                    // Для кнопки копирования компании пропускаем, если не видна
+                                    console.log(`⚠️ Элемент ${step.element} скрыт, пропускаем шаг`);
+                                    setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                                    return;
+                                }
+                            } else {
+                                // Если пользователь не админ, пропускаем шаг
+                                console.log(`⚠️ Пользователь не админ, пропускаем шаг ${step.element}`);
+                                setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('Ошибка проверки роли:', e);
+                            setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                            return;
+                        }
+                    } else {
+                        // Если пользователь не авторизован, пропускаем шаг
+                        console.log(`⚠️ Пользователь не авторизован, пропускаем шаг ${step.element}`);
+                        setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
+                        return;
+                    }
+                }
+                
+                if (!isVisible && step.element !== '#companiesBottomBtn' && step.element !== '#archiveBtn' && step.element !== '#adminPanelLink' && step.element !== '#themeToggleBtn' && step.element !== '.copy-company-btn') {
+                    // Если элемент скрыт (и это не специальные кнопки), пропускаем шаг
                     console.log(`⚠️ Элемент ${step.element} скрыт, пропускаем шаг`);
                     setTimeout(() => showFirstVisitStep(stepIndex + 1), 500);
                     return;
@@ -6388,8 +6580,19 @@
                 
                 // Проверяем, что элемент видим и имеет размеры
                 if (rect.width > 0 && rect.height > 0) {
+                    let topOffset = -3; // Базовое смещение
+                    
+                    // Корректировка позиции для конкретных элементов
+                    if (step.element === '.btn-copy-link') {
+                        // Для "Копировать ссылку" - подсветка выше на 2px
+                        topOffset = -3 - 2;
+                    } else if (step.element === '.statistics-company-btn') {
+                        // Для статистики - подсветка ниже на 2px
+                        topOffset = -3 + 2;
+                    }
+                    
                     highlight.style.left = (rect.left - 3) + 'px';
-                    highlight.style.top = (rect.top - 3) + 'px';
+                    highlight.style.top = (rect.top + topOffset) + 'px';
                     highlight.style.width = (rect.width + 6) + 'px';
                     highlight.style.height = (rect.height + 6) + 'px';
                     highlight.style.display = 'block';
@@ -6399,10 +6602,11 @@
                     highlight.classList.add('active');
                     console.log('✨ Highlight активирован:', {
                         left: rect.left,
-                        top: rect.top,
+                        top: rect.top + topOffset,
                         width: rect.width,
                         height: rect.height,
-                        element: step.element
+                        element: step.element,
+                        topOffset: topOffset
                     });
                 } else {
                     console.warn('⚠️ Элемент имеет нулевой размер:', step.element, rect);
@@ -6580,6 +6784,135 @@
             console.log('✅ Тур завершен, все элементы скрыты');
         }
 
+        // Функции для работы с приветственным модальным окном
+        function openWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                // Принудительно устанавливаем все стили для гарантии видимости
+                modal.classList.add('show');
+                modal.style.cssText = `
+                    display: flex !important;
+                    position: fixed !important;
+                    z-index: 999999 !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background-color: rgba(0, 0, 0, 0.5) !important;
+                    backdrop-filter: blur(5px) !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                    overflow-y: auto !important;
+                    padding: 20px !important;
+                    box-sizing: border-box !important;
+                `;
+                
+                // Убеждаемся, что содержимое тоже видно
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.cssText = `
+                        display: block !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        position: relative !important;
+                        z-index: 999999 !important;
+                    `;
+                }
+                
+                document.body.style.overflow = 'hidden';
+                
+                console.log('✅ Приветственное окно открыто');
+                console.log('🔍 Состояние окна:', {
+                    hasShowClass: modal.classList.contains('show'),
+                    display: window.getComputedStyle(modal).display,
+                    zIndex: window.getComputedStyle(modal).zIndex,
+                    visibility: window.getComputedStyle(modal).visibility,
+                    opacity: window.getComputedStyle(modal).opacity,
+                    width: window.getComputedStyle(modal).width,
+                    height: window.getComputedStyle(modal).height,
+                    position: window.getComputedStyle(modal).position
+                });
+                
+                // Дополнительная проверка через небольшую задержку
+                setTimeout(() => {
+                    const rect = modal.getBoundingClientRect();
+                    console.log('🔍 Позиция и размеры окна:', {
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height,
+                        visible: rect.width > 0 && rect.height > 0
+                    });
+                }, 100);
+            } else {
+                console.error('❌ Модальное окно welcomeModal не найдено!');
+            }
+        }
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.classList.remove('show');
+                // Сбрасываем все inline стили
+                modal.style.cssText = '';
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.cssText = '';
+                }
+                document.body.style.overflow = '';
+                console.log('✅ Приветственное окно закрыто');
+                
+                // После закрытия приветственного окна сразу запускаем подсказки
+                requestAnimationFrame(() => {
+                    startFirstVisitTour();
+                });
+            }
+        }
+
+        // Запуск тура подсказок после закрытия приветственного окна
+        function startFirstVisitTour() {
+            // Инициализируем шаги подсказок с учетом роли пользователя
+            firstVisitSteps = getFirstVisitSteps();
+            console.log('📋 Загружено шагов подсказок:', firstVisitSteps.length);
+            
+            // Ждем загрузки компаний и всех элементов перед показом подсказок
+            // Проверяем наличие основных элементов перед показом
+            let checkAttempts = 0;
+            const maxCheckAttempts = 30; // Максимум 9 секунд (30 * 300ms)
+            
+            const checkElements = () => {
+                checkAttempts++;
+                const profileBtn = document.getElementById('profileBtn');
+                const logoutBtn = document.getElementById('logoutBtn');
+                const companyCards = document.querySelectorAll('.company-card');
+                
+                console.log('🔍 Проверка элементов (попытка ' + checkAttempts + '):', {
+                    profileBtn: !!profileBtn,
+                    logoutBtn: !!logoutBtn,
+                    companyCards: companyCards.length
+                });
+                
+                if (profileBtn && logoutBtn && (companyCards.length > 0 || checkAttempts >= maxCheckAttempts)) {
+                    console.log('✅ Все элементы найдены, запускаем подсказки');
+                    setTimeout(() => {
+                        showFirstVisitStep(0);
+                    }, 300);
+                } else if (checkAttempts < maxCheckAttempts) {
+                    setTimeout(checkElements, 300);
+                } else {
+                    console.warn('⚠️ Не все элементы найдены, но запускаем подсказки');
+                    setTimeout(() => {
+                        showFirstVisitStep(0);
+                    }, 300);
+                }
+            };
+            
+            checkElements();
+        }
+
         // Инициализация системы подсказок
         function initFirstVisitTour() {
             // Дополнительная проверка - если флаг уже установлен, не показываем тур
@@ -6607,50 +6940,33 @@
             console.log('🔍 Текущий пользователь:', localStorage.getItem('gantt-user'));
             
             if (isFirst) {
-                console.log('✅ Это первый вход, запускаем подсказки');
+                console.log('✅ Это первый вход, показываем приветственное окно');
                 
-                // Ждем загрузки компаний и всех элементов перед показом подсказок
-                // Проверяем наличие основных элементов перед показом
-                let checkAttempts = 0;
-                const maxCheckAttempts = 30; // Максимум 9 секунд (30 * 300ms)
-                
-                const checkElements = () => {
-                    checkAttempts++;
-                    const profileBtn = document.getElementById('profileBtn');
-                    const logoutBtn = document.getElementById('logoutBtn');
-                    const companyCards = document.querySelectorAll('.company-card');
+                // Показываем приветственное окно через задержку (после всех закрытий других модальных окон)
+                setTimeout(() => {
+                    openWelcomeModal();
                     
-                    console.log('🔍 Проверка элементов (попытка ' + checkAttempts + '):', {
-                        profileBtn: !!profileBtn,
-                        logoutBtn: !!logoutBtn,
-                        companyCards: companyCards.length
-                    });
-                    
-                    // Проверяем наличие основных элементов (кнопки профиля и выхода)
-                    // Для первых двух шагов компании не нужны
-                    const basicElementsReady = profileBtn && logoutBtn;
-                    
-                    if (basicElementsReady) {
-                        // Основные элементы найдены, показываем подсказки
-                        console.log('✅ Элементы найдены, запускаем подсказки через 500ms');
-                        setTimeout(() => {
-                            console.log('🚀 Запускаем первый шаг подсказок');
-                            showFirstVisitStep(0);
-                        }, 500);
-                    } else if (checkAttempts < maxCheckAttempts) {
-                        // Элементы еще не загружены, ждем еще
-                        setTimeout(checkElements, 300);
-                    } else {
-                        console.warn('⚠️ Элементы не найдены после всех попыток, но пытаемся показать подсказки');
-                        // Пытаемся показать подсказки даже если элементы не найдены
-                        setTimeout(() => {
-                            showFirstVisitStep(0);
-                        }, 500);
-                    }
-                };
-                
-                // Начинаем проверку через небольшую задержку
-                setTimeout(checkElements, 500);
+                    // Дополнительная проверка через 200ms - если окно все еще не видно, пробуем еще раз
+                    setTimeout(() => {
+                        const modal = document.getElementById('welcomeModal');
+                        if (modal && modal.classList.contains('show')) {
+                            const rect = modal.getBoundingClientRect();
+                            const styles = window.getComputedStyle(modal);
+                            const isVisible = styles.display !== 'none' && 
+                                            styles.visibility !== 'hidden' && 
+                                            styles.opacity !== '0' &&
+                                            rect.width > 0 && 
+                                            rect.height > 0;
+                            
+                            if (!isVisible) {
+                                console.warn('⚠️ Модальное окно не видно, пытаемся открыть еще раз');
+                                openWelcomeModal();
+                            } else {
+                                console.log('✅ Модальное окно успешно отображено');
+                            }
+                        }
+                    }, 200);
+                }, 600);
             } else {
                 console.log('❌ Это не первый вход, подсказки не показываются');
             }
@@ -6693,9 +7009,13 @@
                 if (container) {
                     container.classList.remove('fade-out');
                 }
-                // Закрываем все модальные окна принудительно
+                // Закрываем все модальные окна принудительно, кроме приветственного окна
                 const modals = document.querySelectorAll('.modal, .delete-modal, .profile-modal');
                 modals.forEach(modal => {
+                    // Пропускаем приветственное модальное окно - оно должно открываться при первом входе
+                    if (modal.id === 'welcomeModal') {
+                        return;
+                    }
                     modal.classList.remove('show');
                     modal.style.display = 'none';
                     modal.style.visibility = 'hidden';
@@ -6715,7 +7035,8 @@
             
             // Также выполняем после небольшой задержки на случай, если что-то открывается позже
             setTimeout(removeDarkening, 100);
-            setTimeout(removeDarkening, 500);
+            // Увеличиваем задержку последнего вызова, чтобы не конфликтовать с открытием welcomeModal (которое открывается через 500ms)
+            setTimeout(removeDarkening, 400);
         })();
 
         // ========== ФУНКЦИИ ДЛЯ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ==========
@@ -7087,6 +7408,26 @@
                 });
             }
             
+            // Закрытие приветственного модального окна при клике вне его
+            const welcomeModal = document.getElementById('welcomeModal');
+            if (welcomeModal) {
+                welcomeModal.addEventListener('click', function(e) {
+                    if (e.target === welcomeModal) {
+                        closeWelcomeModal();
+                    }
+                });
+            }
+            
+            // Закрытие приветственного модального окна по клавише Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const welcomeModal = document.getElementById('welcomeModal');
+                    if (welcomeModal && welcomeModal.classList.contains('show')) {
+                        closeWelcomeModal();
+                    }
+                }
+            });
+            
             // Проверяем кнопку профиля еще раз после полной загрузки
             setTimeout(() => {
                 const profileBtnCheck = document.getElementById('profileBtn');
@@ -7220,10 +7561,24 @@
         async function saveProfile(event) {
             event.preventDefault();
 
+            const newName = document.getElementById('profileName').value.trim();
             const newLogin = document.getElementById('profileLogin').value.trim();
             const newPassword = document.getElementById('profilePassword').value;
             const confirmPassword = document.getElementById('profilePasswordConfirm').value;
             const messageEl = document.getElementById('profileMessage');
+
+            // Проверка обязательных полей
+            if (!newName) {
+                messageEl.textContent = 'Имя пользователя не может быть пустым';
+                messageEl.className = 'profile-message error show';
+                return;
+            }
+
+            if (!newLogin) {
+                messageEl.textContent = 'Логин не может быть пустым';
+                messageEl.className = 'profile-message error show';
+                return;
+            }
 
             // Проверка пароля (если вводится)
             if (newPassword || confirmPassword) {
@@ -7248,6 +7603,7 @@
                     body: JSON.stringify({
                         oldLogin: currentUser.login,
                         newLogin: newLogin,
+                        name: newName,
                         password: newPassword || undefined
                     })
                 });
@@ -7259,6 +7615,7 @@
                     messageEl.className = 'profile-message success show';
                     
                     // Обновляем данные пользователя в localStorage
+                    currentUser.name = newName;
                     currentUser.login = newLogin;
                     localStorage.setItem('gantt-user', JSON.stringify(currentUser));
                     
