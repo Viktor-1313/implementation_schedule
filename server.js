@@ -4,6 +4,61 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 
+// Rate limiting (простая реализация без внешних зависимостей)
+const rateLimitStore = new Map();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 минут
+const RATE_LIMIT_MAX_REQUESTS = 100; // максимум 100 запросов
+const RATE_LIMIT_AUTH_MAX = 5; // максимум 5 попыток входа
+
+// Функция для очистки старых записей
+function cleanRateLimitStore() {
+  const now = Date.now();
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now > value.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+}
+
+// Очищаем старые записи каждые 5 минут
+setInterval(cleanRateLimitStore, 5 * 60 * 1000);
+
+// Middleware для rate limiting
+function rateLimit(maxRequests, windowMs = RATE_LIMIT_WINDOW) {
+  return (req, res, next) => {
+    // Получаем IP адрес (учитываем прокси)
+    const ip = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+    const key = `rate_limit_${ip}`;
+    
+    cleanRateLimitStore();
+    
+    const now = Date.now();
+    const record = rateLimitStore.get(key);
+    
+    if (!record || now > record.resetTime) {
+      // Создаем новую запись
+      rateLimitStore.set(key, {
+        count: 1,
+        resetTime: now + windowMs
+      });
+      return next();
+    }
+    
+    if (record.count >= maxRequests) {
+      const retryAfter = Math.ceil((record.resetTime - now) / 1000);
+      res.setHeader('Retry-After', retryAfter);
+      return res.status(429).json({ 
+        ok: false, 
+        error: 'Слишком много запросов. Попробуйте позже.',
+        retryAfter: retryAfter
+      });
+    }
+    
+    record.count++;
+    next();
+  };
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001; // порт для внутреннего сервера компании
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -39,7 +94,7 @@ function readLogs() {
       console.log('📝 Файл логов пустой');
       return [];
     }
-    const logs = JSON.parse(raw);
+    const logs = safeJsonParse(raw);
     if (!Array.isArray(logs)) {
       console.warn('⚠️ Файл логов содержит не массив, возвращаем пустой массив');
       return [];
@@ -131,24 +186,422 @@ function addLog(userName, action, details, companyId = null, detailedChanges = n
   }
 }
 
-// парсим JSON и разрешаем запросы с файловой страницы
-app.use(cors());
+// ========== НАСТРОЙКА CORS (безопасность) ==========
+// Настройка CORS с ограничением разрешенных доменов
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Разрешенные домены
+    const allowedOrigins = [];
+    
+    // Добавляем домены из переменных окружения (для гибкости)
+    if (process.env.ALLOWED_ORIGINS) {
+      allowedOrigins.push(...process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()));
+    }
+    
+    // Добавляем стандартные домены
+    allowedOrigins.push(
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+      'http://icona_academy.corppn.ru:3001',
+      'https://deadlinepro.onrender.com' // Продакшен на Render.com
+    );
+    
+    // Добавляем домен продакшена из переменной окружения (если указан)
+    if (process.env.PRODUCTION_URL) {
+      allowedOrigins.push(process.env.PRODUCTION_URL);
+      // Также добавляем без порта, если указан порт
+      try {
+        const url = new URL(process.env.PRODUCTION_URL);
+        if (url.port) {
+          allowedOrigins.push(`${url.protocol}//${url.hostname}`);
+        }
+      } catch (e) {
+        console.warn('⚠️ Неверный формат PRODUCTION_URL:', process.env.PRODUCTION_URL);
+      }
+    }
+    
+    // В режиме разработки разрешаем все локальные домены
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    if (isDevelopment) {
+      // Разрешаем localhost с любым портом в режиме разработки
+      if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+    }
+    
+    // Разрешаем запросы без origin (например, Postman, curl, мобильные приложения)
+    // Это безопасно, так как мы проверяем авторизацию на уровне API
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Проверяем, есть ли origin в списке разрешенных
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS: Запрос с неразрешенного домена: ${origin}`);
+      callback(new Error('Не разрешено политикой CORS'));
+    }
+  },
+  credentials: true, // Разрешаем отправку cookies и заголовков авторизации
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Разрешенные методы
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Login', 'X-User-Name', 'X-User-Name-Encoded'], // Разрешенные заголовки
+  exposedHeaders: ['Content-Type'], // Заголовки, доступные клиенту
+  optionsSuccessStatus: 200 // Статус для успешных OPTIONS запросов
+};
+
+app.use(cors(corsOptions));
+
 // Увеличиваем лимит размера тела запроса до 10MB для загрузки изображений
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// ========== MIDDLEWARE ДЛЯ АВТОРИЗАЦИИ И ПРОВЕРКИ ПРАВ ==========
+
+// Middleware для проверки авторизации пользователя
+// Проверяет наличие логина пользователя и загружает данные пользователя из users.json
+async function requireAuth(req, res, next) {
+  try {
+    // Логирование для отладки
+    console.log(`🔍 [requireAuth] ${req.method} ${req.path}`);
+    
+    // Читаем заголовки с учетом разных регистров
+    const xUserLogin = req.headers['x-user-login'] || req.headers['X-User-Login'];
+    const xUserName = req.headers['x-user-name'] || req.headers['X-User-Name'];
+    const xUserNameEncoded = req.headers['x-user-name-encoded'] || req.headers['X-User-Name-Encoded'];
+    
+    console.log(`🔍 [requireAuth] Заголовки:`, {
+      'x-user-login': xUserLogin,
+      'x-user-name': xUserName,
+      'x-user-name-encoded': xUserNameEncoded
+    });
+    console.log(`🔍 [requireAuth] Body:`, {
+      userLogin: req.body?.userLogin,
+      userName: req.body?.userName
+    });
+    
+    // Получаем логин пользователя из body или заголовков
+    // Для GET запросов req.body может быть undefined, поэтому используем optional chaining
+    let userLogin = (req.body && req.body.userLogin) || xUserLogin || null;
+    
+    // Если логина нет, пытаемся получить из userName (для обратной совместимости)
+    if (!userLogin) {
+      let userName = (req.body && req.body.userName) || xUserName || null;
+      
+      // Декодируем userName, если он закодирован
+      if (userName && xUserNameEncoded === 'base64') {
+        try {
+          userName = decodeURIComponent(Buffer.from(userName, 'base64').toString('utf8'));
+        } catch (e) {
+          console.warn('⚠️ Ошибка декодирования userName:', e);
+        }
+      }
+      
+      // Если userName есть, используем его как логин (для обратной совместимости)
+      if (userName && userName !== 'Неизвестный пользователь') {
+        userLogin = userName;
+      }
+    }
+    
+    // Если логин не указан, возвращаем ошибку
+    if (!userLogin || !userLogin.trim()) {
+      console.warn('⚠️ Попытка доступа без авторизации:', req.method, req.path);
+      return res.status(401).json({ ok: false, error: 'Требуется авторизация' });
+    }
+    
+    userLogin = userLogin.trim();
+    console.log(`🔍 [requireAuth] Используемый логин: "${userLogin}"`);
+    
+    // Загружаем данные пользователя из файла
+    if (!fs.existsSync(USERS_FILE)) {
+      console.error(`❌ [requireAuth] Файл ${USERS_FILE} не существует`);
+      return res.status(401).json({ ok: false, error: 'Пользователь не найден' });
+    }
+    
+    let raw;
+    try {
+      raw = fs.readFileSync(USERS_FILE, 'utf8');
+    } catch (e) {
+      console.error(`❌ [requireAuth] Ошибка чтения файла ${USERS_FILE}:`, e);
+      console.error(`   Детали ошибки:`, e.message, e.stack);
+      return res.status(500).json({ ok: false, error: 'Ошибка чтения файла пользователей' });
+    }
+    
+    if (!raw || raw.trim() === '') {
+      console.error(`❌ [requireAuth] Файл ${USERS_FILE} пустой`);
+      return res.status(500).json({ ok: false, error: 'Файл пользователей пустой' });
+    }
+    
+    let users;
+    try {
+      users = safeJsonParse(raw);
+    } catch (e) {
+      console.error(`❌ [requireAuth] Ошибка парсинга JSON из ${USERS_FILE}:`, e);
+      console.error(`   Первые 200 символов файла:`, raw.substring(0, 200));
+      return res.status(500).json({ ok: false, error: 'Ошибка парсинга файла пользователей' });
+    }
+    
+    if (!Array.isArray(users)) {
+      console.error(`❌ [requireAuth] Файл ${USERS_FILE} не содержит массив, тип:`, typeof users);
+      return res.status(500).json({ ok: false, error: 'Неверный формат файла пользователей' });
+    }
+    
+    console.log(`🔍 [requireAuth] Загружено пользователей: ${users.length}`);
+    console.log(`🔍 [requireAuth] Логины в файле:`, users.map(u => u.login));
+    
+    const user = users.find(u => u.login === userLogin);
+    
+    if (!user) {
+      console.warn(`⚠️ [requireAuth] Пользователь с логином "${userLogin}" не найден`);
+      console.warn(`⚠️ [requireAuth] Доступные логины:`, users.map(u => u.login));
+      return res.status(401).json({ ok: false, error: 'Пользователь не найден' });
+    }
+    
+    console.log(`✅ [requireAuth] Пользователь найден: ${user.login}, роль: ${user.role}`);
+    
+    // Сохраняем данные пользователя в req.user (без пароля)
+    const { password: _, ...userWithoutPassword } = user;
+    req.user = userWithoutPassword;
+    
+    next();
+  } catch (e) {
+    console.error('❌ Ошибка проверки авторизации:', e);
+    console.error('   Детали ошибки:', e.message);
+    console.error('   Стек ошибки:', e.stack);
+    return res.status(500).json({ ok: false, error: 'Ошибка проверки авторизации', details: process.env.NODE_ENV !== 'production' ? e.message : undefined });
+  }
+}
+
+// Middleware для проверки прав администратора
+function requireAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ ok: false, error: 'Требуется авторизация' });
+  }
+  
+  if (req.user.role !== 'admin') {
+    console.warn(`⚠️ Попытка доступа к админ-функции пользователем "${req.user.login}" (роль: ${req.user.role})`);
+    return res.status(403).json({ ok: false, error: 'Требуются права администратора' });
+  }
+  
+  next();
+}
+
+// Middleware для проверки доступа к компании
+function checkCompanyAccess(req, res, next) {
+  // Если пользователь не авторизован (режим просмотра), разрешаем доступ только для GET запросов
+  if (!req.user) {
+    if (req.method === 'GET') {
+      // В режиме просмотра разрешаем только чтение
+      return next();
+    }
+    return res.status(401).json({ ok: false, error: 'Требуется авторизация' });
+  }
+  
+  // Админы имеют доступ ко всем компаниям
+  if (req.user.role === 'admin') {
+    return next();
+  }
+  
+  // Получаем ID компании из разных источников
+  const companyId = req.query.company || req.params.id || req.body.company;
+  
+  if (!companyId) {
+    // Если компания не указана, разрешаем доступ (для операций без привязки к компании)
+    return next();
+  }
+  
+  // Проверяем, есть ли у пользователя доступ к этой компании
+  const userCompanies = req.user.companies || [];
+  if (!userCompanies.includes(companyId)) {
+    console.warn(`⚠️ Пользователь "${req.user.login}" пытается получить доступ к компании "${companyId}"`);
+    return res.status(403).json({ ok: false, error: 'Нет доступа к этой компании' });
+  }
+  
+  next();
+}
+
+// Middleware для опциональной авторизации (для режима просмотра)
+// Разрешает доступ, если пользователь авторизован, но не требует обязательной авторизации
+async function optionalAuth(req, res, next) {
+  try {
+    // Читаем заголовки с учетом разных регистров
+    const xUserLogin = req.headers['x-user-login'] || req.headers['X-User-Login'];
+    const xUserName = req.headers['x-user-name'] || req.headers['X-User-Name'];
+    const xUserNameEncoded = req.headers['x-user-name-encoded'] || req.headers['X-User-Name-Encoded'];
+    
+    // Для GET запросов req.body может быть undefined, поэтому используем проверку
+    let userLogin = (req.body && req.body.userLogin) || xUserLogin || null;
+    
+    if (!userLogin) {
+      let userName = (req.body && req.body.userName) || xUserName || null;
+      if (userName && xUserNameEncoded === 'base64') {
+        try {
+          userName = decodeURIComponent(Buffer.from(userName, 'base64').toString('utf8'));
+        } catch (e) {
+          // Игнорируем ошибку декодирования
+        }
+      }
+      if (userName && userName !== 'Неизвестный пользователь') {
+        userLogin = userName;
+      }
+    }
+    
+    if (userLogin && userLogin.trim() && fs.existsSync(USERS_FILE)) {
+      try {
+        const raw = fs.readFileSync(USERS_FILE, 'utf8');
+        if (raw && raw.trim()) {
+          const users = safeJsonParse(raw);
+          if (Array.isArray(users)) {
+            const user = users.find(u => u.login === userLogin.trim());
+            if (user) {
+              const { password: _, ...userWithoutPassword } = user;
+              req.user = userWithoutPassword;
+            }
+          }
+        }
+      } catch (e) {
+        // В режиме просмотра игнорируем ошибки чтения файла
+        console.warn('⚠️ [optionalAuth] Ошибка чтения файла пользователей:', e.message);
+      }
+    }
+    
+    next();
+  } catch (e) {
+    // В режиме просмотра игнорируем ошибки авторизации
+    console.warn('⚠️ [optionalAuth] Ошибка при опциональной авторизации:', e.message);
+    next();
+  }
+}
+
+// ========== ВАЛИДАЦИЯ ВХОДНЫХ ДАННЫХ ==========
+
+// Функции валидации
+function validateString(value, fieldName, minLength = 1, maxLength = 1000) {
+  if (typeof value !== 'string') {
+    return { valid: false, error: `${fieldName} должно быть строкой` };
+  }
+  const trimmed = value.trim();
+  if (trimmed.length < minLength) {
+    return { valid: false, error: `${fieldName} должно содержать минимум ${minLength} символов` };
+  }
+  if (trimmed.length > maxLength) {
+    return { valid: false, error: `${fieldName} должно содержать максимум ${maxLength} символов` };
+  }
+  return { valid: true, value: trimmed };
+}
+
+function validateCompanyId(id) {
+  if (typeof id !== 'string') {
+    return { valid: false, error: 'ID компании должно быть строкой' };
+  }
+  if (!isValidCompanyId(id)) {
+    return { valid: false, error: 'ID компании может содержать только латинские буквы, цифры, дефисы и подчеркивания' };
+  }
+  if (id.length > 100) {
+    return { valid: false, error: 'ID компании не может быть длиннее 100 символов' };
+  }
+  return { valid: true, value: id.trim() };
+}
+
+function validateLogin(login) {
+  const validation = validateString(login, 'Логин', 1, 50);
+  if (!validation.valid) return validation;
+  
+  // Логин может содержать только латинские буквы, цифры, дефисы, подчеркивания и точки
+  if (!/^[a-zA-Z0-9_.-]+$/.test(validation.value)) {
+    return { valid: false, error: 'Логин может содержать только латинские буквы, цифры, дефисы, подчеркивания и точки' };
+  }
+  return validation;
+}
+
+function validatePassword(password) {
+  if (typeof password !== 'string') {
+    return { valid: false, error: 'Пароль должен быть строкой' };
+  }
+  if (password.length < 6) {
+    return { valid: false, error: 'Пароль должен содержать минимум 6 символов' };
+  }
+  if (password.length > 200) {
+    return { valid: false, error: 'Пароль не может быть длиннее 200 символов' };
+  }
+  return { valid: true, value: password };
+}
+
+function validateRole(role) {
+  if (role !== 'admin' && role !== 'user') {
+    return { valid: false, error: 'Роль должна быть "admin" или "user"' };
+  }
+  return { valid: true, value: role };
+}
+
+function validateArray(value, fieldName, maxLength = 1000) {
+  if (!Array.isArray(value)) {
+    return { valid: false, error: `${fieldName} должно быть массивом` };
+  }
+  if (value.length > maxLength) {
+    return { valid: false, error: `${fieldName} не может содержать более ${maxLength} элементов` };
+  }
+  return { valid: true, value: value };
+}
+
+// Безопасный парсинг JSON с защитой от DoS
+function safeJsonParse(jsonString, maxLength = 10 * 1024 * 1024) {
+  if (typeof jsonString !== 'string') {
+    throw new Error('JSON должен быть строкой');
+  }
+  if (jsonString.length > maxLength) {
+    throw new Error(`JSON слишком большой (максимум ${maxLength} байт)`);
+  }
+  try {
+    const parsed = JSON.parse(jsonString);
+    // Проверка на циклические ссылки
+    JSON.stringify(parsed);
+    return parsed;
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      throw new Error('Неверный формат JSON');
+    }
+    throw new Error('Ошибка обработки JSON');
+  }
+}
+
+// ========== ГЛОБАЛЬНАЯ ОБРАБОТКА ОШИБОК ==========
+
+// Middleware для обработки ошибок (должен быть после всех маршрутов)
+app.use((err, req, res, next) => {
+  console.error('❌ Ошибка сервера:', err);
+  console.error('   Путь:', req.path);
+  console.error('   Метод:', req.method);
+  console.error('   Стек:', err.stack);
+  
+  // В продакшене не показываем детали ошибок
+  const isProduction = process.env.NODE_ENV === 'production';
+  const errorMessage = isProduction 
+    ? 'Внутренняя ошибка сервера' 
+    : err.message || 'Неизвестная ошибка';
+  
+  res.status(err.status || 500).json({ 
+    ok: false, 
+    error: errorMessage,
+    ...(isProduction ? {} : { details: err.message, stack: err.stack })
+  });
+});
+
 // ========== API МАРШРУТЫ (должны быть ПЕРЕД статикой) ==========
+
+// Rate limiting отключен для беспрепятственной работы
+// app.use('/api/', rateLimit(RATE_LIMIT_MAX_REQUESTS));
 
 // ========== API ДЛЯ РАБОТЫ С КОМПАНИЯМИ ==========
 
-// Получить список всех компаний (только для админов)
-app.get('/api/companies', (req, res) => {
+// Получить список всех компаний (опциональная авторизация для режима просмотра)
+app.get('/api/companies', optionalAuth, (req, res) => {
   try {
     if (!fs.existsSync(COMPANIES_FILE)) {
       return res.json([]);
     }
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    const companies = JSON.parse(raw);
+      const companies = safeJsonParse(raw);
     // Фильтруем архивированные компании - они не должны показываться в основном списке
     const activeCompanies = companies.filter(c => !c.archived);
     res.json(activeCompanies);
@@ -158,35 +611,39 @@ app.get('/api/companies', (req, res) => {
   }
 });
 
-// Создать новую компанию
-app.post('/api/companies', (req, res) => {
+// Создать новую компанию (требуется авторизация, только админы)
+app.post('/api/companies', requireAuth, requireAdmin, (req, res) => {
   try {
     const { id, name } = req.body;
 
-    if (!id || !name) {
-      return res.status(400).json({ ok: false, error: 'ID и название компании обязательны' });
+    // Валидация ID компании
+    const idValidation = validateCompanyId(id);
+    if (!idValidation.valid) {
+      return res.status(400).json({ ok: false, error: idValidation.error });
     }
 
-    if (!isValidCompanyId(id)) {
-      return res.status(400).json({ ok: false, error: 'ID компании может содержать только латинские буквы, цифры, дефисы и подчеркивания' });
+    // Валидация названия компании
+    const nameValidation = validateString(name, 'Название компании', 1, 200);
+    if (!nameValidation.valid) {
+      return res.status(400).json({ ok: false, error: nameValidation.error });
     }
 
     // Загружаем существующие компании
     let companies = [];
     if (fs.existsSync(COMPANIES_FILE)) {
       const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-      companies = JSON.parse(raw);
+      companies = safeJsonParse(raw);
     }
 
     // Проверяем, не существует ли уже компания с таким ID
-    if (companies.some(c => c.id === id)) {
+    if (companies.some(c => c.id === idValidation.value)) {
       return res.status(400).json({ ok: false, error: 'Компания с таким ID уже существует' });
     }
 
     // Добавляем новую компанию
     const newCompany = {
-      id: id.trim(),
-      name: name.trim(),
+      id: idValidation.value,
+      name: nameValidation.value,
       createdAt: new Date().toISOString()
     };
 
@@ -208,8 +665,8 @@ app.post('/api/companies', (req, res) => {
   }
 });
 
-// Обновить порядок компаний (должен быть ПЕРЕД /api/companies/:id)
-app.put('/api/companies/order', (req, res) => {
+// Обновить порядок компаний (требуется авторизация, только админы)
+app.put('/api/companies/order', requireAuth, requireAdmin, (req, res) => {
   try {
     const { companyIds } = req.body;
     
@@ -222,7 +679,7 @@ app.put('/api/companies/order', (req, res) => {
     }
 
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    let companies = JSON.parse(raw);
+    let companies = safeJsonParse(raw);
 
     // Создаем карту компаний для быстрого доступа
     const companyMap = new Map(companies.map(c => [c.id, c]));
@@ -250,8 +707,8 @@ app.put('/api/companies/order', (req, res) => {
   }
 });
 
-// Обновить компанию (изменить ID и/или название)
-app.put('/api/companies/:id', (req, res) => {
+// Обновить компанию (требуется авторизация, только админы)
+app.put('/api/companies/:id', requireAuth, requireAdmin, (req, res) => {
   try {
     const oldCompanyId = req.params.id;
     const { id: newCompanyId, name } = req.body;
@@ -262,7 +719,7 @@ app.put('/api/companies/:id', (req, res) => {
     }
 
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    let companies = JSON.parse(raw);
+    let companies = safeJsonParse(raw);
 
     const companyIndex = companies.findIndex(c => c.id === oldCompanyId);
     if (companyIndex === -1) {
@@ -323,8 +780,8 @@ app.put('/api/companies/:id', (req, res) => {
   }
 });
 
-// Удалить компанию
-app.delete('/api/companies/:id', (req, res) => {
+// Удалить компанию (требуется авторизация, только админы)
+app.delete('/api/companies/:id', requireAuth, requireAdmin, (req, res) => {
   try {
     let companyId = req.params.id;
     console.log('🗑️ DELETE /api/companies/:id вызван');
@@ -348,7 +805,7 @@ app.delete('/api/companies/:id', (req, res) => {
     let raw, companies;
     try {
       raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-      companies = JSON.parse(raw);
+      companies = safeJsonParse(raw);
       console.log('   ✅ Файл прочитан, компаний:', companies.length);
     } catch (readError) {
       console.error('   ❌ Ошибка чтения/парсинга companies.json:', readError);
@@ -434,8 +891,8 @@ app.delete('/api/companies/:id', (req, res) => {
   }
 });
 
-// Архивировать компанию
-app.post('/api/companies/:id/archive', (req, res) => {
+// Архивировать компанию (требуется авторизация, только админы)
+app.post('/api/companies/:id/archive', requireAuth, requireAdmin, (req, res) => {
   try {
     let companyId = req.params.id;
     console.log('📦 POST /api/companies/:id/archive вызван');
@@ -460,7 +917,7 @@ app.post('/api/companies/:id/archive', (req, res) => {
     let raw, companies;
     try {
       raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-      companies = JSON.parse(raw);
+      companies = safeJsonParse(raw);
       console.log('   ✅ Файл прочитан, компаний:', companies.length);
     } catch (readError) {
       console.error('   ❌ Ошибка чтения/парсинга companies.json:', readError);
@@ -528,8 +985,8 @@ app.post('/api/companies/:id/archive', (req, res) => {
   }
 });
 
-// Восстановить компанию из архива
-app.post('/api/companies/:id/restore', (req, res) => {
+// Восстановить компанию из архива (требуется авторизация, только админы)
+app.post('/api/companies/:id/restore', requireAuth, requireAdmin, (req, res) => {
   try {
     let companyId = req.params.id;
     console.log('♻️ POST /api/companies/:id/restore вызван');
@@ -554,7 +1011,7 @@ app.post('/api/companies/:id/restore', (req, res) => {
     let raw, companies;
     try {
       raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-      companies = JSON.parse(raw);
+      companies = safeJsonParse(raw);
       console.log('   ✅ Файл прочитан, компаний:', companies.length);
     } catch (readError) {
       console.error('   ❌ Ошибка чтения/парсинга companies.json:', readError);
@@ -624,15 +1081,15 @@ app.post('/api/companies/:id/restore', (req, res) => {
   }
 });
 
-// Получить архивированные компании
-app.get('/api/companies/archived', (req, res) => {
+// Получить архивированные компании (требуется авторизация, только админы)
+app.get('/api/companies/archived', requireAuth, requireAdmin, (req, res) => {
   try {
     if (!fs.existsSync(COMPANIES_FILE)) {
       return res.json({ ok: true, companies: [] });
     }
 
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-    const companies = JSON.parse(raw);
+      const companies = safeJsonParse(raw);
 
     // Фильтруем только архивированные компании
     const archivedCompanies = companies.filter(c => c.archived === true);
@@ -642,7 +1099,7 @@ app.get('/api/companies/archived', (req, res) => {
       const infoFile = getCompanyInfoFile(company.id);
       if (fs.existsSync(infoFile)) {
         try {
-          const infoData = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
+          const infoData = safeJsonParse(fs.readFileSync(infoFile, 'utf8'));
           return { ...company, logoData: infoData.logoData || null };
         } catch (e) {
           return company;
@@ -660,8 +1117,8 @@ app.get('/api/companies/archived', (req, res) => {
 
 // ========== API ДЛЯ РАБОТЫ С ГРАФИКОМ ГАНТА ==========
 
-// получить сохранённое состояние графика
-app.get('/api/gantt-state', (req, res) => {
+// получить сохранённое состояние графика (требуется авторизация или режим просмотра)
+app.get('/api/gantt-state', optionalAuth, checkCompanyAccess, (req, res) => {
   try {
     const companyId = req.query.company;
     if (!companyId || !isValidCompanyId(companyId)) {
@@ -673,15 +1130,15 @@ app.get('/api/gantt-state', (req, res) => {
       return res.json(null);
     }
     const raw = fs.readFileSync(dataFile, 'utf8');
-    res.json(JSON.parse(raw));
+    res.json(safeJsonParse(raw));
   } catch (e) {
     console.error('Ошибка загрузки gantt-state:', e);
     res.status(500).json({ ok: false, error: 'load_failed' });
   }
 });
 
-// сохранить состояние графика
-app.post('/api/gantt-state', (req, res) => {
+// сохранить состояние графика (требуется авторизация и доступ к компании)
+app.post('/api/gantt-state', requireAuth, checkCompanyAccess, (req, res) => {
   try {
     const companyId = req.query.company || req.body.company;
     console.log('📥 POST /api/gantt-state получен');
@@ -778,7 +1235,7 @@ app.post('/api/gantt-state', (req, res) => {
     try {
       const companiesFile = path.join(__dirname, 'companies.json');
       if (fs.existsSync(companiesFile)) {
-        const companies = JSON.parse(fs.readFileSync(companiesFile, 'utf8'));
+        const companies = safeJsonParse(fs.readFileSync(companiesFile, 'utf8'));
         const company = companies.find(c => c.id === companyId);
         if (company && company.name) {
           companyName = company.name;
@@ -831,8 +1288,8 @@ app.post('/api/gantt-state', (req, res) => {
 
 // ========== API ДЛЯ РАБОТЫ СО СКЕЛЕТОМ ГРАФИКА ==========
 
-// Получить скелет графика по типу
-app.get('/api/gantt-skeleton', (req, res) => {
+// Получить скелет графика по типу (опциональная авторизация для режима просмотра)
+app.get('/api/gantt-skeleton', optionalAuth, (req, res) => {
   try {
     const chartType = req.query.chartType || 'icona';
     const skeletonFile = path.join(__dirname, `gantt-skeleton-${chartType}.json`);
@@ -843,7 +1300,7 @@ app.get('/api/gantt-skeleton', (req, res) => {
     }
     
     const raw = fs.readFileSync(skeletonFile, 'utf8');
-    const data = JSON.parse(raw);
+    const data = safeJsonParse(raw);
     res.json({ 
       chartType, 
       skeleton: data.skeleton || [],
@@ -855,8 +1312,8 @@ app.get('/api/gantt-skeleton', (req, res) => {
   }
 });
 
-// Сохранить скелет графика
-app.post('/api/gantt-skeleton', (req, res) => {
+// Сохранить скелет графика (требуется авторизация, только админы)
+app.post('/api/gantt-skeleton', requireAuth, requireAdmin, (req, res) => {
   try {
     const { chartType, skeleton, columns, containerName, chartTypeName } = req.body;
     
@@ -885,7 +1342,7 @@ app.post('/api/gantt-skeleton', (req, res) => {
       let chartTypes = [];
       if (fs.existsSync(CHART_TYPES_FILE)) {
         const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
-        chartTypes = JSON.parse(raw);
+        chartTypes = safeJsonParse(raw);
       }
       
       // Проверяем, существует ли уже такой тип
@@ -924,8 +1381,8 @@ app.post('/api/gantt-skeleton', (req, res) => {
   }
 });
 
-// Получить список всех типов графиков
-app.get('/api/chart-types', (req, res) => {
+// Получить список всех типов графиков (опциональная авторизация для режима просмотра)
+app.get('/api/chart-types', optionalAuth, (req, res) => {
   try {
     if (!fs.existsSync(CHART_TYPES_FILE)) {
       // Создаём дефолтные типы, если файла нет
@@ -941,7 +1398,7 @@ app.get('/api/chart-types', (req, res) => {
     }
     
     const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
-    const chartTypes = JSON.parse(raw);
+    const chartTypes = safeJsonParse(raw);
     
     // Проверяем, что файл не пустой и содержит валидные данные
     if (!Array.isArray(chartTypes) || chartTypes.length === 0) {
@@ -965,8 +1422,8 @@ app.get('/api/chart-types', (req, res) => {
   }
 });
 
-// Создать новый тип графика
-app.post('/api/chart-types', (req, res) => {
+// Создать новый тип графика (требуется авторизация, только админы)
+app.post('/api/chart-types', requireAuth, requireAdmin, (req, res) => {
   try {
     const { containerName, chartTypeName } = req.body;
     
@@ -987,7 +1444,7 @@ app.post('/api/chart-types', (req, res) => {
     let chartTypes = [];
     if (fs.existsSync(CHART_TYPES_FILE)) {
       const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
-      chartTypes = JSON.parse(raw);
+      chartTypes = safeJsonParse(raw);
     }
     
     // Проверяем, не существует ли уже такой ID
@@ -1029,8 +1486,8 @@ app.post('/api/chart-types', (req, res) => {
   }
 });
 
-// Удалить тип графика
-app.delete('/api/chart-types/:id', (req, res) => {
+// Удалить тип графика (требуется авторизация, только админы)
+app.delete('/api/chart-types/:id', requireAuth, requireAdmin, (req, res) => {
   try {
     const chartTypeId = req.params.id;
     
@@ -1044,7 +1501,7 @@ app.delete('/api/chart-types/:id', (req, res) => {
     }
     
     const raw = fs.readFileSync(CHART_TYPES_FILE, 'utf8');
-    let chartTypes = JSON.parse(raw);
+    let chartTypes = safeJsonParse(raw);
     
     const initialLength = chartTypes.length;
     chartTypes = chartTypes.filter(ct => ct.id !== chartTypeId);
@@ -1079,8 +1536,8 @@ app.delete('/api/chart-types/:id', (req, res) => {
   }
 });
 
-// получить информацию о компании (название и логотип)
-app.get('/api/company-info', (req, res) => {
+// получить информацию о компании (требуется авторизация или режим просмотра)
+app.get('/api/company-info', optionalAuth, checkCompanyAccess, (req, res) => {
   try {
     const companyId = req.query.company;
     if (!companyId || !isValidCompanyId(companyId)) {
@@ -1092,15 +1549,15 @@ app.get('/api/company-info', (req, res) => {
       return res.json(null);
     }
     const raw = fs.readFileSync(infoFile, 'utf8');
-    res.json(JSON.parse(raw));
+    res.json(safeJsonParse(raw));
   } catch (e) {
     console.error('Ошибка загрузки company-info:', e);
     res.status(500).json({ ok: false, error: 'load_failed' });
   }
 });
 
-// сохранить информацию о компании
-app.post('/api/company-info', (req, res) => {
+// сохранить информацию о компании (требуется авторизация и доступ к компании)
+app.post('/api/company-info', requireAuth, checkCompanyAccess, (req, res) => {
   try {
     const companyId = req.query.company || req.body.company;
     if (!companyId || !isValidCompanyId(companyId)) {
@@ -1114,7 +1571,7 @@ app.post('/api/company-info', (req, res) => {
     let oldInfo = null;
     if (fs.existsSync(infoFile)) {
       try {
-        oldInfo = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
+        oldInfo = safeJsonParse(fs.readFileSync(infoFile, 'utf8'));
       } catch (e) {
         // Игнорируем ошибку, если файл поврежден
       }
@@ -1151,8 +1608,8 @@ app.post('/api/company-info', (req, res) => {
 
 // ========== API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ==========
 
-// Получить список пользователей (для конкретной компании или всех)
-app.get('/api/users', (req, res) => {
+// Получить список пользователей (требуется авторизация, только админы)
+app.get('/api/users', requireAuth, requireAdmin, (req, res) => {
   try {
     const companyId = req.query.company; // Опционально: фильтр по компании
 
@@ -1160,7 +1617,7 @@ app.get('/api/users', (req, res) => {
       return res.json([]);
     }
     const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let users = safeJsonParse(raw);
 
     // Фильтруем по компании, если указана
     if (companyId) {
@@ -1181,35 +1638,55 @@ app.get('/api/users', (req, res) => {
   }
 });
 
-// Добавить нового пользователя
-app.post('/api/users', async (req, res) => {
+// Добавить нового пользователя (требуется авторизация, только админы)
+app.post('/api/users', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { name, login, password, role, companies } = req.body;
 
-    if (!name || !login || !password) {
-      return res.status(400).json({ ok: false, error: 'Не все поля заполнены' });
+    // Валидация имени
+    const nameValidation = validateString(name, 'Имя пользователя', 1, 100);
+    if (!nameValidation.valid) {
+      return res.status(400).json({ ok: false, error: nameValidation.error });
     }
 
-    // Проверяем, что пароль не пустой после trim
-    const trimmedPassword = password.trim();
-    if (!trimmedPassword) {
-      return res.status(400).json({ ok: false, error: 'Пароль не может быть пустым' });
+    // Валидация логина
+    const loginValidation = validateLogin(login);
+    if (!loginValidation.valid) {
+      return res.status(400).json({ ok: false, error: loginValidation.error });
+    }
+
+    // Валидация пароля
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ ok: false, error: passwordValidation.error });
+    }
+
+    // Валидация роли
+    const roleValidation = validateRole(role || 'user');
+    if (!roleValidation.valid) {
+      return res.status(400).json({ ok: false, error: roleValidation.error });
+    }
+
+    // Валидация массива компаний
+    const companiesValidation = validateArray(companies || [], 'Компании', 100);
+    if (!companiesValidation.valid) {
+      return res.status(400).json({ ok: false, error: companiesValidation.error });
     }
 
     // Загружаем существующих пользователей
     let users = [];
     if (fs.existsSync(USERS_FILE)) {
       const raw = fs.readFileSync(USERS_FILE, 'utf8');
-      users = JSON.parse(raw);
+      users = safeJsonParse(raw);
     }
 
     // Проверяем, не существует ли уже пользователь с таким логином
-    if (users.some(u => u.login === login)) {
+    if (users.some(u => u.login === loginValidation.value)) {
       return res.status(400).json({ ok: false, error: 'Пользователь с таким логином уже существует' });
     }
 
-    // Хешируем пароль (используем trimmed версию)
-    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+    // Хешируем пароль
+    const hashedPassword = await bcrypt.hash(passwordValidation.value, 10);
     
     // Проверяем, что хеш создан правильно
     if (!hashedPassword || !hashedPassword.startsWith('$2')) {
@@ -1217,16 +1694,16 @@ app.post('/api/users', async (req, res) => {
       return res.status(500).json({ ok: false, error: 'Ошибка создания пароля' });
     }
     
-    console.log(`🔐 Создание пользователя "${login.trim()}": пароль хеширован успешно`);
+    console.log(`🔐 Создание пользователя "${loginValidation.value}": пароль хеширован успешно`);
 
     // Добавляем нового пользователя
     const newUser = {
       id: Date.now().toString(),
-      name: name.trim(),
-      login: login.trim(),
+      name: nameValidation.value,
+      login: loginValidation.value,
       password: hashedPassword,
-      role: role || 'user',
-      companies: Array.isArray(companies) ? companies : [], // Массив ID компаний
+      role: roleValidation.value,
+      companies: companiesValidation.value, // Массив ID компаний
       createdAt: new Date().toISOString()
     };
 
@@ -1234,12 +1711,12 @@ app.post('/api/users', async (req, res) => {
 
     // Сохраняем
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
-    console.log(`✅ Пользователь "${login.trim()}" успешно создан с хешированным паролем`);
+    console.log(`✅ Пользователь "${loginValidation.value}" успешно создан с хешированным паролем`);
     
     // Логируем создание пользователя
     const userName = req.body.userName || req.headers['x-user-name'] || 'Система';
-    const companyList = Array.isArray(companies) && companies.length > 0 ? companies.join(', ') : 'нет';
-    addLog(userName, 'Создал пользователя', `Пользователь: ${name} (${login}), роль: ${role || 'user'}, компании: ${companyList}`, null);
+    const companyList = companiesValidation.value.length > 0 ? companiesValidation.value.join(', ') : 'нет';
+    addLog(userName, 'Создал пользователя', `Пользователь: ${nameValidation.value} (${loginValidation.value}), роль: ${roleValidation.value}, компании: ${companyList}`, null);
     
     res.json({ ok: true });
   } catch (e) {
@@ -1248,8 +1725,8 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-// Удалить пользователя
-app.delete('/api/users/:login', (req, res) => {
+// Удалить пользователя (требуется авторизация, только админы)
+app.delete('/api/users/:login', requireAuth, requireAdmin, (req, res) => {
   try {
     console.log('🗑️ DELETE /api/users/:login вызван');
     console.log('   Исходный параметр login:', req.params.login);
@@ -1298,7 +1775,7 @@ app.delete('/api/users/:login', (req, res) => {
     let raw, users;
     try {
       raw = fs.readFileSync(USERS_FILE, 'utf8');
-      users = JSON.parse(raw);
+      users = safeJsonParse(raw);
     } catch (e) {
       console.error('Ошибка чтения файла users.json:', e);
       return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
@@ -1360,13 +1837,18 @@ app.delete('/api/users/:login', (req, res) => {
   }
 });
 
-// Обновление профиля пользователя
-app.put('/api/users/update', async (req, res) => {
+// Обновление профиля пользователя (требуется авторизация, пользователь может менять только свой профиль)
+app.put('/api/users/update', requireAuth, async (req, res) => {
   try {
     const { oldLogin, newLogin, name, password } = req.body;
 
     if (!oldLogin || !newLogin) {
       return res.status(400).json({ ok: false, error: 'Логин обязателен' });
+    }
+    
+    // Проверяем, что пользователь меняет только свой профиль (или это админ)
+    if (req.user.role !== 'admin' && req.user.login !== oldLogin) {
+      return res.status(403).json({ ok: false, error: 'Вы можете изменять только свой профиль' });
     }
 
     if (!name || !name.trim()) {
@@ -1378,7 +1860,7 @@ app.put('/api/users/update', async (req, res) => {
     }
 
     const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    let users = JSON.parse(raw);
+    let users = safeJsonParse(raw);
 
     const userIndex = users.findIndex(u => u.login === oldLogin);
     if (userIndex === -1) {
@@ -1431,8 +1913,8 @@ app.put('/api/users/update', async (req, res) => {
   }
 });
 
-// Обновить доступ пользователя к компаниям
-app.put('/api/users/:login/companies', (req, res) => {
+// Обновить доступ пользователя к компаниям (требуется авторизация, только админы)
+app.put('/api/users/:login/companies', requireAuth, requireAdmin, (req, res) => {
   try {
     let { login } = req.params;
     
@@ -1474,7 +1956,7 @@ app.put('/api/users/:login/companies', (req, res) => {
     let raw, users;
     try {
       raw = fs.readFileSync(USERS_FILE, 'utf8');
-      users = JSON.parse(raw);
+      users = safeJsonParse(raw);
     } catch (e) {
       console.error('Ошибка чтения файла users.json:', e);
       return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
@@ -1512,8 +1994,8 @@ app.put('/api/users/:login/companies', (req, res) => {
   }
 });
 
-// Обновление пользователя админом (имя, роль, компании, пароль)
-app.put('/api/users/:login', async (req, res) => {
+// Обновление пользователя админом (требуется авторизация, только админы)
+app.put('/api/users/:login', requireAuth, requireAdmin, async (req, res) => {
   try {
     let { login } = req.params;
     
@@ -1552,7 +2034,7 @@ app.put('/api/users/:login', async (req, res) => {
     let raw, users;
     try {
       raw = fs.readFileSync(USERS_FILE, 'utf8');
-      users = JSON.parse(raw);
+      users = safeJsonParse(raw);
     } catch (e) {
       console.error('Ошибка чтения файла users.json:', e);
       return res.status(500).json({ ok: false, error: 'Ошибка чтения данных пользователей' });
@@ -1647,7 +2129,7 @@ app.put('/api/users/:login', async (req, res) => {
   }
 });
 
-// Проверка авторизации пользователя
+// Проверка авторизации пользователя (rate limiting отключен)
 app.post('/api/auth', async (req, res) => {
   try {
     const { login, password, company } = req.body;
@@ -1665,7 +2147,7 @@ app.post('/api/auth', async (req, res) => {
     }
 
     const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    const users = JSON.parse(raw);
+    const users = safeJsonParse(raw);
 
     const user = users.find(u => u.login === trimmedLogin);
     if (!user) {
@@ -1780,8 +2262,8 @@ app.use((err, req, res, next) => {
 
 // ========== API ДЛЯ РАБОТЫ С ЛОГАМИ ==========
 
-// Получить логи активности
-app.get('/api/activity-logs', (req, res) => {
+// Получить логи активности (требуется авторизация, только админы)
+app.get('/api/activity-logs', requireAuth, requireAdmin, (req, res) => {
   try {
     const { companyId, userName, limit = 1000, offset = 0 } = req.query;
     let logs = readLogs();
@@ -1816,8 +2298,8 @@ app.get('/api/activity-logs', (req, res) => {
   }
 });
 
-// Очистить логи (только для админов)
-app.delete('/api/activity-logs', (req, res) => {
+// Очистить логи (требуется авторизация, только админы)
+app.delete('/api/activity-logs', requireAuth, requireAdmin, (req, res) => {
   try {
     writeLogs([]);
     res.json({ ok: true, message: 'Логи очищены' });
@@ -1829,8 +2311,8 @@ app.delete('/api/activity-logs', (req, res) => {
 
 // ========== API ДЛЯ БЭКАПА КОМПАНИЙ ==========
 
-// Экспорт данных компании (бэкап)
-app.get('/api/company-backup', (req, res) => {
+// Экспорт данных компании (требуется авторизация и доступ к компании)
+app.get('/api/company-backup', requireAuth, checkCompanyAccess, (req, res) => {
   try {
     const companyId = req.query.company;
     
@@ -1845,14 +2327,14 @@ app.get('/api/company-backup', (req, res) => {
     let ganttState = null;
     if (fs.existsSync(dataFile)) {
       const raw = fs.readFileSync(dataFile, 'utf8');
-      ganttState = JSON.parse(raw);
+      ganttState = safeJsonParse(raw);
     }
     
     // Читаем информацию о компании
     let companyInfo = null;
     if (fs.existsSync(infoFile)) {
       const raw = fs.readFileSync(infoFile, 'utf8');
-      companyInfo = JSON.parse(raw);
+      companyInfo = safeJsonParse(raw);
     }
     
     // Формируем объект бэкапа
@@ -1876,8 +2358,8 @@ app.get('/api/company-backup', (req, res) => {
   }
 });
 
-// Импорт данных компании (восстановление из бэкапа)
-app.post('/api/company-restore', (req, res) => {
+// Импорт данных компании (требуется авторизация и доступ к компании)
+app.post('/api/company-restore', requireAuth, checkCompanyAccess, (req, res) => {
   try {
     const backup = req.body;
     
@@ -1905,12 +2387,12 @@ app.post('/api/company-restore', (req, res) => {
     
     if (fs.existsSync(dataFile)) {
       const raw = fs.readFileSync(dataFile, 'utf8');
-      currentGanttState = JSON.parse(raw);
+      currentGanttState = safeJsonParse(raw);
     }
     
     if (fs.existsSync(infoFile)) {
       const raw = fs.readFileSync(infoFile, 'utf8');
-      currentCompanyInfo = JSON.parse(raw);
+      currentCompanyInfo = safeJsonParse(raw);
     }
     
     // Функция для глубокого сравнения объектов (игнорируя порядок ключей)
@@ -2022,7 +2504,7 @@ app.post('/api/company-restore', (req, res) => {
     let companies = [];
     if (fs.existsSync(COMPANIES_FILE)) {
       const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
-      companies = JSON.parse(raw);
+      companies = safeJsonParse(raw);
     }
     
     const companyExists = companies.some(c => c.id === companyId);
@@ -2050,6 +2532,48 @@ app.post('/api/company-restore', (req, res) => {
     console.error('Ошибка восстановления бэкапа:', e);
     res.status(500).json({ ok: false, error: 'restore_failed', message: e.message });
   }
+});
+
+// ========== ЗАГОЛОВКИ БЕЗОПАСНОСТИ ==========
+// Middleware для установки заголовков безопасности
+app.use((req, res, next) => {
+  // Принудительный HTTPS в продакшене
+  if (process.env.NODE_ENV === 'production') {
+    // Проверяем, используется ли HTTPS (через прокси или напрямую)
+    const isSecure = req.secure || 
+                     req.header('x-forwarded-proto') === 'https' ||
+                     req.header('x-forwarded-ssl') === 'on';
+    
+    if (!isSecure && req.method !== 'GET') {
+      // Для POST/PUT/DELETE запросов в продакшене требуем HTTPS
+      return res.status(403).json({ 
+        ok: false, 
+        error: 'HTTPS required in production' 
+      });
+    }
+  }
+  
+  // Заголовки безопасности
+  res.setHeader('X-Content-Type-Options', 'nosniff'); // Запрет MIME-sniffing
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // Защита от clickjacking (SAMEORIGIN для встраивания в iframe на том же домене)
+  res.setHeader('X-XSS-Protection', '1; mode=block'); // Защита от XSS (для старых браузеров)
+  
+  // Content Security Policy (базовая, можно расширить)
+  // Разрешаем только ресурсы с того же домена + cdnjs.cloudflare.com для html2pdf.js
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';");
+  
+  // Strict Transport Security (только для HTTPS)
+  if (req.secure || req.header('x-forwarded-proto') === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  
+  // Referrer Policy
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Permissions Policy (бывший Feature-Policy)
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  
+  next();
 });
 
 // ========== СТАТИЧЕСКИЕ ФАЙЛЫ (после всех API маршрутов) ==========
@@ -2108,7 +2632,7 @@ async function initializeMainAdmin() {
 
     // Проверяем, существует ли главный админ
     const raw = fs.readFileSync(USERS_FILE, 'utf8');
-    const users = JSON.parse(raw);
+    const users = safeJsonParse(raw);
     const mainAdminExists = users.some(u => u.login === MAIN_ADMIN_LOGIN);
 
     if (!mainAdminExists) {

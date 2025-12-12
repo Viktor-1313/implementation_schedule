@@ -1981,6 +1981,10 @@
             border-left-color: #ff9800;
         }
 
+        .statistics-card.info {
+            border-left-color: #2196f3;
+        }
+
         .statistics-card-label {
             font-size: 0.85rem;
             color: #666;
@@ -3451,6 +3455,28 @@
     </div>
 
     <script>
+        // ========== ФУНКЦИИ БЕЗОПАСНОЙ РАБОТЫ С HTML (защита от XSS) ==========
+        
+        // Экранирование HTML для защиты от XSS
+        function escapeHtml(text) {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Безопасная вставка HTML (только для статического HTML, без пользовательских данных)
+        function setSafeHtml(element, html) {
+            if (!element) return;
+            element.innerHTML = html;
+        }
+        
+        // Безопасная вставка текста (экранирует пользовательские данные)
+        function setSafeText(element, text) {
+            if (!element) return;
+            element.textContent = text;
+        }
+
         // ========== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ==========
         // Функция переключения темы
         function toggleTheme() {
@@ -3729,7 +3755,19 @@
                 const isViewMode = ganttMode === 'view';
                 
                 const response = await fetch('/api/companies');
-                const allCompanies = await response.json() || [];
+                
+                // Проверяем статус ответа
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки компаний' }));
+                    console.error('Ошибка загрузки компаний:', response.status, errorData);
+                    showMessage(`Ошибка загрузки компаний: ${errorData.error || response.statusText}`, 'error');
+                    renderCompanies([], []); // Отображаем пустой список
+                    return;
+                }
+                
+                const data = await response.json();
+                // Проверяем, что данные - массив
+                const allCompanies = Array.isArray(data) ? data : [];
                 
                 // Фильтруем компании по доступу пользователя
                 let availableCompanies = [];
@@ -3753,6 +3791,7 @@
             } catch (error) {
                 console.error('Ошибка загрузки компаний:', error);
                 showMessage('Ошибка загрузки компаний', 'error');
+                renderCompanies([], []); // Отображаем пустой список
             }
         }
 
@@ -4722,9 +4761,7 @@
                 // Отправляем новый порядок на сервер
                 const response = await fetch('/api/companies/order', {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ companyIds })
                 });
 
@@ -4967,9 +5004,7 @@
                     
                     const updateResponse = await fetch(updateUrl, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify({
                             id: newCompanyId,
                             name: companyName
@@ -5026,9 +5061,7 @@
                 
                 const infoResponse = await fetch(`/api/company-info?company=${newCompanyId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({
                         name: companyName,
                         objectName: objectName || null,
@@ -5049,9 +5082,7 @@
                     
                     const updateResponse = await fetch(updateUrl, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify({
                             name: companyName
                         })
@@ -5258,7 +5289,8 @@
                 console.log('Company ID encoded:', encodeURIComponent(companyId));
                 
                 const response = await fetch(url, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: getAuthHeaders()
                 });
 
                 console.log('Response status:', response.status);
@@ -5405,10 +5437,83 @@
             }
         }
 
+        // Получить заголовки авторизации для API запросов
+        function getAuthHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            try {
+                const storedUser = localStorage.getItem('gantt-user');
+                if (storedUser) {
+                    const parsed = JSON.parse(storedUser);
+                    if (parsed && parsed.login) {
+                        headers['X-User-Login'] = parsed.login;
+                    }
+                    if (parsed && parsed.name) {
+                        // Кодируем имя пользователя в base64 для передачи в заголовке
+                        try {
+                            const encodedName = btoa(encodeURIComponent(parsed.name));
+                            headers['X-User-Name'] = encodedName;
+                            headers['X-User-Name-Encoded'] = 'base64';
+                        } catch (e) {
+                            console.warn('⚠️ Ошибка кодирования имени пользователя:', e);
+                            // Если не удалось закодировать, не добавляем заголовок
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Ошибка получения заголовков авторизации:', e);
+            }
+            
+            return headers;
+        }
+
         // Загрузить архивированные компании
         async function loadArchivedCompanies() {
             try {
-                const response = await fetch('/api/companies/archived');
+                // Проверяем авторизацию перед запросом (архив доступен только админам)
+                const userStr = localStorage.getItem('gantt-user');
+                if (!userStr) {
+                    // Если пользователь не авторизован, не показываем архив
+                    renderArchivedCompanies([]);
+                    return;
+                }
+                
+                // Проверяем, что пользователь - админ
+                try {
+                    const user = JSON.parse(userStr);
+                    if (user.role !== 'admin') {
+                        // Если пользователь не админ, не показываем архив
+                        renderArchivedCompanies([]);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Ошибка проверки роли пользователя:', e);
+                    renderArchivedCompanies([]);
+                    return;
+                }
+                
+                const response = await fetch('/api/companies/archived', {
+                    headers: getAuthHeaders()
+                });
+                
+                // Проверяем статус ответа
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки архива' }));
+                    console.error('Ошибка загрузки архива:', response.status, errorData);
+                    
+                    // Если ошибка авторизации или доступа, просто показываем пустой архив
+                    if (response.status === 401 || response.status === 403 || 
+                        (errorData.error && (errorData.error.includes('авторизац') || errorData.error.includes('доступ')))) {
+                        renderArchivedCompanies([]);
+                        return;
+                    }
+                    
+                    // Для других ошибок тоже показываем пустой архив
+                    renderArchivedCompanies([]);
+                    return;
+                }
                 
                 // Проверяем, что ответ JSON
                 const contentType = response.headers.get('content-type');
@@ -5421,7 +5526,7 @@
                 
                 const result = await response.json();
                 
-                if (result.ok && result.companies) {
+                if (result.ok && result.companies && Array.isArray(result.companies)) {
                     renderArchivedCompanies(result.companies);
                 } else {
                     // Если ошибка, показываем пустой архив
@@ -5450,9 +5555,10 @@
                 return;
             }
 
+            // Безопасное создание HTML с экранированием пользовательских данных
             container.innerHTML = companies.map(company => {
-                const safeCompanyId = company.id.replace(/"/g, '&quot;');
-                const safeCompanyName = company.name.replace(/"/g, '&quot;');
+                const safeCompanyId = escapeHtml(company.id);
+                const safeCompanyName = escapeHtml(company.name);
                 const safeCompanyIdForJs = company.id.replace(/'/g, "\\'");
                 const archivedDate = company.archivedAt ? new Date(company.archivedAt).toLocaleDateString('ru-RU') : '';
 
@@ -5467,11 +5573,11 @@
                     <div class="company-card">
                         ${statisticsButtonHtml}
                         <div class="company-info">
-                            ${company.logoData ? `<img src="${company.logoData}" alt="${safeCompanyName}" class="company-logo">` : ''}
+                            ${company.logoData ? `<img src="${escapeHtml(company.logoData)}" alt="${safeCompanyName}" class="company-logo">` : ''}
                             <div class="company-details">
                                 <h3>${safeCompanyName}</h3>
-                                <p class="company-id">ID: ${company.id}</p>
-                                ${archivedDate ? `<p class="archived-date">Архивировано: ${archivedDate}</p>` : ''}
+                                <p class="company-id">ID: ${escapeHtml(company.id)}</p>
+                                ${archivedDate ? `<p class="archived-date">Архивировано: ${escapeHtml(archivedDate)}</p>` : ''}
                             </div>
                         </div>
                         <div class="company-actions">
@@ -5647,7 +5753,8 @@
                 console.log('Company ID encoded:', encodeURIComponent(companyId));
                 
                 const response = await fetch(url, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: getAuthHeaders()
                 });
 
                 console.log('Response status:', response.status);
@@ -5795,7 +5902,8 @@
                 console.log('Company ID encoded:', encodeURIComponent(companyId));
                 
                 const response = await fetch(url, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
 
                 console.log('Response status:', response.status);
@@ -6017,13 +6125,10 @@
                 }
                 
                 // Сначала создаем компанию
-                // Убираем заголовок X-User-Name, так как userName передается в теле запроса
-                // Заголовки HTTP могут содержать только ASCII символы, а userName может содержать кириллицу
+                // Добавляем заголовки авторизации для создания компании
                 const response = await fetch('/api/companies', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({
                         id: companyId,
                         name: companyName,
@@ -6069,9 +6174,7 @@
                 try {
                     const infoResponse = await fetch(`/api/company-info?company=${companyId}`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify({
                             name: companyName,
                             objectName: objectName || null,
@@ -6304,10 +6407,13 @@
             try {
                 const response = await fetch('/api/chart-types');
                 if (response.ok) {
-                    window.chartTypesList = await response.json() || [];
+                    const data = await response.json();
+                    // Проверяем, что данные - массив
+                    window.chartTypesList = Array.isArray(data) ? data : [];
                     updateChartTypeSelects();
                 } else {
-                    console.error('Ошибка загрузки типов графиков');
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки типов графиков' }));
+                    console.error('Ошибка загрузки типов графиков:', response.status, errorData);
                     window.chartTypesList = [];
                 }
             } catch (error) {
@@ -7720,9 +7826,7 @@
             try {
                 const response = await fetch('/api/users/update', {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({
                         oldLogin: currentUser.login,
                         newLogin: newLogin,
@@ -7873,9 +7977,7 @@
                         try {
                             const createResponse = await fetch('/api/companies', {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
+                                headers: getAuthHeaders(),
                                 body: JSON.stringify({
                                     id: currentId,
                                     name: name
@@ -7958,9 +8060,7 @@
                     try {
                         await fetch(`/api/gantt-state?company=${encodeURIComponent(newCompanyId)}`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify(ganttData)
                         });
                     } catch (e) {
@@ -7973,9 +8073,7 @@
                     try {
                         await fetch(`/api/company-info?company=${encodeURIComponent(newCompanyId)}`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify({
                                 name: newCompanyName,
                                 objectName: companyInfo.objectName || null,
@@ -7992,9 +8090,7 @@
                     try {
                         await fetch(`/api/company-info?company=${encodeURIComponent(newCompanyId)}`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify({
                                 name: newCompanyName,
                                 logoData: null,
@@ -8052,6 +8148,36 @@
             return `${year}-${month}-${day}`;
         }
 
+        // Массив праздничных дней РФ
+        const holidays = [
+            "2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05",
+            "2025-01-06", "2025-01-07", "2025-01-08", "2025-02-23", "2025-03-08",
+            "2025-05-01", "2025-05-09", "2025-06-12", "2025-11-04"
+        ];
+
+        // Проверка, является ли день рабочим
+        function isWorkday(date) {
+            const dayOfWeek = date.getDay();
+            const dateStr = formatDateKey(date);
+            return dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.includes(dateStr);
+        }
+
+        // Получить рабочие дни между датами, исключая выходные, помеченные вручную
+        function getWorkdaysBetweenExcludingWeekends(start, end, weekendManualDates) {
+            const dates = [];
+            const current = new Date(start);
+            const last = new Date(end);
+            while (current <= last) {
+                const dateKey = formatDateKey(current);
+                // Проверяем, что это рабочий день И он не помечен как выходной
+                if (isWorkday(current) && !weekendManualDates.has(dateKey)) {
+                    dates.push(new Date(current));
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
         // Показать статистику компании
         // Делаем функцию доступной глобально
         async function showCompanyStatistics(companyId, companyName) {
@@ -8096,6 +8222,64 @@
                 const tasks = data.tasks || [];
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
+                
+                // Находим минимальную дату начала и максимальную дату окончания проекта
+                let minStartDate = null;
+                let maxEndDate = null;
+                
+                tasks.forEach(task => {
+                    // Используем task.dates, если доступен (более точные данные), иначе task.startDate/endDate
+                    let taskStartDate = null;
+                    let taskEndDate = null;
+                    
+                    if (task.dates && task.dates.length > 0) {
+                        // Используем первый и последний день из массива dates
+                        taskStartDate = new Date(task.dates[0]);
+                        taskEndDate = new Date(task.dates[task.dates.length - 1]);
+                    } else {
+                        // Используем startDate и endDate, если dates недоступен
+                        if (task.startDate) {
+                            taskStartDate = new Date(task.startDate);
+                        }
+                        if (task.endDate) {
+                            taskEndDate = new Date(task.endDate);
+                        }
+                    }
+                    
+                    // Проверяем и обновляем minStartDate
+                    if (taskStartDate && !isNaN(taskStartDate.getTime())) {
+                        if (!minStartDate || taskStartDate < minStartDate) {
+                            minStartDate = taskStartDate;
+                        }
+                    }
+                    
+                    // Проверяем и обновляем maxEndDate
+                    if (taskEndDate && !isNaN(taskEndDate.getTime())) {
+                        if (!maxEndDate || taskEndDate > maxEndDate) {
+                            maxEndDate = taskEndDate;
+                        }
+                    }
+                });
+                
+                // Подсчет рабочих дней между датами начала и окончания проекта
+                let totalWorkingDays = 0;
+                if (minStartDate && maxEndDate) {
+                    // Собираем все дни, помеченные как выходные во всех задачах
+                    const weekendManualDates = new Set();
+                    tasks.forEach(task => {
+                        if (task.dateStatuses) {
+                            Object.keys(task.dateStatuses).forEach(dateKey => {
+                                if (task.dateStatuses[dateKey] === 'weekend-manual') {
+                                    weekendManualDates.add(dateKey);
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Считаем рабочие дни, исключая выходные дни
+                    const workdays = getWorkdaysBetweenExcludingWeekends(minStartDate, maxEndDate, weekendManualDates);
+                    totalWorkingDays = workdays.length;
+                }
                 
                 // Рассчитываем статистику
                 let completedCount = 0;
@@ -8235,6 +8419,21 @@
                                     return `<span class="statistics-badge info">Через ${daysUntil} ${daysUntil === 1 ? 'день' : 'дней'}</span>`;
                                 }
                             })() : '<span class="statistics-badge info">Нет дедлайнов</span>'}
+                        </div>
+                        <div class="statistics-card info">
+                            <div class="statistics-card-label">Рабочих дней</div>
+                            <div class="statistics-card-value">${totalWorkingDays}</div>
+                            ${totalWorkingDays > 0 ? `<span class="statistics-badge info">${totalWorkingDays} ${totalWorkingDays === 1 ? 'день' : totalWorkingDays < 5 ? 'дня' : 'дней'}</span>` : '<span class="statistics-badge info">Нет данных</span>'}
+                        </div>
+                        <div class="statistics-card info">
+                            <div class="statistics-card-label">Дата начала</div>
+                            <div class="statistics-card-value" style="font-size: 1.2rem;">${formatDate(minStartDate)}</div>
+                            ${minStartDate ? '<span class="statistics-badge info">Проект начат</span>' : '<span class="statistics-badge info">Не указана</span>'}
+                        </div>
+                        <div class="statistics-card info">
+                            <div class="statistics-card-label">Дата окончания</div>
+                            <div class="statistics-card-value" style="font-size: 1.2rem;">${formatDate(maxEndDate)}</div>
+                            ${maxEndDate ? '<span class="statistics-badge info">Проект завершится</span>' : '<span class="statistics-badge info">Не указана</span>'}
                         </div>
                     </div>
                 `;

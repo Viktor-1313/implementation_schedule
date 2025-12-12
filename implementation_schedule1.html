@@ -13070,13 +13070,21 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         section.className = 'pdf-page-section';
         section.style.width = '100%';
         section.style.padding = '10px'; // Уменьшен padding для большего пространства таблицы
+        section.style.paddingTop = '10px'; // ЖЕСТКО фиксированный отступ сверху
         section.style.paddingBottom = '20px';
+        section.style.paddingLeft = '10px'; // ЖЕСТКО фиксированный отступ слева
+        section.style.paddingRight = '10px'; // ЖЕСТКО фиксированный отступ справа
         section.style.background = '#ffffff';
         section.style.pageBreakInside = 'avoid';
         section.style.breakInside = 'avoid';
         section.style.boxSizing = 'border-box'; // Правильный расчет размеров
         section.style.margin = '0'; // Убираем центрирование для предотвращения смещения
+        section.style.marginTop = '0'; // ЖЕСТКО фиксированный верхний отступ
+        section.style.marginBottom = '0'; // ЖЕСТКО фиксированный нижний отступ
+        section.style.marginLeft = '0'; // ЖЕСТКО фиксированный левый отступ
+        section.style.marginRight = '0'; // ЖЕСТКО фиксированный правый отступ
         section.style.overflow = 'visible'; // Позволяем контенту выходить за границы
+        section.style.position = 'relative'; // Относительное позиционирование для надежности
         
         if (!isFirst) {
             // Разрыв страницы перед каждой новой секцией (кроме первой)
@@ -13579,22 +13587,43 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
     if (tasks && tasks.length > 0) {
         // Если это первая секция после титульного листа (нет секций диаграммы), не создаем pageBreakBefore
         const detailSection = createPageSection(hasDiagramSections ? false : true);
+        
+        // ЖЕСТКО фиксируем позицию секции с таблицей - никаких смещений
+        detailSection.style.position = 'relative';
+        detailSection.style.top = '0';
+        detailSection.style.left = '0';
+        detailSection.style.right = '0';
+        detailSection.style.paddingTop = '10px'; // ЖЕСТКО фиксированный отступ сверху - таблица всегда вверху
+        detailSection.style.marginTop = '0'; // ЖЕСТКО убираем все внешние отступы
+        detailSection.style.marginBottom = '0';
+        detailSection.style.marginLeft = '0';
+        detailSection.style.marginRight = '0';
 
         const detailTitle = document.createElement('div');
         detailTitle.textContent = 'Детальная таблица задач';
         detailTitle.style.fontSize = '12px';
         detailTitle.style.fontWeight = '600';
-        detailTitle.style.margin = '4px 0 6px 0';
+        detailTitle.style.margin = '4px 0 6px 0'; // ЖЕСТКО фиксированные отступы заголовка
+        detailTitle.style.marginTop = '4px'; // ЖЕСТКО
+        detailTitle.style.marginBottom = '6px'; // ЖЕСТКО
+        detailTitle.style.marginLeft = '0'; // ЖЕСТКО
+        detailTitle.style.marginRight = '0'; // ЖЕСТКО
         detailTitle.style.textAlign = 'left'; // Выравнивание по левому краю в рамках секции
+        detailTitle.style.position = 'relative'; // Относительное позиционирование
+        detailTitle.style.top = '0'; // ЖЕСТКО фиксируем вверху
         detailSection.appendChild(detailTitle);
 
         const detailTable = document.createElement('table');
         detailTable.style.borderCollapse = 'collapse';
         detailTable.style.width = '100%';
+        detailTable.style.marginTop = '0'; // ЖЕСТКО фиксированный отступ сверху - таблица сразу после заголовка
         detailTable.style.marginBottom = '20px'; // Добавляем отступ снизу таблицы
-        detailTable.style.marginLeft = '0';
-        detailTable.style.marginRight = '0';
+        detailTable.style.marginLeft = '0'; // ЖЕСТКО фиксированный левый отступ
+        detailTable.style.marginRight = '0'; // ЖЕСТКО фиксированный правый отступ
         detailTable.style.tableLayout = 'fixed'; // Фиксированная ширина для предотвращения перекрытия
+        detailTable.style.position = 'relative'; // Относительное позиционирование для надежности
+        detailTable.style.top = '0'; // ЖЕСТКО фиксируем вверху секции
+        detailTable.style.left = '0'; // ЖЕСТКО фиксируем слева
 
         // Заголовок таблицы
         const detailHeaderTr = document.createElement('tr');
@@ -13735,14 +13764,28 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
         .pdf-page-section {
             width: 100% !important;
             margin: 0 auto !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
             box-sizing: border-box !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            padding-top: 10px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
         .pdf-page-section table {
             margin-left: 0 !important;
             margin-right: 0 !important;
+            margin-top: 0 !important;
             width: 100% !important;
-            table-layout: auto !important;
+            table-layout: fixed !important;
             min-width: 100% !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
         }
         .pdf-page-section table th,
         .pdf-page-section table td {
@@ -13758,10 +13801,19 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true) {
                 page-break-inside: avoid;
                 break-before: page;
                 break-inside: avoid;
+                margin-top: 0 !important;
+                padding-top: 10px !important;
+                position: relative !important;
+                top: 0 !important;
             }
             .pdf-page-section:first-child {
                 page-break-before: auto;
                 break-before: auto;
+            }
+            .pdf-page-section table {
+                margin-top: 0 !important;
+                position: relative !important;
+                top: 0 !important;
             }
         }
     `;

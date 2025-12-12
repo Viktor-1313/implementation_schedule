@@ -348,6 +348,129 @@
             content: '☀️';
         }
 
+        /* Стили для модального окна создания компании в темной теме */
+        [data-theme="dark"] .modal-content {
+            background: var(--color-surface) !important;
+            border-color: var(--color-border) !important;
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: var(--color-border) !important;
+        }
+
+        [data-theme="dark"] .modal-header h2 {
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .modal-close {
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .modal-close:hover {
+            color: var(--color-primary-hover) !important;
+        }
+
+        [data-theme="dark"] .form-group label {
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select {
+            background: var(--color-bg) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] .form-group input:focus,
+        [data-theme="dark"] .form-group select:focus {
+            background: var(--color-surface) !important;
+            border-color: var(--color-primary) !important;
+        }
+
+        [data-theme="dark"] .form-group input::placeholder {
+            color: rgba(100, 181, 246, 0.6) !important;
+        }
+
+        [data-theme="dark"] .form-group input[type="file"] {
+            background: var(--color-bg) !important;
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] .form-group input[type="file"]:hover {
+            background: var(--color-surface) !important;
+        }
+
+        [data-theme="dark"] .form-group select option {
+            background: var(--color-surface) !important;
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .form-group small {
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] #companyChartType {
+            background: var(--color-bg) !important;
+            border-color: var(--color-border) !important;
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] #companyChartType:focus {
+            background: var(--color-surface) !important;
+            border-color: var(--color-primary) !important;
+        }
+
+        [data-theme="dark"] #companyChartType option {
+            background: var(--color-surface) !important;
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .add-company-card {
+            background: var(--color-surface) !important;
+            border-color: var(--color-border) !important;
+        }
+
+        [data-theme="dark"] .add-company-card:hover {
+            background: var(--color-bg) !important;
+            border-color: var(--color-primary) !important;
+        }
+
+        [data-theme="dark"] .add-company-card h3 {
+            color: #64b5f6 !important;
+        }
+
+        [data-theme="dark"] .message {
+            background: var(--color-surface) !important;
+            border-color: var(--color-border) !important;
+            color: var(--color-text) !important;
+        }
+
+        [data-theme="dark"] .message.success {
+            background: rgba(129, 199, 132, 0.2) !important;
+            color: #81c784 !important;
+            border-color: rgba(129, 199, 132, 0.5) !important;
+        }
+
+        [data-theme="dark"] .message.error {
+            background: rgba(239, 83, 80, 0.2) !important;
+            color: #ef5350 !important;
+            border-color: rgba(239, 83, 80, 0.5) !important;
+        }
+
+        [data-theme="dark"] .message.info {
+            background: rgba(33, 150, 243, 0.2) !important;
+            color: #64b5f6 !important;
+            border-color: rgba(33, 150, 243, 0.5) !important;
+        }
+
+        [data-theme="dark"] #logoPreview {
+            border-color: var(--color-border) !important;
+        }
+
+        [data-theme="dark"] #logoPreviewImg {
+            border-color: var(--color-border) !important;
+        }
+
         /* Анимация переключения темы */
         .theme-toggle-btn.animating {
             animation: themeTogglePulse 1.2s ease-in-out;

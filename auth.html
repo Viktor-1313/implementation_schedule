@@ -131,6 +131,34 @@
             background: rgba(255, 255, 255, 0.5);
         }
 
+        /* Анимация вспышки бордера */
+        @keyframes borderFlash {
+            0% {
+                border-color: rgba(100, 180, 255, 0.4);
+                box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+            }
+            30% {
+                border-color: rgba(33, 150, 243, 0.8);
+                box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.25),
+                            0 0 0 8px rgba(33, 150, 243, 0.15),
+                            inset 0 0 15px rgba(33, 150, 243, 0.1);
+            }
+            60% {
+                border-color: rgba(25, 118, 210, 0.9);
+                box-shadow: 0 0 0 5px rgba(25, 118, 210, 0.3),
+                            0 0 0 10px rgba(25, 118, 210, 0.18),
+                            inset 0 0 18px rgba(25, 118, 210, 0.15);
+            }
+            100% {
+                border-color: rgba(100, 180, 255, 0.4);
+                box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+            }
+        }
+
+        .form-input.border-flash {
+            animation: borderFlash 1s ease-in-out;
+        }
+
         .password-input-wrapper {
             position: relative;
             width: 100%;
@@ -243,6 +271,26 @@
 
         .auth-btn:active {
             transform: translateY(0);
+        }
+
+        /* Анимация визуального нажатия кнопки */
+        @keyframes buttonPress {
+            0% {
+                background: linear-gradient(135deg, rgba(100, 180, 255, 0.8) 0%, rgba(135, 206, 250, 0.9) 100%);
+                transform: translateY(-2px);
+            }
+            50% {
+                background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+                transform: translateY(0);
+            }
+            100% {
+                background: linear-gradient(135deg, rgba(100, 180, 255, 0.8) 0%, rgba(135, 206, 250, 0.9) 100%);
+                transform: translateY(-2px);
+            }
+        }
+
+        .auth-btn.button-press {
+            animation: buttonPress 0.3s ease-in-out;
         }
 
         .view-mode-btn {
@@ -1046,8 +1094,26 @@
                 
                 if (result.ok && result.user) {
                     // Сохраняем режим редактирования и данные пользователя
+                    console.log('✅ [AUTH] Сохраняем данные пользователя в localStorage:', result.user);
                     localStorage.setItem('gantt-mode', 'edit');
                     localStorage.setItem('gantt-user', JSON.stringify(result.user));
+                    
+                    // Проверяем, что данные сохранились
+                    const savedUser = localStorage.getItem('gantt-user');
+                    console.log('✅ [AUTH] Проверка сохранения данных:', savedUser ? 'ДАННЫЕ СОХРАНЕНЫ' : 'ОШИБКА: ДАННЫЕ НЕ СОХРАНЕНЫ');
+                    if (savedUser) {
+                        try {
+                            const parsed = JSON.parse(savedUser);
+                            console.log('✅ [AUTH] Сохраненные данные:', {
+                                login: parsed.login,
+                                name: parsed.name,
+                                role: parsed.role
+                            });
+                        } catch (e) {
+                            console.error('❌ [AUTH] Ошибка парсинга сохраненных данных:', e);
+                        }
+                    }
+                    
                     // Не сохраняем company при авторизации - пользователь выберет на следующей странице
                     
                     // Останавливаем анимации
@@ -1248,6 +1314,32 @@
             }
         }
 
+        // ========== ВСПЫШКА БОРДЕРА ИНПУТА ==========
+        function flashInputBorder(inputElement) {
+            if (!inputElement) return;
+            
+            // Добавляем класс для анимации
+            inputElement.classList.add('border-flash');
+            
+            // Удаляем класс после завершения анимации (увеличено до 1 секунды для большей заметности)
+            setTimeout(() => {
+                inputElement.classList.remove('border-flash');
+            }, 1000);
+        }
+
+        // ========== ВИЗУАЛЬНАЯ ИМИТАЦИЯ НАЖАТИЯ КНОПКИ ==========
+        function simulateButtonPress(buttonElement) {
+            if (!buttonElement) return;
+            
+            // Добавляем класс для анимации
+            buttonElement.classList.add('button-press');
+            
+            // Удаляем класс после завершения анимации
+            setTimeout(() => {
+                buttonElement.classList.remove('button-press');
+            }, 300);
+        }
+
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         window.addEventListener('DOMContentLoaded', function() {
             initWaves();
@@ -1257,11 +1349,38 @@
             
             // Устанавливаем фокус на поле логина для удобства
             const loginInput = document.getElementById('auth-login');
+            const passwordInput = document.getElementById('auth-password');
+            const authBtn = document.querySelector('.auth-btn');
+            
             if (loginInput) {
                 // Небольшая задержка на случай, если анимации еще загружаются
                 setTimeout(() => {
                     loginInput.focus();
+                    // Вспышка бордера при загрузке страницы
+                    flashInputBorder(loginInput);
                 }, 100);
+            }
+
+            // Обработчик перехода на инпут пароля (Tab)
+            if (passwordInput) {
+                passwordInput.addEventListener('focus', function() {
+                    flashInputBorder(passwordInput);
+                });
+            }
+
+            // Обработчик нажатия Enter в инпуте пароля
+            if (passwordInput && authBtn) {
+                passwordInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Визуальная имитация нажатия кнопки
+                        simulateButtonPress(authBtn);
+                        // Небольшая задержка перед отправкой формы для визуального эффекта
+                        setTimeout(() => {
+                            authBtn.click();
+                        }, 150);
+                    }
+                });
             }
         });
     </script>

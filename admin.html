@@ -110,32 +110,100 @@
             overflow: hidden;
         }
 
-        /* Кнопка выхода из админ-панели */
-        .logout-admin-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(100, 181, 246, 0.1);
-            border: 1px solid #2196f3;
-            border-radius: 10px;
-            padding: 8px 16px;
-            color: #2196f3;
-            font-size: 0.85rem;
-            font-weight: 500;
-            text-decoration: none;
+        /* Кастомная кнопка компаний (как на других страницах) */
+        .companies-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #2c2c2c;
             cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
-            z-index: 10;
+            justify-content: center;
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            overflow: visible;
         }
 
-        .logout-admin-btn:hover {
-            background: rgba(100, 181, 246, 0.2);
-            border-color: #1976d2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        .companies-btn:hover:not(.animating) {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+        }
+
+        /* Иконка сетки компаний (4 квадрата в сетке) */
+        .companies-icon {
+            width: 18px;
+            height: 18px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7'%3E%3C/rect%3E%3Crect x='14' y='3' width='7' height='7'%3E%3C/rect%3E%3Crect x='14' y='14' width='7' height='7'%3E%3C/rect%3E%3Crect x='3' y='14' width='7' height='7'%3E%3C/rect%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Подсказка для кнопки компаний */
+        .companies-tooltip {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000000;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1002;
+        }
+
+        .companies-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-bottom-color: #000000;
+        }
+
+        .companies-btn:hover .companies-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transition-delay: 1s;
+        }
+
+        /* Золотая точка, вращающаяся по кругу при наведении */
+        .companies-btn::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            z-index: 1002;
+            transition: opacity 0.3s ease;
+        }
+
+        .companies-btn:hover::after {
+            opacity: 1;
+            animation: rotateDot 2s linear infinite;
         }
 
         .header::before {
@@ -957,6 +1025,23 @@
             .users-list {
                 grid-template-columns: 1fr;
             }
+
+            .theme-toggle-btn {
+                top: 25px !important;
+                right: 75px !important;
+            }
+
+            .companies-btn {
+                top: 25px;
+                right: 25px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .companies-icon {
+                width: 16px;
+                height: 16px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -967,6 +1052,23 @@
             .admin-panel {
                 grid-template-columns: 1fr;
                 gap: 20px;
+            }
+
+            .theme-toggle-btn {
+                top: 15px !important;
+                right: 65px !important;
+            }
+
+            .companies-btn {
+                top: 15px;
+                right: 15px;
+                width: 38px;
+                height: 38px;
+            }
+
+            .companies-icon {
+                width: 15px;
+                height: 15px;
             }
 
             .header {
@@ -1060,6 +1162,23 @@
         @media (max-width: 480px) {
             body {
                 padding: 10px;
+            }
+
+            .theme-toggle-btn {
+                top: 12px !important;
+                right: 57px !important;
+            }
+
+            .companies-btn {
+                top: 12px;
+                right: 12px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .companies-icon {
+                width: 14px;
+                height: 14px;
             }
 
             .header {
@@ -1260,14 +1379,13 @@
             color: #64b5f6;
         }
 
-        [data-theme="dark"] .logout-admin-btn {
-            background: rgba(66, 165, 245, 0.1);
-            border-color: var(--color-primary);
-            color: var(--color-primary);
+        [data-theme="dark"] .companies-btn {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            border-color: #2c2c2c;
         }
 
-        [data-theme="dark"] .logout-admin-btn:hover {
-            background: rgba(66, 165, 245, 0.2);
+        [data-theme="dark"] .companies-btn:hover:not(.animating) {
+            box-shadow: 0 4px 12px rgba(66, 165, 245, 0.5);
         }
 
         [data-theme="dark"] .footer {
@@ -1437,10 +1555,10 @@
 
         /* Кнопка переключения темы */
         .theme-toggle-btn {
-            position: absolute !important;
-            top: 20px !important;
-            left: 20px !important;
-            right: auto !important;
+            position: fixed !important;
+            top: 30px !important;
+            right: 80px !important;
+            left: auto !important;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -1500,7 +1618,7 @@
 
         .theme-tooltip {
             position: absolute;
-            bottom: calc(100% + 8px);
+            top: calc(100% + 8px);
             left: 50%;
             transform: translateX(-50%);
             background: #000000;
@@ -1519,11 +1637,11 @@
         .theme-tooltip::after {
             content: '';
             position: absolute;
-            top: 100%;
+            bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: #000000;
+            border-bottom-color: #000000;
         }
 
         /* Золотая точка, вращающаяся по кругу при наведении */
@@ -1617,8 +1735,45 @@
             }
         }
     </style>
-</head>
+    </head>
 <body>
+    <script>
+        // Проверка данных авторизации СРАЗУ при загрузке страницы (до основного скрипта)
+        (function() {
+            console.log('🔍 [INLINE] ========================================');
+            console.log('🔍 [INLINE] Проверка данных авторизации при загрузке страницы...');
+            console.log('🔍 [INLINE] URL:', window.location.href);
+            console.log('🔍 [INLINE] Время:', new Date().toISOString());
+            
+            const allKeys = Object.keys(localStorage);
+            console.log('🔍 [INLINE] Все ключи в localStorage:', allKeys);
+            console.log('🔍 [INLINE] Количество ключей:', allKeys.length);
+            
+            const userStr = localStorage.getItem('gantt-user');
+            console.log('🔍 [INLINE] localStorage.getItem("gantt-user"):', userStr ? 'ЕСТЬ ДАННЫЕ' : 'НЕТ ДАННЫХ');
+            
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    console.log('🔍 [INLINE] Данные пользователя:', {
+                        login: user.login,
+                        name: user.name,
+                        role: user.role,
+                        hasRole: !!user.role,
+                        fullData: user
+                    });
+                } catch (e) {
+                    console.error('🔍 [INLINE] Ошибка парсинга:', e);
+                    console.error('🔍 [INLINE] Сырые данные:', userStr);
+                }
+            } else {
+                console.error('🔍 [INLINE] НЕТ ДАННЫХ В localStorage!');
+                console.error('🔍 [INLINE] Все ключи в localStorage:', allKeys);
+                console.error('🔍 [INLINE] Проверяем sessionStorage:', Object.keys(sessionStorage));
+            }
+            console.log('🔍 [INLINE] ========================================');
+        })();
+    </script>
     <!-- Надпись DeadLinePro в правом верхнем углу -->
     <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
     <div class="container">
@@ -1627,8 +1782,10 @@
             <button class="theme-toggle-btn" id="themeToggleBtn" data-tooltip="Переключить тему" onclick="toggleTheme()">
                 <span class="theme-tooltip">Переключить тему</span>
             </button>
-            <button class="logout-admin-btn" onclick="logoutFromAdmin()" data-tooltip="Управление компаниями">
-                Управление компаниями
+            <!-- Кастомная кнопка компаний -->
+            <button class="companies-btn" onclick="logoutFromAdmin()" data-tooltip="Управление компаниями">
+                <span class="companies-icon"></span>
+                <span class="companies-tooltip">Управление компаниями</span>
             </button>
             <div class="header-content">
                 <div class="header-icon"></div>
@@ -2009,6 +2166,27 @@
     </div>
 
     <script>
+        // ========== ФУНКЦИИ БЕЗОПАСНОЙ РАБОТЫ С HTML (защита от XSS) ==========
+        
+        // Экранирование HTML для защиты от XSS
+        function escapeHtml(text) {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Безопасная вставка HTML (только для статического HTML, без пользовательских данных)
+        function setSafeHtml(element, html) {
+            if (!element) return;
+            element.innerHTML = html;
+        }
+        
+        // Безопасная вставка текста (экранирует пользовательские данные)
+        function setSafeText(element, text) {
+            if (!element) return;
+            element.textContent = text;
+        }
         // ========== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ==========
         // Функция переключения темы
         function toggleTheme() {
@@ -2074,42 +2252,116 @@
         // Загрузить список компаний
         async function loadCompanies() {
             try {
-                const response = await fetch('/api/companies');
-                allCompanies = await response.json() || [];
+                // Проверяем авторизацию перед запросом
+                if (!localStorage.getItem('gantt-user')) {
+                    console.warn('⚠️ loadCompanies: Нет данных авторизации');
+                    if (!window.DEBUG_AUTH) {
+                        window.location.href = 'auth.html';
+                    }
+                    return;
+                }
+                
+                const response = await fetch('/api/companies', {
+                    headers: getAuthHeaders()
+                });
+                
+                // Проверяем статус ответа
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки компаний' }));
+                    console.error('Ошибка загрузки компаний:', response.status, errorData);
+                    
+                    // Если ошибка авторизации, перенаправляем на страницу входа
+                    if (response.status === 401 || (errorData.error && errorData.error.includes('авторизац'))) {
+                        console.warn('⚠️ Ошибка авторизации при загрузке данных');
+                        if (!window.DEBUG_AUTH) {
+                            window.location.href = 'auth.html';
+                        }
+                        return;
+                    }
+                    
+                    showMessage(`Ошибка загрузки компаний: ${errorData.error || response.statusText}`, 'error');
+                    allCompanies = []; // Устанавливаем пустой массив
+                    return;
+                }
+                
+                const data = await response.json();
+                // Проверяем, что данные - массив
+                allCompanies = Array.isArray(data) ? data : [];
+                
                 const companySelectUsers = document.getElementById('companySelectUsers');
                 const backupCompanySelect = document.getElementById('backupCompanySelect');
                 
                 // Очищаем и заполняем список компаний для пользователей
                 if (companySelectUsers) {
                     companySelectUsers.innerHTML = '<option value="">Все компании</option>';
-                    allCompanies.forEach(company => {
-                        const option = document.createElement('option');
-                        option.value = company.id;
-                        option.textContent = `${company.name} (${company.id})`;
-                        companySelectUsers.appendChild(option);
-                    });
+                    if (Array.isArray(allCompanies)) {
+                        allCompanies.forEach(company => {
+                            const option = document.createElement('option');
+                            option.value = company.id;
+                            option.textContent = `${company.name} (${company.id})`;
+                            companySelectUsers.appendChild(option);
+                        });
+                    }
                 }
                 
                 // Очищаем и заполняем список компаний для бэкапа
                 if (backupCompanySelect) {
                     backupCompanySelect.innerHTML = '<option value="">-- Выберите компанию --</option>';
-                    allCompanies.forEach(company => {
-                        const option = document.createElement('option');
-                        option.value = company.id;
-                        option.textContent = `${company.name} (${company.id})`;
-                        backupCompanySelect.appendChild(option);
-                    });
+                    if (Array.isArray(allCompanies)) {
+                        allCompanies.forEach(company => {
+                            const option = document.createElement('option');
+                            option.value = company.id;
+                            option.textContent = `${company.name} (${company.id})`;
+                            backupCompanySelect.appendChild(option);
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Ошибка загрузки компаний:', error);
+                showMessage('Ошибка загрузки компаний', 'error');
+                allCompanies = []; // Устанавливаем пустой массив
             }
         }
 
         // Загрузить список пользователей
         async function loadUsers() {
             try {
-                const response = await fetch('/api/users');
-                allUsers = await response.json() || [];
+                // Проверяем авторизацию перед запросом
+                if (!localStorage.getItem('gantt-user')) {
+                    console.warn('⚠️ loadCompanies: Нет данных авторизации');
+                    if (!window.DEBUG_AUTH) {
+                        window.location.href = 'auth.html';
+                    }
+                    return;
+                }
+                
+                const response = await fetch('/api/users', {
+                    headers: getAuthHeaders()
+                });
+                
+                // Проверяем статус ответа
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки пользователей' }));
+                    console.error('Ошибка загрузки пользователей:', response.status, errorData);
+                    
+                    // Если ошибка авторизации, перенаправляем на страницу входа
+                    if (response.status === 401 || (errorData.error && errorData.error.includes('авторизац'))) {
+                        console.warn('⚠️ Ошибка авторизации при загрузке данных');
+                        if (!window.DEBUG_AUTH) {
+                            window.location.href = 'auth.html';
+                        }
+                        return;
+                    }
+                    
+                    showMessage(`Ошибка загрузки пользователей: ${errorData.error || response.statusText}`, 'error');
+                    allUsers = []; // Устанавливаем пустой массив
+                    renderUsers([]); // Отображаем пустой список
+                    return;
+                }
+                
+                const data = await response.json();
+                // Проверяем, что данные - массив
+                allUsers = Array.isArray(data) ? data : [];
                 
                 // Фильтруем пользователей по выбранной компании
                 let filteredUsers = allUsers;
@@ -2132,6 +2384,8 @@
             } catch (error) {
                 console.error('Ошибка загрузки пользователей:', error);
                 showMessage('Ошибка загрузки пользователей', 'error');
+                allUsers = []; // Устанавливаем пустой массив
+                renderUsers([]); // Отображаем пустой список
             }
         }
 
@@ -2150,17 +2404,19 @@
                 return;
             }
 
+            // Безопасное создание HTML с экранированием пользовательских данных
             usersList.innerHTML = users.map((user, index) => {
                 const userCompanies = user.companies || [];
                 const companiesText = user.role === 'admin' 
                     ? 'Доступ ко всем компаниям' 
                     : (userCompanies.length > 0 
-                        ? `Компании: ${userCompanies.join(', ')}` 
+                        ? `Компании: ${userCompanies.map(c => escapeHtml(c)).join(', ')}` 
                         : 'Нет доступа к компаниям');
                 
                 // Экранируем данные для безопасной передачи
-                const safeLogin = user.login.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const safeName = user.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeLogin = escapeHtml(user.login);
+                const safeName = escapeHtml(user.name);
+                const safeLoginForJs = user.login.replace(/'/g, "\\'");
                 const companiesJson = JSON.stringify(user.companies || []).replace(/"/g, '&quot;');
                 
                 // Проверяем, является ли пользователь главным админом
@@ -2170,19 +2426,19 @@
                 <div class="user-item">
                     <div class="user-info">
                         <div class="user-avatar"></div>
-                        <div class="user-name">${user.name}${isMainAdmin ? ' <span style="color: #ff9800; font-size: 0.85rem;">(Главный админ)</span>' : ''}</div>
-                        <div class="user-login">Логин: ${user.login}</div>
-                        <div style="color: #64b5f6; font-size: 0.85rem; margin-top: 5px;">${companiesText}</div>
-                        <span class="user-role ${user.role}">${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</span>
+                        <div class="user-name">${safeName}${isMainAdmin ? ' <span style="color: #ff9800; font-size: 0.85rem;">(Главный админ)</span>' : ''}</div>
+                        <div class="user-login">Логин: ${safeLogin}</div>
+                        <div style="color: #64b5f6; font-size: 0.85rem; margin-top: 5px;">${escapeHtml(companiesText)}</div>
+                        <span class="user-role ${escapeHtml(user.role)}">${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</span>
                     </div>
                     <div class="user-actions">
                         <button class="btn btn-primary btn-small" 
                                 data-user-login="${safeLogin}"
                                 data-user-name="${safeName}"
-                                data-user-role="${user.role}"
+                                data-user-role="${escapeHtml(user.role)}"
                                 data-user-companies="${companiesJson}"
                                 onclick="editUserFromButton(this)">Редактировать</button>
-                        ${isMainAdmin ? '' : `<button class="btn btn-danger btn-small" onclick="deleteUser('${safeLogin}')">Удалить</button>`}
+                        ${isMainAdmin ? '' : `<button class="btn btn-danger btn-small" onclick="deleteUser('${safeLoginForJs}')">Удалить</button>`}
                     </div>
                 </div>
             `;
@@ -2280,9 +2536,7 @@
             try {
                 const response = await fetch('/api/users', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(formData)
                 });
 
@@ -2510,9 +2764,7 @@
 
                 const response = await fetch(`/api/users/${encodeURIComponent(userToEdit.login)}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(updateData)
                 });
 
@@ -2583,7 +2835,8 @@
 
             try {
                 const response = await fetch(`/api/users/${encodeURIComponent(login)}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
@@ -2694,27 +2947,244 @@
             }
         });
 
+        // Показать сообщение об ошибке авторизации на странице
+        function showAuthError(message, details) {
+            // Удаляем предыдущее сообщение, если есть
+            const existingError = document.getElementById('auth-error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'auth-error-message';
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 99999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            `;
+            
+            const errorContent = document.createElement('div');
+            errorContent.style.cssText = `
+                background: #f44336;
+                color: white;
+                padding: 40px 50px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                max-width: 700px;
+                max-height: 90vh;
+                overflow-y: auto;
+                font-size: 18px;
+                line-height: 1.6;
+            `;
+            
+            errorContent.innerHTML = `
+                <div style="font-weight: bold; font-size: 24px; margin-bottom: 20px; text-align: center;">❌ Ошибка авторизации</div>
+                <div style="margin-bottom: 20px; font-size: 20px;">${message}</div>
+                ${details ? `<div style="font-size: 16px; opacity: 0.95; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 15px; margin-bottom: 20px;">${details}</div>` : ''}
+                <div style="margin-top: 25px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    <div style="font-size: 16px; margin-bottom: 10px; font-weight: bold;">Автоматический редирект отключен для отладки</div>
+                    <div style="font-size: 14px; margin-bottom: 10px;">Откройте консоль браузера (F12) и посмотрите детальные сообщения об ошибке</div>
+                    <div style="font-size: 14px; font-family: monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                        window.DEBUG_AUTH = false
+                    </div>
+                    <div style="font-size: 14px;">Для включения автоматического редиректа введите эту команду в консоли</div>
+                </div>
+                <div style="margin-top: 20px; font-size: 18px; font-weight: bold; text-align: center; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;" id="redirectTimer">Перенаправление через 30 секунд...</div>
+            `;
+            
+            errorDiv.appendChild(errorContent);
+            document.body.appendChild(errorDiv);
+            
+            // Обновляем таймер обратного отсчета
+            let secondsLeft = 30;
+            const timerElement = errorContent.querySelector('#redirectTimer');
+            const timerInterval = setInterval(() => {
+                secondsLeft--;
+                if (timerElement) {
+                    timerElement.textContent = `Перенаправление через ${secondsLeft} секунд...`;
+                    if (secondsLeft <= 10) {
+                        timerElement.style.color = '#ffeb3b';
+                    }
+                }
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
         // Проверка авторизации и роли администратора
         function checkAuth() {
-            const userStr = localStorage.getItem('gantt-user');
+            // Небольшая задержка для гарантии, что страница загрузилась
+            console.log('🔍 checkAuth: Начало проверки...');
+            
+            // Проверяем данные несколько раз с небольшой задержкой (на случай, если они еще не загрузились)
+            let userStr = localStorage.getItem('gantt-user');
+            let attempts = 0;
+            const maxAttempts = 5;
+            
+            while (!userStr && attempts < maxAttempts) {
+                console.log(`🔍 checkAuth: Попытка ${attempts + 1}/${maxAttempts} - данных нет, ждем...`);
+                // Небольшая задержка перед следующей попыткой
+                if (attempts > 0) {
+                    // Синхронная задержка не работает, но мы можем проверить еще раз
+                }
+                userStr = localStorage.getItem('gantt-user');
+                attempts++;
+            }
+            
             if (!userStr) {
-                window.location.href = 'auth.html';
+                const allKeys = Object.keys(localStorage);
+                console.error('❌ checkAuth: Нет данных пользователя в localStorage после всех попыток');
+                console.error('❌ checkAuth: Все ключи в localStorage:', allKeys);
+                console.error('❌ checkAuth: Проверяем sessionStorage:', Object.keys(sessionStorage));
+                showAuthError(
+                    'Нет данных пользователя в localStorage',
+                    `Найденные ключи: ${allKeys.length > 0 ? allKeys.join(', ') : 'нет'}<br><br>Попробуйте войти заново через страницу авторизации.<br><br>Для отладки установите в консоли: window.DEBUG_AUTH = true`
+                );
+                // Задержка перед редиректом для просмотра консоли (или отключение при DEBUG_AUTH)
+                if (!window.DEBUG_AUTH) {
+                    setTimeout(() => {
+                        console.log('🔍 checkAuth: Выполняем редирект на auth.html');
+                        window.location.href = 'auth.html';
+                    }, 30000); // 30 секунд на просмотр консоли
+                } else {
+                    console.warn('🔍 DEBUG_AUTH: Редирект отключен для отладки');
+                }
                 return false;
             }
 
             try {
                 const currentUser = JSON.parse(userStr);
-                if (currentUser.role !== 'admin') {
-                    // Если пользователь не админ, перенаправляем на страницу выбора компаний
-                    window.location.href = 'companies.html';
+                console.log('✅ checkAuth: Данные пользователя загружены:', { 
+                    login: currentUser.login, 
+                    name: currentUser.name, 
+                    role: currentUser.role,
+                    fullData: currentUser
+                });
+                
+                // Проверяем, что роль определена
+                if (!currentUser.role) {
+                    console.error('❌ checkAuth: Роль пользователя не определена');
+                    console.error('❌ checkAuth: Полные данные пользователя:', currentUser);
+                    showAuthError(
+                        'Роль пользователя не определена',
+                        `Логин: ${currentUser.login || 'не указан'}, Имя: ${currentUser.name || 'не указано'}, Роль: ${currentUser.role || 'отсутствует'}`
+                    );
+                    // Задержка перед редиректом для просмотра консоли (или отключение при DEBUG_AUTH)
+                    if (!window.DEBUG_AUTH) {
+                        setTimeout(() => {
+                            console.log('🔍 checkAuth: Выполняем редирект на auth.html (нет роли)');
+                            window.location.href = 'auth.html';
+                        }, 30000);
+                    } else {
+                        console.warn('🔍 DEBUG_AUTH: Редирект отключен для отладки');
+                        console.warn('🔍 Для включения автоматического редиректа введите: window.DEBUG_AUTH = false');
+                    }
                     return false;
                 }
+                
+                if (currentUser.role !== 'admin') {
+                    console.warn('⚠️ checkAuth: Пользователь не администратор');
+                    console.warn('⚠️ checkAuth: Роль пользователя:', currentUser.role);
+                    console.warn('⚠️ checkAuth: Ожидаемая роль: admin');
+                    showAuthError(
+                        'Требуются права администратора',
+                        `Ваша роль: "${currentUser.role}", требуется: "admin"<br><br>Для отладки установите в консоли: window.DEBUG_AUTH = true`
+                    );
+                    // Задержка перед редиректом для просмотра консоли (или отключение при DEBUG_AUTH)
+                    if (!window.DEBUG_AUTH) {
+                        setTimeout(() => {
+                            console.log('🔍 checkAuth: Выполняем редирект на companies.html (не админ)');
+                            window.location.href = 'companies.html';
+                        }, 30000);
+                    } else {
+                        console.warn('🔍 DEBUG_AUTH: Редирект отключен для отладки');
+                        console.warn('🔍 Для включения автоматического редиректа введите: window.DEBUG_AUTH = false');
+                    }
+                    return false;
+                }
+                
+                console.log('✅ checkAuth: Пользователь авторизован как администратор');
+                console.log('✅ checkAuth: Логин:', currentUser.login);
+                console.log('✅ checkAuth: Имя:', currentUser.name);
                 return true;
             } catch (e) {
-                console.error('Ошибка загрузки данных пользователя:', e);
-                window.location.href = 'auth.html';
+                console.error('❌ checkAuth: Ошибка парсинга данных пользователя:', e);
+                console.error('❌ checkAuth: Содержимое localStorage (gantt-user):', userStr);
+                console.error('❌ checkAuth: Тип данных:', typeof userStr);
+                showAuthError(
+                    'Ошибка парсинга данных пользователя',
+                    `Ошибка: ${e.message}<br>Тип данных: ${typeof userStr}<br>Длина: ${userStr ? userStr.length : 0}`
+                );
+                // Задержка перед редиректом для просмотра консоли (или отключение при DEBUG_AUTH)
+                if (!window.DEBUG_AUTH) {
+                    setTimeout(() => {
+                        console.log('🔍 checkAuth: Выполняем редирект на auth.html (ошибка парсинга)');
+                        window.location.href = 'auth.html';
+                    }, 30000);
+                } else {
+                    console.warn('🔍 DEBUG_AUTH: Редирект отключен для отладки');
+                    console.warn('🔍 Для включения автоматического редиректа введите: window.DEBUG_AUTH = false');
+                }
                 return false;
             }
+        }
+
+        // Получить заголовки авторизации для API запросов
+        function getAuthHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            try {
+                const storedUser = localStorage.getItem('gantt-user');
+                console.log('🔍 [getAuthHeaders] Данные из localStorage:', storedUser ? 'ЕСТЬ' : 'НЕТ');
+                
+                if (storedUser) {
+                    const parsed = JSON.parse(storedUser);
+                    console.log('🔍 [getAuthHeaders] Распарсенные данные:', {
+                        login: parsed.login,
+                        name: parsed.name,
+                        role: parsed.role
+                    });
+                    
+                    if (parsed && parsed.login) {
+                        headers['X-User-Login'] = parsed.login;
+                        console.log('✅ [getAuthHeaders] Добавлен заголовок X-User-Login:', parsed.login);
+                    } else {
+                        console.warn('⚠️ [getAuthHeaders] Логин не найден в данных пользователя');
+                    }
+                    
+                    if (parsed && parsed.name) {
+                        // Кодируем имя пользователя в base64 для передачи в заголовке
+                        try {
+                            const encodedName = btoa(encodeURIComponent(parsed.name));
+                            headers['X-User-Name'] = encodedName;
+                            headers['X-User-Name-Encoded'] = 'base64';
+                            console.log('✅ [getAuthHeaders] Добавлены заголовки X-User-Name и X-User-Name-Encoded');
+                        } catch (e) {
+                            console.warn('⚠️ [getAuthHeaders] Ошибка кодирования имени пользователя:', e);
+                            // Если не удалось закодировать, не добавляем заголовок
+                        }
+                    }
+                } else {
+                    console.error('❌ [getAuthHeaders] Нет данных пользователя в localStorage');
+                }
+                
+                console.log('🔍 [getAuthHeaders] Итоговые заголовки:', headers);
+            } catch (e) {
+                console.error('❌ [getAuthHeaders] Ошибка получения заголовков авторизации:', e);
+            }
+            
+            return headers;
         }
 
         // Получить данные текущего пользователя для передачи на сервер (логирование действий)
@@ -2795,12 +3265,26 @@
         // Загрузить список типов графиков
         async function loadChartTypes() {
             try {
-                const response = await fetch('/api/chart-types');
+                // Проверяем авторизацию перед запросом
+                if (!localStorage.getItem('gantt-user')) {
+                    console.warn('⚠️ loadCompanies: Нет данных авторизации');
+                    if (!window.DEBUG_AUTH) {
+                        window.location.href = 'auth.html';
+                    }
+                    return;
+                }
+                
+                const response = await fetch('/api/chart-types', {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
-                    chartTypesList = await response.json() || [];
+                    const data = await response.json();
+                    // Проверяем, что данные - массив
+                    chartTypesList = Array.isArray(data) ? data : [];
                     renderSkeletonButtons();
                 } else {
-                    console.warn('⚠️ Ошибка загрузки типов графиков:', response.status, response.statusText);
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки типов графиков' }));
+                    console.warn('⚠️ Ошибка загрузки типов графиков:', response.status, errorData);
                     // Если файл не найден (404), это нормально при первом запуске - используем дефолтные типы
                     if (response.status === 404) {
                         chartTypesList = [
@@ -2808,6 +3292,11 @@
                             { id: 'praktis', containerName: 'Praktis ID', chartTypeName: 'Внедрение Praktis ID' }
                         ];
                     } else {
+                        // Если ошибка авторизации, перенаправляем на страницу входа
+                        if (response.status === 401 || (errorData.error && errorData.error.includes('авторизац'))) {
+                            window.location.href = 'auth.html';
+                            return;
+                        }
                         chartTypesList = [];
                     }
                     renderSkeletonButtons();
@@ -3497,11 +3986,10 @@
             }
             
             try {
+                const headers = getAuthHeaders();
                 const response = await fetch('/api/chart-types', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         containerName,
                         chartTypeName,
@@ -3579,7 +4067,8 @@
 
             try {
                 const response = await fetch(`/api/chart-types/${encodeURIComponent(id)}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
@@ -3651,6 +4140,15 @@
         // Загрузить логи активности
         async function loadActivityLogs() {
             try {
+                // Проверяем авторизацию перед запросом
+                if (!localStorage.getItem('gantt-user')) {
+                    console.warn('⚠️ loadCompanies: Нет данных авторизации');
+                    if (!window.DEBUG_AUTH) {
+                        window.location.href = 'auth.html';
+                    }
+                    return;
+                }
+                
                 const companyFilter = document.getElementById('logCompanyFilter')?.value || '';
                 const userFilter = document.getElementById('logUserFilter')?.value || '';
                 
@@ -3662,13 +4160,36 @@
                     url += `&userName=${encodeURIComponent(userFilter)}`;
                 }
                 
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    headers: getAuthHeaders()
+                });
+                
+                // Проверяем статус ответа
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки логов' }));
+                    console.error('Ошибка загрузки логов:', response.status, errorData);
+                    
+                    // Если ошибка авторизации, перенаправляем на страницу входа
+                    if (response.status === 401 || (errorData.error && errorData.error.includes('авторизац'))) {
+                        console.warn('⚠️ Ошибка авторизации при загрузке данных');
+                        if (!window.DEBUG_AUTH) {
+                            window.location.href = 'auth.html';
+                        }
+                        return;
+                    }
+                    
+                    showMessage(`Ошибка загрузки логов: ${errorData.error || response.statusText}`, 'error');
+                    renderActivityLogs([]);
+                    return;
+                }
+                
                 const result = await response.json();
                 
-                if (result.ok) {
-                    renderActivityLogs(result.logs || []);
+                if (result.ok && Array.isArray(result.logs)) {
+                    renderActivityLogs(result.logs);
                 } else {
-                    showMessage('Ошибка загрузки логов', 'error');
+                    console.warn('⚠️ Неверный формат ответа для логов:', result);
+                    showMessage('Ошибка загрузки логов: неверный формат данных', 'error');
                     renderActivityLogs([]);
                 }
             } catch (error) {
@@ -3792,7 +4313,8 @@
         async function confirmClearLogs() {
             try {
                 const response = await fetch('/api/activity-logs', {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
                 
                 const result = await response.json();
@@ -4237,42 +4759,102 @@
         // Обновить список компаний в фильтре логов
         function updateLogCompanyFilter() {
             const logCompanyFilter = document.getElementById('logCompanyFilter');
-            if (!logCompanyFilter || !allCompanies) return;
+            if (!logCompanyFilter) return;
             
             logCompanyFilter.innerHTML = '<option value="">Все компании</option>';
-            allCompanies.forEach(company => {
-                const option = document.createElement('option');
-                option.value = company.id;
-                option.textContent = `${company.name} (${company.id})`;
-                logCompanyFilter.appendChild(option);
-            });
+            
+            // Проверяем, что allCompanies - массив
+            if (Array.isArray(allCompanies) && allCompanies.length > 0) {
+                allCompanies.forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = `${company.name} (${company.id})`;
+                    logCompanyFilter.appendChild(option);
+                });
+            }
         }
+
+        // Проверка данных авторизации сразу при загрузке скрипта (до DOMContentLoaded)
+        console.log('🔍 Проверка данных авторизации при загрузке скрипта...');
+        const initialUserCheck = localStorage.getItem('gantt-user');
+        console.log('🔍 Начальная проверка localStorage:', {
+            hasData: !!initialUserCheck,
+            dataLength: initialUserCheck ? initialUserCheck.length : 0,
+            allKeys: Object.keys(localStorage)
+        });
+        if (initialUserCheck) {
+            try {
+                const parsed = JSON.parse(initialUserCheck);
+                console.log('🔍 Начальные данные пользователя:', {
+                    login: parsed.login,
+                    name: parsed.name,
+                    role: parsed.role,
+                    hasRole: !!parsed.role
+                });
+            } catch (e) {
+                console.error('🔍 Ошибка парсинга начальных данных:', e);
+            }
+        }
+
+        // Флаг для отладки - можно установить в консоли: window.DEBUG_AUTH = true
+        // По умолчанию отключаем автоматический редирект для диагностики
+        window.DEBUG_AUTH = window.DEBUG_AUTH !== undefined ? window.DEBUG_AUTH : true;
 
         // Загрузить компании и пользователей при загрузке страницы
         window.addEventListener('DOMContentLoaded', function() {
-            // Проверяем авторизацию перед загрузкой данных
-            if (!checkAuth()) {
-                return;
-            }
-            // Сначала отображаем дефолтные кнопки
-            renderSkeletonButtons();
-            // Затем загружаем типы графиков
-            loadCompanies().then(() => {
-                updateLogCompanyFilter();
-                // Загружаем компании для формы добавления пользователя
-                loadCompaniesForAdd();
-                // Проверяем выбранную роль и показываем/скрываем поле компаний
-                const userRole = document.getElementById('userRole');
-                if (userRole && userRole.value === 'user') {
-                    const companiesGroup = document.getElementById('userCompaniesGroup');
-                    if (companiesGroup) {
-                        companiesGroup.style.display = 'block';
-                    }
+            console.log('🔍 DOMContentLoaded: начинаем проверку авторизации...');
+            console.log('🔍 DOMContentLoaded: DEBUG_AUTH =', window.DEBUG_AUTH);
+            
+            // Проверяем данные сразу при DOMContentLoaded
+            const immediateCheck = localStorage.getItem('gantt-user');
+            console.log('🔍 DOMContentLoaded: Немедленная проверка localStorage:', immediateCheck ? 'ЕСТЬ ДАННЫЕ' : 'НЕТ ДАННЫХ');
+            
+            if (immediateCheck) {
+                try {
+                    const user = JSON.parse(immediateCheck);
+                    console.log('🔍 DOMContentLoaded: Данные пользователя:', {
+                        login: user.login,
+                        name: user.name,
+                        role: user.role
+                    });
+                } catch (e) {
+                    console.error('🔍 DOMContentLoaded: Ошибка парсинга:', e);
                 }
-            });
-            loadUsers();
-            loadChartTypes();
-            loadActivityLogs();
+            }
+            
+            // Небольшая задержка перед проверкой, чтобы дать время странице полностью загрузиться
+            // Увеличена задержка до 500мс для гарантии, что localStorage готов
+            setTimeout(function() {
+                // Проверяем авторизацию перед загрузкой данных
+                const authResult = checkAuth();
+                if (!authResult) {
+                    console.error('🔍 DOMContentLoaded: проверка авторизации не прошла');
+                    if (window.DEBUG_AUTH) {
+                        console.warn('🔍 DEBUG_AUTH: Редирект отключен для отладки');
+                        return;
+                    }
+                    return;
+                }
+                console.log('🔍 DOMContentLoaded: проверка авторизации прошла успешно');
+                // Сначала отображаем дефолтные кнопки
+                renderSkeletonButtons();
+                // Затем загружаем типы графиков
+                loadCompanies().then(() => {
+                    updateLogCompanyFilter();
+                    // Загружаем компании для формы добавления пользователя
+                    loadCompaniesForAdd();
+                    // Проверяем выбранную роль и показываем/скрываем поле компаний
+                    const userRole = document.getElementById('userRole');
+                    if (userRole && userRole.value === 'user') {
+                        const companiesGroup = document.getElementById('userCompaniesGroup');
+                        if (companiesGroup) {
+                            companiesGroup.style.display = 'block';
+                        }
+                    }
+                });
+                loadUsers();
+                loadChartTypes();
+                loadActivityLogs();
             
             // Обновление логов при изменении фильтров
             const logCompanyFilter = document.getElementById('logCompanyFilter');
@@ -4288,6 +4870,7 @@
                     userFilterTimeout = setTimeout(loadActivityLogs, 500);
                 });
             }
+            }, 500); // Закрываем setTimeout - задержка 500мс перед проверкой авторизации
         });
 
         // Экспорт бэкапа компании
