@@ -5909,13 +5909,9 @@
                     <span class="view-toggle-part view-toggle-table">Таблица</span>
                 </span>
             </button>
-            <button class="btn btn-primary" onclick="openPDFExportModal()">
+            <button class="btn btn-primary" id="exportUnifiedButton" onclick="openPDFExportModal('pdf')">
                 <span class="btn-icon btn-icon-pdf"></span>
-                <span>Выгрузить в PDF</span>
-            </button>
-            <button class="btn btn-primary" onclick="openExcelExportModal()">
-                <span class="btn-icon btn-icon-excel"></span>
-                <span>Выгрузить в Excel</span>
+                <span>Экспорт</span>
             </button>
             <div style="display: inline-flex; align-items: center; gap: 8px;">
                 <div class="search-input-container" style="position: relative; display: inline-block;">
@@ -6227,102 +6223,127 @@
     <div id="pdfExportModal" class="modal">
         <div class="modal-content" style="max-width: 1900px; width: 98%; max-height: 95vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2>Выгрузка в PDF</h2>
+                <h2>Экспорт</h2>
                 <span class="close" onclick="closePDFExportModal()">&times;</span>
             </div>
             
-            <div id="pdfExportSettingsGrid" style="display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px;">
-                <!-- Левая колонка: Настройки -->
-                <div style="min-width: 300px;">
-                    <p style="margin-bottom: 12px; font-size: 13px;">
-                        Будет сформирован PDF-файл с диаграммой Ганта в выбранном масштабе и детальной таблицей задач с комментариями.
-                    </p>
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label for="pdfScaleMode" style="font-size: 13px;">Масштаб представления Ганта:</label>
-                        <select id="pdfScaleMode" onchange="updatePDFPreview()" style="width: 100%; padding: 6px; font-size: 13px;">
-                            <option value="day">Дни</option>
-                            <option value="week">Недели</option>
-                            <option value="month">Месяцы</option>
-                        </select>
-                    </div>
-                    <div class="form-group pdf-content-toggle" style="margin-bottom: 16px;">
-                        <label style="font-size: 13px;">Содержимое PDF:</label>
-                        <div class="pdf-toggle-options">
-                            <label class="pdf-toggle-option">
-                                <input type="radio" name="pdfContentMode" value="full" checked onchange="updatePDFPreview()">
-                                <span>С диаграммой</span>
-                            </label>
-                            <label class="pdf-toggle-option">
-                                <input type="radio" name="pdfContentMode" value="table" onchange="updatePDFPreview()">
-                                <span>Только таблица</span>
-                            </label>
+            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                <label for="exportFormatSelect" style="font-weight: 600; font-size: 13px;">Формат выгрузки:</label>
+                <select id="exportFormatSelect" onchange="handleExportFormatChange()" style="min-width: 160px; padding: 6px; font-size: 13px;">
+                    <option value="pdf" selected>PDF</option>
+                    <option value="excel">Excel</option>
+                </select>
+            </div>
+
+            <div id="pdfExportSection">
+                <div id="pdfExportSettingsGrid" style="display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px;">
+                    <!-- Левая колонка: Настройки -->
+                    <div style="min-width: 300px;">
+                        <p style="margin-bottom: 12px; font-size: 13px;">
+                            Будет сформирован PDF-файл с диаграммой Ганта в выбранном масштабе и детальной таблицей задач с комментариями.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="pdfScaleMode" style="font-size: 13px;">Масштаб представления Ганта:</label>
+                            <select id="pdfScaleMode" onchange="updatePDFPreview()" style="width: 100%; padding: 6px; font-size: 13px;">
+                                <option value="day">Дни</option>
+                                <option value="week">Недели</option>
+                                <option value="month">Месяцы</option>
+                            </select>
+                        </div>
+                        <div class="form-group pdf-content-toggle" style="margin-bottom: 16px;">
+                            <label style="font-size: 13px;">Содержимое PDF:</label>
+                            <div class="pdf-toggle-options">
+                                <label class="pdf-toggle-option">
+                                    <input type="radio" name="pdfContentMode" value="full" checked onchange="updatePDFPreview()">
+                                    <span>С диаграммой</span>
+                                </label>
+                                <label class="pdf-toggle-option">
+                                    <input type="radio" name="pdfContentMode" value="table" onchange="updatePDFPreview()">
+                                    <span>Только таблица</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Массовые настройки отступов -->
+                        <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Отступы для всех страниц (мм):</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div>
+                                    <label for="pdfMarginTop" style="display: block; margin-bottom: 4px; font-size: 12px;">Верх:</label>
+                                    <input type="number" id="pdfMarginTop" min="0" max="50" value="10" step="1" 
+                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                           oninput="applyMarginsToAll()">
+                                </div>
+                                <div>
+                                    <label for="pdfMarginBottom" style="display: block; margin-bottom: 4px; font-size: 12px;">Низ:</label>
+                                    <input type="number" id="pdfMarginBottom" min="0" max="50" value="20" step="1" 
+                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                           oninput="applyMarginsToAll()">
+                                </div>
+                                <div>
+                                    <label for="pdfMarginLeft" style="display: block; margin-bottom: 4px; font-size: 12px;">Слева:</label>
+                                    <input type="number" id="pdfMarginLeft" min="0" max="50" value="5" step="1" 
+                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                           oninput="applyMarginsToAll()">
+                                </div>
+                                <div>
+                                    <label for="pdfMarginRight" style="display: block; margin-bottom: 4px; font-size: 12px;">Справа:</label>
+                                    <input type="number" id="pdfMarginRight" min="0" max="50" value="5" step="1" 
+                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                           oninput="applyMarginsToAll()">
+                                </div>
+                            </div>
+                            <button onclick="applyMarginsToAll()" style="width: 100%; margin-top: 8px; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                Применить ко всем страницам
+                            </button>
+                        </div>
+                        
+                        <!-- Сохранение/загрузка макета -->
+                        <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 8px;">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Макет отступов:</label>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                <button onclick="savePDFLayout()" style="width: 100%; padding: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                    💾 Сохранить макет
+                                </button>
+                                <button onclick="loadPDFLayout()" style="width: 100%; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                    📂 Загрузить макет
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Массовые настройки отступов -->
-                    <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px;">
-                        <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Отступы для всех страниц (мм):</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div>
-                                <label for="pdfMarginTop" style="display: block; margin-bottom: 4px; font-size: 12px;">Верх:</label>
-                                <input type="number" id="pdfMarginTop" min="0" max="50" value="10" step="1" 
-                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                       oninput="applyMarginsToAll()">
-                            </div>
-                            <div>
-                                <label for="pdfMarginBottom" style="display: block; margin-bottom: 4px; font-size: 12px;">Низ:</label>
-                                <input type="number" id="pdfMarginBottom" min="0" max="50" value="20" step="1" 
-                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                       oninput="applyMarginsToAll()">
-                            </div>
-                            <div>
-                                <label for="pdfMarginLeft" style="display: block; margin-bottom: 4px; font-size: 12px;">Слева:</label>
-                                <input type="number" id="pdfMarginLeft" min="0" max="50" value="5" step="1" 
-                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                       oninput="applyMarginsToAll()">
-                            </div>
-                            <div>
-                                <label for="pdfMarginRight" style="display: block; margin-bottom: 4px; font-size: 12px;">Справа:</label>
-                                <input type="number" id="pdfMarginRight" min="0" max="50" value="5" step="1" 
-                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                       oninput="applyMarginsToAll()">
-                            </div>
+                    <!-- Правая колонка: Предпросмотр -->
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="font-weight: 600; font-size: 14px;">Предпросмотр всех страниц:</label>
+                            <span id="pdfPagesCount" style="color: #666; font-size: 12px;"></span>
                         </div>
-                        <button onclick="applyMarginsToAll()" style="width: 100%; margin-top: 8px; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                            Применить ко всем страницам
-                        </button>
-                    </div>
-                    
-                    <!-- Сохранение/загрузка макета -->
-                    <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 8px;">
-                        <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Макет отступов:</label>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <button onclick="savePDFLayout()" style="width: 100%; padding: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                💾 Сохранить макет
-                            </button>
-                            <button onclick="loadPDFLayout()" style="width: 100%; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                📂 Загрузить макет
-                            </button>
+                        <div id="pdfPreviewContainer" style="background: #f9f9f9; border: 2px solid #ddd; border-radius: 8px; padding: 16px; min-height: 600px; max-height: calc(95vh - 220px); overflow-y: auto; overflow-x: auto;">
+                            <div style="text-align: center; color: #999; padding: 40px;">
+                                Загрузка предпросмотра...
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Правая колонка: Предпросмотр -->
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="font-weight: 600; font-size: 14px;">Предпросмотр всех страниц:</label>
-                        <span id="pdfPagesCount" style="color: #666; font-size: 12px;"></span>
-                    </div>
-                    <div id="pdfPreviewContainer" style="background: #f9f9f9; border: 2px solid #ddd; border-radius: 8px; padding: 16px; min-height: 600px; max-height: calc(95vh - 220px); overflow-y: auto; overflow-x: auto;">
-                        <div style="text-align: center; color: #999; padding: 40px;">
-                            Загрузка предпросмотра...
-                        </div>
-                    </div>
+            </div>
+
+            <div id="excelExportSection" style="display: none; margin-bottom: 20px;">
+                <p style="margin-bottom: 12px; font-size: 13px;">
+                    Будет сформирован файл Excel с двумя листами: на первом — диаграмма Ганта в выбранном масштабе, на втором — таблица задач.
+                </p>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="exportExcelScale" style="display: block; margin-bottom: 4px; font-size: 13px;">Масштаб Ганта:</label>
+                    <select id="exportExcelScale" style="width: 100%; max-width: 240px; padding: 6px; font-size: 13px;">
+                        <option value="day">Дни</option>
+                        <option value="week">Недели</option>
+                        <option value="month">Месяцы</option>
+                        <option value="year">Годы</option>
+                    </select>
                 </div>
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 16px;">
-                <button class="btn btn-primary" onclick="confirmPDFExport()" style="flex: 1;">Выгрузить в PDF</button>
+                <button class="btn btn-primary" onclick="confirmExportByFormat()" style="flex: 1;">Экспорт</button>
                 <button class="btn btn-secondary" onclick="closePDFExportModal()">Отмена</button>
             </div>
         </div>
@@ -6331,7 +6352,7 @@
     <div id="excelExportModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Выгрузка в Excel</h2>
+                <h2>Экспорт в Excel</h2>
                 <span class="close" onclick="closeExcelExportModal()">&times;</span>
             </div>
             <p style="margin-bottom: 12px;">
@@ -6348,7 +6369,7 @@
                 </select>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-primary" onclick="confirmExcelExport()">Выгрузить</button>
+                <button class="btn btn-primary" onclick="confirmExcelExport()">Экспорт</button>
                 <button class="btn btn-secondary" onclick="closeExcelExportModal()">Отмена</button>
             </div>
         </div>
@@ -17394,6 +17415,16 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             }
         }
 
+        function getExcelScaleModeValue() {
+            const selectEl = document.getElementById('exportExcelScale') || document.getElementById('excelScaleMode');
+            const rawMode = selectEl ? String(selectEl.value || '').toLowerCase() : 'day';
+            let scaleMode = 'day';
+            if (rawMode.startsWith('week') || rawMode.startsWith('нед')) scaleMode = 'week';
+            else if (rawMode.startsWith('month') || rawMode.startsWith('мес')) scaleMode = 'month';
+            else if (rawMode.startsWith('year') || rawMode.startsWith('год')) scaleMode = 'year';
+            return scaleMode;
+        }
+
         // Экспорт в Excel
         function exportExcel() {
             // Показываем индикатор загрузки
@@ -17432,12 +17463,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             // делаем простой экспорт в CSV, который Excel спокойно открывает.
             if (typeof XLSX === 'undefined') {
                 try {
-                    const selectEl = document.getElementById('excelScaleMode');
-                    const rawMode = selectEl ? String(selectEl.value || '').toLowerCase() : 'day';
-                    let scaleMode = 'day';
-                    if (rawMode.startsWith('week') || rawMode.startsWith('нед')) scaleMode = 'week';
-                    else if (rawMode.startsWith('month') || rawMode.startsWith('мес')) scaleMode = 'month';
-                    else if (rawMode.startsWith('year') || rawMode.startsWith('год')) scaleMode = 'year';
+                    const scaleMode = getExcelScaleModeValue();
 
                     const timelineUnits = buildExportTimeline(scaleMode);
 
@@ -17849,77 +17875,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
         }
 
         function openExcelExportModal() {
-            const modal = document.getElementById('excelExportModal');
-            if (modal) {
-                modal.style.display = 'block';
-                
-                // На мобильных устройствах и планшетах позиционируем модальное окно рядом с кнопкой
-                const isMobile = window.innerWidth <= 1024;
-                if (isMobile) {
-                    // Используем requestAnimationFrame для применения стилей после рендера
-                    requestAnimationFrame(() => {
-                        // Находим кнопку "Выгрузить в Excel"
-                        const buttons = document.querySelectorAll('.btn');
-                        let excelButton = null;
-                        for (let btn of buttons) {
-                            if (btn.textContent && btn.textContent.includes('Выгрузить в Excel')) {
-                                excelButton = btn;
-                                break;
-                            }
-                        }
-                        
-                        if (excelButton) {
-                            const modalContent = modal.querySelector('.modal-content');
-                            if (modalContent) {
-                                const buttonRect = excelButton.getBoundingClientRect();
-                                
-                                // Позиционируем модальное окно так, чтобы оно было видно рядом с кнопкой
-                                // Вычисляем позицию: если кнопка в нижней половине экрана - показываем над ней, иначе - под ней
-                                const viewportHeight = window.innerHeight;
-                                const buttonBottom = buttonRect.bottom;
-                                const spaceBelow = viewportHeight - buttonBottom;
-                                const spaceAbove = buttonRect.top;
-                                
-                                // Вычисляем позицию относительно viewport (так как modal имеет position: fixed)
-                                let topPosition;
-                                if (spaceBelow < 300 && spaceAbove > spaceBelow) {
-                                    // Показываем над кнопкой
-                                    topPosition = buttonRect.top - 350; // высота модального окна примерно 350px
-                                } else {
-                                    // Показываем под кнопкой
-                                    topPosition = buttonRect.bottom + 20; // небольшой отступ
-                                }
-                                
-                                // Убеждаемся, что окно не выходит за пределы экрана
-                                const minTop = 20;
-                                const maxTop = viewportHeight - 400;
-                                topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
-                                
-                                // Применяем стили с !important через setProperty для переопределения CSS
-                                modalContent.style.setProperty('position', 'absolute', 'important');
-                                modalContent.style.setProperty('top', topPosition + 'px', 'important');
-                                modalContent.style.setProperty('left', '50%', 'important');
-                                modalContent.style.setProperty('transform', 'translateX(-50%)', 'important');
-                                modalContent.style.setProperty('margin', '0', 'important');
-                                modalContent.style.setProperty('width', 'calc(100% - 40px)', 'important');
-                                modalContent.style.setProperty('max-width', '500px', 'important');
-                            }
-                        }
-                    });
-                } else {
-                    // На десктопе сбрасываем стили (используется стандартное центрирование через CSS)
-                    const modalContent = modal.querySelector('.modal-content');
-                    if (modalContent) {
-                        modalContent.style.position = '';
-                        modalContent.style.top = '';
-                        modalContent.style.left = '';
-                        modalContent.style.transform = '';
-                        modalContent.style.margin = '';
-                        modalContent.style.width = '';
-                        modalContent.style.maxWidth = '';
-                    }
-                }
-            }
+            // Переиспользуем единое модальное окно с выбором формата
+            openPDFExportModal('excel');
         }
 
         function closeExcelExportModal() {
@@ -17943,6 +17900,35 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
         function confirmExcelExport() {
             closeExcelExportModal();
             exportExcel();
+        }
+
+        function confirmExportByFormat() {
+            const formatSelect = document.getElementById('exportFormatSelect');
+            const format = formatSelect ? String(formatSelect.value || 'pdf').toLowerCase() : 'pdf';
+            if (format === 'excel') {
+                closePDFExportModal();
+                exportExcel();
+            } else {
+                confirmPDFExport();
+            }
+        }
+
+        function handleExportFormatChange() {
+            const formatSelect = document.getElementById('exportFormatSelect');
+            const format = formatSelect ? String(formatSelect.value || 'pdf').toLowerCase() : 'pdf';
+            const pdfSection = document.getElementById('pdfExportSection');
+            const excelSection = document.getElementById('excelExportSection');
+            
+            if (pdfSection) {
+                pdfSection.style.display = format === 'pdf' ? 'block' : 'none';
+            }
+            if (excelSection) {
+                excelSection.style.display = format === 'excel' ? 'block' : 'none';
+            }
+            
+            if (format === 'pdf') {
+                updatePDFPreview();
+            }
         }
 
         // ========== ФУНКЦИИ ПОИСКА ==========
@@ -18397,33 +18383,35 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             modalContent.dataset.resizeInitialized = 'true';
         }
         
-        function openPDFExportModal() {
+        function openPDFExportModal(defaultFormat = 'pdf') {
             const modal = document.getElementById('pdfExportModal');
             if (modal) {
                 modal.style.display = 'block';
+                
+                // Устанавливаем выбранный формат и переключаем секции
+                const formatSelect = document.getElementById('exportFormatSelect');
+                if (formatSelect) {
+                    formatSelect.value = defaultFormat || 'pdf';
+                }
+                handleExportFormatChange();
                 
                 // Инициализируем ресайз для модального окна
                 initPDFModalResize();
                 
                 // Генерируем предпросмотр при открытии
-                setTimeout(() => {
-                    updatePDFPreview();
-                }, 100);
+                if ((defaultFormat || 'pdf') === 'pdf') {
+                    setTimeout(() => {
+                        updatePDFPreview();
+                    }, 100);
+                }
                 
                 // На мобильных устройствах и планшетах позиционируем модальное окно рядом с кнопкой
                 const isMobile = window.innerWidth <= 1024;
                 if (isMobile) {
                     // Используем requestAnimationFrame для применения стилей после рендера
                     requestAnimationFrame(() => {
-                        // Находим кнопку "Выгрузить в PDF"
-                        const buttons = document.querySelectorAll('.btn');
-                        let pdfButton = null;
-                        for (let btn of buttons) {
-                            if (btn.textContent && btn.textContent.includes('Выгрузить в PDF')) {
-                                pdfButton = btn;
-                                break;
-                            }
-                        }
+                        // Находим кнопку запуска модалки
+                        const pdfButton = document.getElementById('exportUnifiedButton');
                         
                         if (pdfButton) {
                             const modalContent = modal.querySelector('.modal-content');
