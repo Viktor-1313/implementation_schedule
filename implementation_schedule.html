@@ -2975,9 +2975,7 @@
             background: var(--color-bg);
             font-weight: 500;
             font-size: 11px;
-            position: static;
-            left: auto;
-            z-index: auto;
+           
             box-sizing: border-box;
             overflow: visible;
             white-space: nowrap;
@@ -4758,7 +4756,7 @@
             /* На мобильных отключаем sticky для колонки названий, чтобы она не перекрывала график */
             .gantt-header-label,
             .gantt-label {
-                position: static !important; /* Отключаем sticky на мобильных */
+                
                 max-width: 100%;
                 width: 100%;
                 min-width: auto;
@@ -4795,7 +4793,7 @@
                 font-size: 0.7rem;
                 padding: 8px 6px;
                 z-index: auto;
-                position: static !important; /* Отключаем sticky на мобильных */
+                
             }
 
             .gantt-header-label {
@@ -4803,7 +4801,7 @@
                 max-width: 120px;
                 width: 120px;
                 z-index: auto;
-                position: static !important; /* Отключаем sticky на мобильных */
+                
             }
 
             /* Убеждаемся, что график не перекрывается */
@@ -25219,7 +25217,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                 }
 
                 // Копирование задачи по Ctrl+C
-                if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
+                if ((event.ctrlKey || event.metaKey) && (event.code === 'KeyC' || event.key === 'c' || event.key === 'C' || event.keyCode === 67)) {
                     const target = event.target;
                     // Не перехватываем нажатие, если фокус в инпуте/textarea/select (стандартное копирование текста)
                     if (
@@ -25242,7 +25240,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                 }
 
                 // Вставка задачи по Ctrl+V
-                if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+                if ((event.ctrlKey || event.metaKey) && (event.code === 'KeyV' || event.key === 'v' || event.key === 'V' || event.keyCode === 86)) {
                     const target = event.target;
                     // Не перехватываем нажатие, если фокус в инпуте/textarea/select (стандартная вставка текста)
                     if (

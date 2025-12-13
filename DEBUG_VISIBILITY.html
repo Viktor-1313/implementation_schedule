@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Проверка видимости столбцов</title>
+</head>
+<body>
+    <h1>Диагностика видимости столбцов</h1>
+    <p>Откройте консоль браузера (F12) и выполните этот код на странице с диаграммой Ганта:</p>
+    
+    <script>
+        // Скопируйте и вставьте в консоль браузера
+        
+        function checkColumnVisibility() {
+            console.log('=== ПРОВЕРКА ВИДИМОСТИ СТОЛБЦОВ ===\n');
+            
+            const chart = document.getElementById('ganttChart');
+            if (!chart) {
+                console.error('❌ #ganttChart не найден!');
+                return;
+            }
+            
+            // Проверка элементов
+            const label = chart.querySelector('.gantt-label');
+            const startCell = chart.querySelector('.gantt-details-cell.start-col');
+            
+            if (label) {
+                console.log('✅ .gantt-label найден');
+                const rect = label.getBoundingClientRect();
+                const style = getComputedStyle(label);
+                
+                console.log('\n📐 Геометрия элемента:');
+                console.log('   width:', rect.width, 'px');
+                console.log('   height:', rect.height, 'px');
+                console.log('   left:', rect.left, 'px');
+                console.log('   top:', rect.top, 'px');
+                console.log('   right:', rect.right, 'px');
+                console.log('   bottom:', rect.bottom, 'px');
+                
+                console.log('\n🎨 Стили:');
+                console.log('   position:', style.position);
+                console.log('   left:', style.left);
+                console.log('   display:', style.display);
+                console.log('   visibility:', style.visibility);
+                console.log('   opacity:', style.opacity);
+                console.log('   width:', style.width);
+                console.log('   min-width:', style.minWidth);
+                console.log('   max-width:', style.maxWidth);
+                console.log('   margin-left:', style.marginLeft);
+                console.log('   transform:', style.transform);
+                console.log('   z-index:', style.zIndex);
+                
+                // Проверка видимости
+                const isVisible = rect.width > 0 && rect.height > 0 && 
+                                 style.display !== 'none' && 
+                                 style.visibility !== 'hidden' && 
+                                 parseFloat(style.opacity) > 0;
+                
+                console.log('\n👁️ Видимость:');
+                console.log('   Элемент видим:', isVisible ? '✅' : '❌');
+                
+                if (!isVisible) {
+                    console.warn('⚠️ Элемент не видим! Проверьте стили выше.');
+                }
+                
+                // Проверка родителя
+                const parent = label.parentElement;
+                if (parent) {
+                    console.log('\n📦 Родительский элемент:');
+                    console.log('   Класс:', parent.className);
+                    const parentRect = parent.getBoundingClientRect();
+                    const parentStyle = getComputedStyle(parent);
+                    console.log('   width:', parentRect.width, 'px');
+                    console.log('   height:', parentRect.height, 'px');
+                    console.log('   overflow:', parentStyle.overflow);
+                    console.log('   display:', parentStyle.display);
+                }
+                
+                // Проверка контейнера
+                const container = chart.closest('.chart-container');
+                if (container) {
+                    const containerRect = container.getBoundingClientRect();
+                    const containerStyle = getComputedStyle(container);
+                    console.log('\n📦 Контейнер .chart-container:');
+                    console.log('   width:', containerRect.width, 'px');
+                    console.log('   scrollLeft:', container.scrollLeft, 'px');
+                    console.log('   scrollWidth:', container.scrollWidth, 'px');
+                    console.log('   overflow-x:', containerStyle.overflowX);
+                    
+                    // Проверка, находится ли элемент в видимой области
+                    const isInViewport = rect.left >= containerRect.left && 
+                                        rect.right <= containerRect.right;
+                    console.log('   Элемент в видимой области:', isInViewport ? '✅' : '❌');
+                    
+                    if (!isInViewport) {
+                        console.warn('⚠️ Элемент находится вне видимой области контейнера!');
+                        console.log('   Попробуйте прокрутить контейнер влево');
+                    }
+                }
+            } else {
+                console.error('❌ .gantt-label НЕ найден!');
+            }
+            
+            // Проверка всех элементов
+            console.log('\n📊 Статистика:');
+            const allLabels = chart.querySelectorAll('.gantt-label');
+            const visibleLabels = Array.from(allLabels).filter(el => {
+                const rect = el.getBoundingClientRect();
+                const style = getComputedStyle(el);
+                return rect.width > 0 && rect.height > 0 && 
+                       style.display !== 'none' && 
+                       style.visibility !== 'hidden';
+            });
+            console.log('   Всего .gantt-label:', allLabels.length);
+            console.log('   Видимых .gantt-label:', visibleLabels.length);
+            
+            const allStartCells = chart.querySelectorAll('.gantt-details-cell.start-col');
+            const visibleStartCells = Array.from(allStartCells).filter(el => {
+                const rect = el.getBoundingClientRect();
+                const style = getComputedStyle(el);
+                return rect.width > 0 && rect.height > 0 && 
+                       style.display !== 'none' && 
+                       style.visibility !== 'hidden';
+            });
+            console.log('   Всего .gantt-details-cell.start-col:', allStartCells.length);
+            console.log('   Видимых .gantt-details-cell.start-col:', visibleStartCells.length);
+        }
+        
+        console.log('Для запуска проверки выполните: checkColumnVisibility()');
+    </script>
+</body>
+</html>
