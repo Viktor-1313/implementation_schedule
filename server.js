@@ -75,6 +75,227 @@ function getCompanyInfoFile(companyId) {
   return path.join(__dirname, `company-info-${companyId}.json`);
 }
 
+// Функция для получения пути к папке версий компании
+function getVersionsDir(companyId) {
+  const versionsDir = path.join(__dirname, 'versions', companyId);
+  if (!fs.existsSync(versionsDir)) {
+    fs.mkdirSync(versionsDir, { recursive: true });
+  }
+  return versionsDir;
+}
+
+// Функция для получения пути к файлу версии
+function getVersionFile(companyId, versionId) {
+  return path.join(getVersionsDir(companyId), `version-${versionId}.json`);
+}
+
+// Функция для получения метаданных версий компании
+function getVersionsMetadataFile(companyId) {
+  return path.join(getVersionsDir(companyId), 'metadata.json');
+}
+
+// Сохранение версии графика
+function saveVersion(companyId, ganttState, companyInfo = null) {
+  try {
+    const versionId = Date.now().toString();
+    const versionFile = getVersionFile(companyId, versionId);
+    const metadataFile = getVersionsMetadataFile(companyId);
+    
+    // Сохраняем версию графика
+    const versionData = {
+      versionId,
+      companyId,
+      timestamp: new Date().toISOString(),
+      dateTime: new Date().toLocaleString('ru-RU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }),
+      ganttState,
+      companyInfo
+    };
+    
+    fs.writeFileSync(versionFile, JSON.stringify(versionData, null, 2), 'utf8');
+    
+    // Обновляем метаданные версий
+    let metadata = [];
+    if (fs.existsSync(metadataFile)) {
+      const raw = fs.readFileSync(metadataFile, 'utf8');
+      metadata = safeJsonParse(raw) || [];
+    }
+    
+    // Добавляем новую версию в начало списка
+    metadata.unshift({
+      versionId,
+      timestamp: versionData.timestamp,
+      dateTime: versionData.dateTime,
+      size: JSON.stringify(versionData).length
+    });
+    
+    // Ограничиваем количество версий (храним последние 365 версий - год)
+    const maxVersions = 365;
+    if (metadata.length > maxVersions) {
+      // Удаляем старые версии
+      const toDelete = metadata.slice(maxVersions);
+      toDelete.forEach(version => {
+        const oldVersionFile = getVersionFile(companyId, version.versionId);
+        if (fs.existsSync(oldVersionFile)) {
+          fs.unlinkSync(oldVersionFile);
+        }
+      });
+      metadata = metadata.slice(0, maxVersions);
+    }
+    
+    fs.writeFileSync(metadataFile, JSON.stringify(metadata, null, 2), 'utf8');
+    
+    console.log(`✅ Версия ${versionId} сохранена для компании ${companyId}`);
+    return versionId;
+  } catch (e) {
+    console.error(`❌ Ошибка сохранения версии для компании ${companyId}:`, e);
+    throw e;
+  }
+}
+
+// Получение списка версий компании
+function getVersions(companyId) {
+  try {
+    const metadataFile = getVersionsMetadataFile(companyId);
+    if (!fs.existsSync(metadataFile)) {
+      return [];
+    }
+    const raw = fs.readFileSync(metadataFile, 'utf8');
+    return safeJsonParse(raw) || [];
+  } catch (e) {
+    console.error(`❌ Ошибка получения версий для компании ${companyId}:`, e);
+    return [];
+  }
+}
+
+// Загрузка конкретной версии
+function loadVersion(companyId, versionId) {
+  try {
+    const versionFile = getVersionFile(companyId, versionId);
+    if (!fs.existsSync(versionFile)) {
+      return null;
+    }
+    const raw = fs.readFileSync(versionFile, 'utf8');
+    return safeJsonParse(raw);
+  } catch (e) {
+    console.error(`❌ Ошибка загрузки версии ${versionId} для компании ${companyId}:`, e);
+    return null;
+  }
+}
+
+// Удаление версии
+function deleteVersion(companyId, versionId) {
+  try {
+    const versionFile = getVersionFile(companyId, versionId);
+    if (fs.existsSync(versionFile)) {
+      fs.unlinkSync(versionFile);
+    }
+    
+    // Обновляем метаданные
+    const metadataFile = getVersionsMetadataFile(companyId);
+    if (fs.existsSync(metadataFile)) {
+      const raw = fs.readFileSync(metadataFile, 'utf8');
+      let metadata = safeJsonParse(raw) || [];
+      metadata = metadata.filter(v => v.versionId !== versionId);
+      fs.writeFileSync(metadataFile, JSON.stringify(metadata, null, 2), 'utf8');
+    }
+    
+    console.log(`✅ Версия ${versionId} удалена для компании ${companyId}`);
+    return true;
+  } catch (e) {
+    console.error(`❌ Ошибка удаления версии ${versionId} для компании ${companyId}:`, e);
+    throw e;
+  }
+}
+
+// Автоматическое сохранение всех графиков
+async function autoSaveAllVersions() {
+  try {
+    console.log('🔄 Начало автоматического сохранения версий всех графиков...');
+    
+    // Получаем список всех компаний
+    let companies = [];
+    if (fs.existsSync(COMPANIES_FILE)) {
+      const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = safeJsonParse(raw) || [];
+    }
+    
+    if (companies.length === 0) {
+      console.log('📭 Нет компаний для сохранения версий');
+      return;
+    }
+    
+    let savedCount = 0;
+    let errorCount = 0;
+    
+    for (const company of companies) {
+      try {
+        const companyId = company.id;
+        const dataFile = getCompanyDataFile(companyId);
+        
+        // Проверяем, существует ли график
+        if (!fs.existsSync(dataFile)) {
+          console.log(`⏭️  Пропуск компании ${companyId} - график не существует`);
+          continue;
+        }
+        
+        // Загружаем текущий график
+        const raw = fs.readFileSync(dataFile, 'utf8');
+        const ganttState = safeJsonParse(raw);
+        
+        // Загружаем информацию о компании
+        let companyInfo = null;
+        const infoFile = getCompanyInfoFile(companyId);
+        if (fs.existsSync(infoFile)) {
+          const infoRaw = fs.readFileSync(infoFile, 'utf8');
+          companyInfo = safeJsonParse(infoRaw);
+        }
+        
+        // Сохраняем версию
+        saveVersion(companyId, ganttState, companyInfo);
+        savedCount++;
+        console.log(`✅ Версия сохранена для компании ${companyId}`);
+      } catch (e) {
+        console.error(`❌ Ошибка сохранения версии для компании ${company.id}:`, e);
+        errorCount++;
+      }
+    }
+    
+    console.log(`✅ Автоматическое сохранение завершено: ${savedCount} успешно, ${errorCount} ошибок`);
+  } catch (e) {
+    console.error('❌ Критическая ошибка при автоматическом сохранении версий:', e);
+  }
+}
+
+// Настройка автоматического сохранения один раз в сутки (в 3:00 ночи)
+function setupAutoSaveSchedule() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(3, 0, 0, 0); // 3:00 ночи
+  
+  const msUntilNext = tomorrow.getTime() - now.getTime();
+  
+  console.log(`⏰ Автоматическое сохранение версий настроено на ${tomorrow.toLocaleString('ru-RU')}`);
+  console.log(`   Следующее сохранение через ${Math.round(msUntilNext / 1000 / 60)} минут`);
+  
+  // Первый запуск через рассчитанное время
+  setTimeout(() => {
+    autoSaveAllVersions();
+    
+    // Затем каждые 24 часа
+    setInterval(() => {
+      autoSaveAllVersions();
+    }, 24 * 60 * 60 * 1000);
+  }, msUntilNext);
+}
+
 // Валидация ID компании (только латинские буквы, цифры, дефисы и подчеркивания)
 function isValidCompanyId(companyId) {
   return /^[a-zA-Z0-9_-]+$/.test(companyId);
@@ -1283,6 +1504,147 @@ app.post('/api/gantt-state', requireAuth, checkCompanyAccess, (req, res) => {
     console.error('   Сообщение:', e.message);
     console.error('   Стек ошибки:', e.stack);
     res.status(500).json({ ok: false, error: 'save_failed', message: e.message });
+  }
+});
+
+// ========== API ДЛЯ РАБОТЫ С ВЕРСИЯМИ ГРАФИКОВ ==========
+
+// Получить список версий графика компании (требуется авторизация, только админы)
+app.get('/api/versions', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const companyId = req.query.company;
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+
+    const versions = getVersions(companyId);
+    res.json({ ok: true, versions });
+  } catch (e) {
+    console.error('Ошибка получения версий:', e);
+    res.status(500).json({ ok: false, error: 'load_versions_failed' });
+  }
+});
+
+// Получить конкретную версию графика (требуется авторизация, только админы)
+app.get('/api/versions/:versionId', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const companyId = req.query.company;
+    const versionId = req.params.versionId;
+    
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+    
+    if (!versionId) {
+      return res.status(400).json({ ok: false, error: 'Не указан ID версии' });
+    }
+
+    const version = loadVersion(companyId, versionId);
+    if (!version) {
+      return res.status(404).json({ ok: false, error: 'Версия не найдена' });
+    }
+
+    res.json({ ok: true, version });
+  } catch (e) {
+    console.error('Ошибка загрузки версии:', e);
+    res.status(500).json({ ok: false, error: 'load_version_failed' });
+  }
+});
+
+// Удалить версию графика (требуется авторизация, только админы)
+app.delete('/api/versions/:versionId', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const companyId = req.query.company;
+    const versionId = req.params.versionId;
+    
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+    
+    if (!versionId) {
+      return res.status(400).json({ ok: false, error: 'Не указан ID версии' });
+    }
+
+    deleteVersion(companyId, versionId);
+    
+    // Логируем удаление версии
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Администратор';
+    addLog(userName, 'Удалил версию графика', `Компания: ${companyId}, Версия: ${versionId}`, companyId);
+    
+    res.json({ ok: true, message: 'Версия удалена' });
+  } catch (e) {
+    console.error('Ошибка удаления версии:', e);
+    res.status(500).json({ ok: false, error: 'delete_version_failed' });
+  }
+});
+
+// Восстановить график из версии (требуется авторизация, только админы)
+app.post('/api/versions/:versionId/restore', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const companyId = req.query.company;
+    const versionId = req.params.versionId;
+    
+    if (!companyId || !isValidCompanyId(companyId)) {
+      return res.status(400).json({ ok: false, error: 'Не указан или неверный ID компании' });
+    }
+    
+    if (!versionId) {
+      return res.status(400).json({ ok: false, error: 'Не указан ID версии' });
+    }
+
+    const version = loadVersion(companyId, versionId);
+    if (!version) {
+      return res.status(404).json({ ok: false, error: 'Версия не найдена' });
+    }
+
+    // Восстанавливаем график
+    const dataFile = getCompanyDataFile(companyId);
+    fs.writeFileSync(dataFile, JSON.stringify(version.ganttState, null, 2), 'utf8');
+    
+    // Восстанавливаем информацию о компании, если она есть
+    if (version.companyInfo) {
+      const infoFile = getCompanyInfoFile(companyId);
+      fs.writeFileSync(infoFile, JSON.stringify(version.companyInfo, null, 2), 'utf8');
+    }
+    
+    // Логируем восстановление версии
+    const userName = req.body.userName || req.headers['x-user-name'] || 'Администратор';
+    addLog(userName, 'Восстановил график из версии', `Компания: ${companyId}, Версия: ${versionId} (${version.dateTime})`, companyId);
+    
+    res.json({ ok: true, message: 'График восстановлен из версии' });
+  } catch (e) {
+    console.error('Ошибка восстановления версии:', e);
+    res.status(500).json({ ok: false, error: 'restore_version_failed' });
+  }
+});
+
+// Получить список всех версий всех компаний (требуется авторизация, только админы)
+app.get('/api/versions/all', requireAuth, requireAdmin, (req, res) => {
+  try {
+    // Получаем список всех компаний
+    let companies = [];
+    if (fs.existsSync(COMPANIES_FILE)) {
+      const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
+      companies = safeJsonParse(raw) || [];
+    }
+    
+    const allVersions = [];
+    
+    for (const company of companies) {
+      const versions = getVersions(company.id);
+      if (versions.length > 0) {
+        allVersions.push({
+          companyId: company.id,
+          companyName: company.name || company.id,
+          versions: versions
+        });
+      }
+    }
+    
+    res.json({ ok: true, companies: allVersions });
+  } catch (e) {
+    console.error('Ошибка получения всех версий:', e);
+    res.status(500).json({ ok: false, error: 'load_all_versions_failed' });
   }
 });
 
@@ -2669,7 +3031,7 @@ async function initializeMainAdmin() {
   }
 }
 
-// Инициализируем главного админа перед запуском сервера
+    // Инициализируем главного админа перед запуском сервера
 initializeMainAdmin()
   .then(() => {
     // Проверяем наличие основных файлов
@@ -2697,6 +3059,9 @@ initializeMainAdmin()
       } catch (e) {
         console.warn('⚠️  Не удалось прочитать содержимое директории:', e.message);
       }
+      
+      // Настраиваем автоматическое сохранение версий
+      setupAutoSaveSchedule();
       console.log(`\n📋 Доступные страницы:`);
       console.log(`   • Авторизация: http://localhost:${PORT}/auth.html`);
       console.log(`   • Админ-панель: http://localhost:${PORT}/admin.html`);

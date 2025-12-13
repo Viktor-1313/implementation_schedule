@@ -2515,7 +2515,7 @@
         }
 
         .gantt-details-cell {
-            padding: 8px 6px;
+            padding: 8px 6px 26px 6px; /* Увеличен нижний padding для тогла */
             border-right: 1px solid var(--color-border);
             background: var(--color-bg);
             font-size: 11px;
@@ -22346,11 +22346,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                     return;
                 }
                 
-                // ВАЖНО: Сохраняем текущую дату начала задачи, если она установлена
-let taskStartDate = (task.startDate && task.startDate instanceof Date && !isNaN(task.startDate.getTime())) 
-    ? new Date(task.startDate) 
-    : currentStartDate;
-const newDates = getTaskDates(taskStartDate, task.days);
+                // Пересчитываем даты задачи с учетом нового календаря
+                const newDates = getTaskDates(new Date(currentStartDate), task.days);
                 
                 if (newDates.length > 0) {
                     // Обновляем дату начала (Date объект)

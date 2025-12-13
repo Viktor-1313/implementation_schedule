@@ -272,3 +272,4 @@ tableWrapper.appendChild(ganttTable);
 Таблица всегда будет начинаться с позиции `8mm + 15mm + 3mm + 2mm = 28mm` от верха страницы.
 
 
+

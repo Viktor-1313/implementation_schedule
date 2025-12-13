@@ -1790,7 +1790,7 @@
             <div class="header-content">
                 <div class="header-icon"></div>
                 <h1>Админ-панель</h1>
-                <p>Управление пользователями системы диаграммы Ганта</p>
+                <p>Управление пользователями системы планирования DeadLinePro</p>
             </div>
         </div>
 
@@ -1953,6 +1953,33 @@
                     <input type="file" id="restoreBackupInput" accept=".json" style="display: none;" onchange="restoreCompanyBackup(event)">
                 </div>
                 <div id="backupStatus" style="display: none; padding: 15px; border-radius: 10px; margin-top: 10px;"></div>
+            </div>
+        </div>
+
+        <!-- Управление версиями графиков -->
+        <div class="panel-section" style="margin-top: 30px;">
+            <h2>Управление версиями графиков</h2>
+            <p style="color: #64b5f6; margin-bottom: 20px; font-size: 0.95rem;">
+                Просмотр, удаление и восстановление автоматически сохраненных версий графиков. Версии сохраняются автоматически один раз в сутки в 3:00 ночи.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="form-group">
+                    <label for="versionsCompanySelect">Выберите компанию</label>
+                    <select id="versionsCompanySelect" name="versionsCompanySelect" style="width: 100%; padding: 14px 18px; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 12px; font-size: 1rem; background: rgba(255, 255, 255, 0.9); color: #1565c0;" onchange="loadVersions()">
+                        <option value="">-- Выберите компанию --</option>
+                    </select>
+                </div>
+                <div id="versionsContainer" style="display: none;">
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="color: #1565c0; margin-bottom: 10px; font-size: 1.2rem;">Список версий</h3>
+                        <div id="versionsList" style="max-height: 500px; overflow-y: auto; border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; padding: 15px; background: rgba(255, 255, 255, 0.9);">
+                            <div class="empty-state">
+                                <p>Загрузка версий...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="versionsStatus" style="display: none; padding: 15px; border-radius: 10px; margin-top: 10px;"></div>
             </div>
         </div>
         <!-- Прозрачный отступ, чтобы блок бэкапа не прилипал к футеру -->
@@ -4855,6 +4882,13 @@
                 loadUsers();
                 loadChartTypes();
                 loadActivityLogs();
+                // Загружаем компании для версий после загрузки основных компаний
+                loadCompanies().then(() => {
+                    loadCompaniesForVersions();
+                }).catch(() => {
+                    // Если основная загрузка не удалась, все равно пытаемся загрузить для версий
+                    loadCompaniesForVersions();
+                });
             
             // Обновление логов при изменении фильтров
             const logCompanyFilter = document.getElementById('logCompanyFilter');
@@ -4884,13 +4918,57 @@
                 return;
             }
             
+            // Проверяем наличие данных пользователя
+            const storedUser = localStorage.getItem('gantt-user');
+            if (!storedUser) {
+                showBackupStatus('❌ Ошибка: вы не авторизованы. Пожалуйста, войдите заново.', 'error');
+                console.error('❌ [exportCompanyBackup] Нет данных пользователя в localStorage');
+                return;
+            }
+            
             try {
+                const userData = JSON.parse(storedUser);
+                if (!userData || !userData.login) {
+                    showBackupStatus('❌ Ошибка: неверные данные авторизации. Пожалуйста, войдите заново.', 'error');
+                    console.error('❌ [exportCompanyBackup] Нет логина в данных пользователя:', userData);
+                    return;
+                }
+                
                 showBackupStatus('Создание бэкапа...', 'info');
                 
-                const response = await fetch(`/api/company-backup?company=${encodeURIComponent(companyId)}`);
+                // Для GET запросов не нужен Content-Type, только заголовки авторизации
+                const authHeaders = getAuthHeaders();
+                const headers = {};
+                if (authHeaders['X-User-Login']) {
+                    headers['X-User-Login'] = authHeaders['X-User-Login'];
+                }
+                if (authHeaders['X-User-Name']) {
+                    headers['X-User-Name'] = authHeaders['X-User-Name'];
+                }
+                if (authHeaders['X-User-Name-Encoded']) {
+                    headers['X-User-Name-Encoded'] = authHeaders['X-User-Name-Encoded'];
+                }
+                
+                console.log('🔍 [exportCompanyBackup] Отправляемые заголовки:', headers);
+                console.log('🔍 [exportCompanyBackup] URL:', `/api/company-backup?company=${encodeURIComponent(companyId)}`);
+                console.log('🔍 [exportCompanyBackup] Логин пользователя:', userData.login);
+                
+                if (!headers['X-User-Login']) {
+                    showBackupStatus('❌ Ошибка: не удалось получить данные авторизации. Пожалуйста, войдите заново.', 'error');
+                    console.error('❌ [exportCompanyBackup] Заголовок X-User-Login не установлен');
+                    return;
+                }
+                
+                const response = await fetch(`/api/company-backup?company=${encodeURIComponent(companyId)}`, {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                console.log('🔍 [exportCompanyBackup] Статус ответа:', response.status);
                 
                 if (!response.ok) {
                     const error = await response.json();
+                    console.error('❌ [exportCompanyBackup] Ошибка ответа:', error);
                     throw new Error(error.error || 'Ошибка создания бэкапа');
                 }
                 
@@ -4996,19 +5074,48 @@
                 return;
             }
 
+            // Проверяем наличие данных пользователя
+            const storedUser = localStorage.getItem('gantt-user');
+            if (!storedUser) {
+                showBackupStatus('❌ Ошибка: вы не авторизованы. Пожалуйста, войдите заново.', 'error');
+                console.error('❌ [confirmRestoreBackup] Нет данных пользователя в localStorage');
+                cancelRestoreBackup();
+                return;
+            }
+            
             try {
+                const userData = JSON.parse(storedUser);
+                if (!userData || !userData.login) {
+                    showBackupStatus('❌ Ошибка: неверные данные авторизации. Пожалуйста, войдите заново.', 'error');
+                    console.error('❌ [confirmRestoreBackup] Нет логина в данных пользователя:', userData);
+                    cancelRestoreBackup();
+                    return;
+                }
+                
                 showBackupStatus('Восстановление данных...', 'info');
+                
+                const headers = getAuthHeaders();
+                console.log('🔍 [confirmRestoreBackup] Отправляемые заголовки:', headers);
+                console.log('🔍 [confirmRestoreBackup] Логин пользователя:', userData.login);
+                
+                if (!headers['X-User-Login']) {
+                    showBackupStatus('❌ Ошибка: не удалось получить данные авторизации. Пожалуйста, войдите заново.', 'error');
+                    console.error('❌ [confirmRestoreBackup] Заголовок X-User-Login не установлен');
+                    cancelRestoreBackup();
+                    return;
+                }
                 
                 const response = await fetch('/api/company-restore', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: headers,
                     body: JSON.stringify(backupToRestore)
                 });
                 
+                console.log('🔍 [confirmRestoreBackup] Статус ответа:', response.status);
+                
                 if (!response.ok) {
                     const error = await response.json();
+                    console.error('❌ [confirmRestoreBackup] Ошибка ответа:', error);
                     throw new Error(error.error || 'Ошибка восстановления бэкапа');
                 }
                 
@@ -5097,9 +5204,267 @@
             statusDiv.style.whiteSpace = 'pre-line';
             statusDiv.style.padding = '15px';
             statusDiv.style.borderRadius = '10px';
-            statusDiv.style.marginTop = '10px';
-            
-            console.log('Сообщение статуса установлено, элемент видим:', statusDiv.style.display);
+        }
+
+        // ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ВЕРСИЯМИ ГРАФИКОВ ==========
+
+        // Загрузка компаний для селектора версий
+        async function loadCompaniesForVersions() {
+            try {
+                const companySelect = document.getElementById('versionsCompanySelect');
+                if (!companySelect) {
+                    console.warn('⚠️ Элемент versionsCompanySelect не найден');
+                    return;
+                }
+
+                // Проверяем авторизацию перед запросом
+                if (!localStorage.getItem('gantt-user')) {
+                    console.warn('⚠️ loadCompaniesForVersions: Нет данных авторизации');
+                    return;
+                }
+
+                const response = await fetch('/api/companies', {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки компаний' }));
+                    console.error('Ошибка загрузки компаний для версий:', response.status, errorData);
+                    throw new Error(errorData.error || 'Ошибка загрузки компаний');
+                }
+
+                const data = await response.json();
+                // API возвращает массив напрямую или объект с полем companies
+                const companies = Array.isArray(data) ? data : (data.companies || []);
+
+                console.log('📋 Загружено компаний для версий:', companies.length);
+
+                // Очищаем селектор
+                companySelect.innerHTML = '<option value="">-- Выберите компанию --</option>';
+
+                // Добавляем компании
+                if (companies.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Нет компаний';
+                    option.disabled = true;
+                    companySelect.appendChild(option);
+                } else {
+                    companies.forEach(company => {
+                        const option = document.createElement('option');
+                        option.value = company.id;
+                        option.textContent = company.name || company.id;
+                        companySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки компаний для версий:', error);
+                const companySelect = document.getElementById('versionsCompanySelect');
+                if (companySelect) {
+                    companySelect.innerHTML = '<option value="">Ошибка загрузки компаний</option>';
+                }
+            }
+        }
+
+        // Загрузка версий графика компании
+        async function loadVersions() {
+            const companySelect = document.getElementById('versionsCompanySelect');
+            const companyId = companySelect ? companySelect.value : '';
+            const versionsContainer = document.getElementById('versionsContainer');
+            const versionsList = document.getElementById('versionsList');
+            const statusDiv = document.getElementById('versionsStatus');
+
+            if (!companyId) {
+                if (versionsContainer) versionsContainer.style.display = 'none';
+                if (statusDiv) {
+                    statusDiv.style.display = 'none';
+                    statusDiv.textContent = '';
+                }
+                return;
+            }
+
+            try {
+                if (versionsList) {
+                    versionsList.innerHTML = '<div class="empty-state"><p>Загрузка версий...</p></div>';
+                }
+
+                const response = await fetch(`/api/versions?company=${encodeURIComponent(companyId)}`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки версий');
+                }
+
+                const data = await response.json();
+                const versions = data.versions || [];
+
+                if (versionsContainer) versionsContainer.style.display = 'block';
+
+                if (versions.length === 0) {
+                    if (versionsList) {
+                        versionsList.innerHTML = '<div class="empty-state"><p>Нет сохраненных версий для этой компании</p></div>';
+                    }
+                    return;
+                }
+
+                // Отображаем список версий
+                if (versionsList) {
+                    versionsList.innerHTML = versions.map((version, index) => {
+                        const date = new Date(version.timestamp);
+                        const formattedDate = version.dateTime || date.toLocaleString('ru-RU', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        const sizeKB = version.size ? (version.size / 1024).toFixed(2) : '?';
+
+                        return `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin-bottom: 10px; background: rgba(255, 255, 255, 0.9); border: 2px solid rgba(100, 181, 246, 0.3); border-radius: 10px; transition: all 0.3s ease;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #1565c0; margin-bottom: 5px;">Версия #${index + 1}</div>
+                                    <div style="color: #666; font-size: 0.9rem;">${formattedDate}</div>
+                                    <div style="color: #999; font-size: 0.85rem; margin-top: 5px;">Размер: ${sizeKB} KB</div>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn btn-primary" onclick="restoreVersion('${version.versionId}', '${companyId}')" style="width: auto; padding: 10px 20px; background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);">
+                                        Восстановить
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteVersion('${version.versionId}', '${companyId}')" style="width: auto; padding: 10px 20px;">
+                                        Удалить
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                if (statusDiv) {
+                    statusDiv.style.display = 'none';
+                    statusDiv.textContent = '';
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки версий:', error);
+                if (versionsList) {
+                    versionsList.innerHTML = `<div class="empty-state"><p style="color: #f44336;">Ошибка загрузки версий: ${error.message}</p></div>`;
+                }
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = `❌ Ошибка загрузки версий: ${error.message}`;
+                    statusDiv.style.background = 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)';
+                    statusDiv.style.color = '#c62828';
+                    statusDiv.style.border = '2px solid #ef5350';
+                }
+            }
+        }
+
+        // Восстановление версии
+        async function restoreVersion(versionId, companyId) {
+            if (!confirm(`Вы действительно хотите восстановить график компании "${companyId}" из этой версии?\n\nТекущий график будет перезаписан.`)) {
+                return;
+            }
+
+            const statusDiv = document.getElementById('versionsStatus');
+
+            try {
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = 'Восстановление версии...';
+                    statusDiv.style.background = 'linear-gradient(135deg, #bbdefb 0%, #90caf9 100%)';
+                    statusDiv.style.color = '#1565c0';
+                    statusDiv.style.border = '2px solid #2196f3';
+                }
+
+                const response = await fetch(`/api/versions/${versionId}/restore?company=${encodeURIComponent(companyId)}`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка восстановления версии');
+                }
+
+                const data = await response.json();
+
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = `✅ График успешно восстановлен из версии`;
+                    statusDiv.style.background = 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)';
+                    statusDiv.style.color = '#2e7d32';
+                    statusDiv.style.border = '2px solid #4caf50';
+                }
+
+                showMessage('График успешно восстановлен из версии', 'success');
+
+                // Перезагружаем версии
+                await loadVersions();
+            } catch (error) {
+                console.error('Ошибка восстановления версии:', error);
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = `❌ Ошибка восстановления версии: ${error.message}`;
+                    statusDiv.style.background = 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)';
+                    statusDiv.style.color = '#c62828';
+                    statusDiv.style.border = '2px solid #ef5350';
+                }
+                showMessage(`Ошибка восстановления версии: ${error.message}`, 'error');
+            }
+        }
+
+        // Удаление версии
+        async function deleteVersion(versionId, companyId) {
+            if (!confirm(`Вы действительно хотите удалить эту версию графика?\n\nЭто действие нельзя отменить.`)) {
+                return;
+            }
+
+            const statusDiv = document.getElementById('versionsStatus');
+
+            try {
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = 'Удаление версии...';
+                    statusDiv.style.background = 'linear-gradient(135deg, #bbdefb 0%, #90caf9 100%)';
+                    statusDiv.style.color = '#1565c0';
+                    statusDiv.style.border = '2px solid #2196f3';
+                }
+
+                const response = await fetch(`/api/versions/${versionId}?company=${encodeURIComponent(companyId)}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка удаления версии');
+                }
+
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = `✅ Версия успешно удалена`;
+                    statusDiv.style.background = 'linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%)';
+                    statusDiv.style.color = '#2e7d32';
+                    statusDiv.style.border = '2px solid #4caf50';
+                }
+
+                showMessage('Версия успешно удалена', 'success');
+
+                // Перезагружаем версии
+                await loadVersions();
+            } catch (error) {
+                console.error('Ошибка удаления версии:', error);
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.textContent = `❌ Ошибка удаления версии: ${error.message}`;
+                    statusDiv.style.background = 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)';
+                    statusDiv.style.color = '#c62828';
+                    statusDiv.style.border = '2px solid #ef5350';
+                }
+                showMessage(`Ошибка удаления версии: ${error.message}`, 'error');
+            }
         }
     </script>
     

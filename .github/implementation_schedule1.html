@@ -2362,20 +2362,6 @@
             scrollbar-width: thin; /* Для Firefox */
             scrollbar-color: #90caf9 #e3f2fd; /* Для Firefox */
         }
-
-        /* Фоновая подложка для закреплённых колонок, чтобы тянуться по всей высоте */
-        .gantt-chart.has-sticky-columns::before {
-            content: '';
-            position: sticky;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: var(--sticky-left-width, 0px);
-            background: var(--color-bg);
-            border-right: 1px solid var(--color-border);
-            z-index: 6;
-            pointer-events: none;
-        }
         
         /* Стили скроллбара для десктопа */
         .gantt-chart::-webkit-scrollbar {
@@ -2419,18 +2405,18 @@
         .gantt-header-label {
             min-width: 180px;
             max-width: 180px;
-            padding: 10px 10px 26px 10px; /* Увеличен нижний padding для тогла */
+            padding: 10px 10px;
             border-right: 2px solid var(--color-border);
             background: var(--color-bg);
-            position: static;
-            left: auto;
-            z-index: auto;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            text-align: center;
             font-size: 16px;
             font-weight: 700;
             box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
+            /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
+            clip-path: inset(0);
         }
 
         .gantt-details-header {
@@ -2441,107 +2427,14 @@
             display: flex;
         }
 
-        /* --- Тогглы фиксации колонок внутри ячеек заголовков --- */
-        .header-sticky-toggle {
-            position: absolute;
-            bottom: 4px;
-            right: 4px;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            z-index: 10;
-        }
-
-        .header-sticky-toggle input {
-            display: none;
-        }
-
-        .header-sticky-switch {
-            position: relative;
-            width: 28px;
-            height: 16px;
-            border-radius: 16px;
-            background: #d8d8d8;
-            border: 1px solid #c5c5c5;
-            transition: background 0.2s ease, border-color 0.2s ease;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
-        }
-
-        .header-sticky-switch::after {
-            content: '';
-            position: absolute;
-            top: 1px;
-            left: 1px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease;
-        }
-
-        .header-sticky-toggle input:checked + .header-sticky-switch {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-            border-color: var(--color-primary);
-        }
-
-        .header-sticky-toggle input:checked + .header-sticky-switch::after {
-            transform: translateX(12px);
-        }
-
-        .header-label-text {
-            flex: 1;
-            text-align: center;
-        }
-
-        [data-theme="dark"] .header-sticky-switch {
-            background: #2b2b2b;
-            border-color: #3a3a3a;
-        }
-
-        [data-theme="dark"] .header-sticky-toggle input:checked + .header-sticky-switch {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-            border-color: var(--color-primary);
-        }
-
-        /* Обновляем стили заголовков для поддержки тоглов */
-        .gantt-header-label {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding-left: 8px;
-            position: relative;
-        }
-
         .gantt-details-cell {
             padding: 8px 6px;
             border-right: 1px solid var(--color-border);
             background: var(--color-bg);
+            text-align: center;
             font-size: 11px;
             box-sizing: border-box;
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            position: relative;
-        }
-
-        .gantt-details-cell .header-label-text {
-            flex: 1;
-            text-align: center;
-            margin-left: 0; /* Тогл теперь абсолютно позиционирован, отступ не нужен */
-        }
-
-        .gantt-header-label .header-label-text {
-            flex: 1;
-            text-align: center;
-            margin-left: 0; /* Тогл теперь абсолютно позиционирован, отступ не нужен */
-        }
-
-        /* Скрытие только блока "Фиксация:" с чекбоксами над таблицей */
-        .sticky-controls {
-            display: none !important;
         }
 
         /* Анимация для колонки "Ответственный" в Ганте */
@@ -2975,10 +2868,12 @@
             background: var(--color-bg);
             font-weight: 500;
             font-size: 11px;
-            position: static;
-            left: auto;
-            z-index: auto;
+            position: sticky;
+            left: 0;
+            z-index: 5;
             box-sizing: border-box;
+            /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
+            clip-path: inset(0);
             overflow: visible;
             white-space: nowrap;
             display: flex;
@@ -3782,17 +3677,6 @@
             font-size: 12px;
         }
         
-        /* Скрываем скроллбар в предпросмотре, оставляя прокрутку */
-        #pdfPreviewContainer {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-            overflow-x: hidden !important; /* скрываем горизонтальный скроллбар */
-            overflow-y: auto !important;  /* оставляем вертикальный скролл */
-        }
-        #pdfPreviewContainer::-webkit-scrollbar {
-            display: none; /* WebKit */
-        }
-        
         /* Адаптивность для мобильных устройств */
         @media (max-width: 1024px) {
             #pdfExportSettingsGrid {
@@ -3819,19 +3703,11 @@
         
         /* Стили для ресайза модального окна PDF */
         #pdfExportModal .modal-content {
-            /* Оставляем прокрутку, но скрываем полосу скролла */
-            overflow: auto !important;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            overflow: auto;
             min-width: 800px;
             min-height: 600px;
             max-width: 98vw;
             max-height: 98vh;
-            display: flex;
-            flex-direction: column;
-        }
-        #pdfExportModal .modal-content::-webkit-scrollbar {
-            display: none; /* WebKit */
         }
         
         /* Ресайз-хендлы для модального окна PDF */
@@ -6014,9 +5890,13 @@
                     <span class="view-toggle-part view-toggle-table">Таблица</span>
                 </span>
             </button>
-            <button class="btn btn-primary" id="exportUnifiedButton" onclick="openPDFExportModal('pdf')">
+            <button class="btn btn-primary" onclick="openPDFExportModal()">
                 <span class="btn-icon btn-icon-pdf"></span>
-                <span>Экспорт</span>
+                <span>Выгрузить в PDF</span>
+            </button>
+            <button class="btn btn-primary" onclick="openExcelExportModal()">
+                <span class="btn-icon btn-icon-excel"></span>
+                <span>Выгрузить в Excel</span>
             </button>
             <div style="display: inline-flex; align-items: center; gap: 8px;">
                 <div class="search-input-container" style="position: relative; display: inline-block;">
@@ -6189,39 +6069,6 @@
                         <span class="stage-settings-knob stage-settings-knob-3"></span>
                     </span>
                 </button>
-                <div class="sticky-controls">
-                    <span class="zoom-label">Фиксация:</span>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Задача'">
-                        <input type="checkbox" id="stickyLabelToggle" onchange="toggleStickyColumn('label')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Задача</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Дата начала'">
-                        <input type="checkbox" id="stickyStartToggle" onchange="toggleStickyColumn('start')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Дата начала</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Дата окончания'">
-                        <input type="checkbox" id="stickyEndToggle" onchange="toggleStickyColumn('end')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Дата окончания</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Рабочих дней'">
-                        <input type="checkbox" id="stickyDaysToggle" onchange="toggleStickyColumn('days')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Рабочих дней</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Связь'">
-                        <input type="checkbox" id="stickyLinkToggle" onchange="toggleStickyColumn('link')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Связь</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Ответственный'">
-                        <input type="checkbox" id="stickyResponsibleToggle" onchange="toggleStickyColumn('responsible')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Ответственный</span>
-                    </label>
-                </div>
                 </div>
             </div>
         </div>
@@ -6279,22 +6126,6 @@
         <div class="status-menu-item" data-status="completed">
             <div class="status-color-box" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);"></div>
             <span>Завершено (с начала по выбранную дату)</span>
-        </div>
-    </div>
-
-    <!-- Меню выбора статуса дня (рабочий/выходной) -->
-    <div id="dayStatusMenu" class="status-menu">
-        <div class="status-menu-item" data-day-status="workday">
-            <div class="status-color-box" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);"></div>
-            <span>Рабочий день</span>
-        </div>
-        <div class="status-menu-item" data-day-status="holiday">
-            <div class="status-color-box" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);"></div>
-            <span>Выходной день</span>
-        </div>
-        <div class="status-menu-item" data-day-status="reset" style="border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 5px;">
-            <div class="status-color-box" style="background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);"></div>
-            <span>Сбросить (стандартный)</span>
         </div>
     </div>
 
@@ -6377,127 +6208,102 @@
     <div id="pdfExportModal" class="modal">
         <div class="modal-content" style="max-width: 1900px; width: 98%; max-height: 95vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2>Экспорт</h2>
+                <h2>Выгрузка в PDF</h2>
                 <span class="close" onclick="closePDFExportModal()">&times;</span>
             </div>
             
-            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
-                <label for="exportFormatSelect" style="font-weight: 600; font-size: 13px;">Формат выгрузки:</label>
-                <select id="exportFormatSelect" onchange="handleExportFormatChange()" style="min-width: 160px; padding: 6px; font-size: 13px;">
-                    <option value="pdf" selected>PDF</option>
-                    <option value="excel">Excel</option>
-                </select>
-            </div>
-
-            <div id="pdfExportSection">
-                <div id="pdfExportSettingsGrid" style="display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px;">
-                    <!-- Левая колонка: Настройки -->
-                    <div style="min-width: 300px;">
-                        <p style="margin-bottom: 12px; font-size: 13px;">
-                            Будет сформирован PDF-файл с диаграммой Ганта в выбранном масштабе и детальной таблицей задач с комментариями.
-                        </p>
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label for="pdfScaleMode" style="font-size: 13px;">Масштаб представления Ганта:</label>
-                            <select id="pdfScaleMode" onchange="updatePDFPreview()" style="width: 100%; padding: 6px; font-size: 13px;">
-                                <option value="day">Дни</option>
-                                <option value="week">Недели</option>
-                                <option value="month">Месяцы</option>
-                            </select>
-                        </div>
-                        <div class="form-group pdf-content-toggle" style="margin-bottom: 16px;">
-                            <label style="font-size: 13px;">Содержимое PDF:</label>
-                            <div class="pdf-toggle-options">
-                                <label class="pdf-toggle-option">
-                                    <input type="radio" name="pdfContentMode" value="full" checked onchange="updatePDFPreview()">
-                                    <span>С диаграммой</span>
-                                </label>
-                                <label class="pdf-toggle-option">
-                                    <input type="radio" name="pdfContentMode" value="table" onchange="updatePDFPreview()">
-                                    <span>Только таблица</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Массовые настройки отступов -->
-                        <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px;">
-                            <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Отступы для всех страниц (мм):</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                <div>
-                                    <label for="pdfMarginTop" style="display: block; margin-bottom: 4px; font-size: 12px;">Верх:</label>
-                                    <input type="number" id="pdfMarginTop" min="0" max="50" value="10" step="1" 
-                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                           oninput="applyMarginsToAll()">
-                                </div>
-                                <div>
-                                    <label for="pdfMarginBottom" style="display: block; margin-bottom: 4px; font-size: 12px;">Низ:</label>
-                                    <input type="number" id="pdfMarginBottom" min="0" max="50" value="20" step="1" 
-                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                           oninput="applyMarginsToAll()">
-                                </div>
-                                <div>
-                                    <label for="pdfMarginLeft" style="display: block; margin-bottom: 4px; font-size: 12px;">Слева:</label>
-                                    <input type="number" id="pdfMarginLeft" min="0" max="50" value="5" step="1" 
-                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                           oninput="applyMarginsToAll()">
-                                </div>
-                                <div>
-                                    <label for="pdfMarginRight" style="display: block; margin-bottom: 4px; font-size: 12px;">Справа:</label>
-                                    <input type="number" id="pdfMarginRight" min="0" max="50" value="5" step="1" 
-                                           style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                                           oninput="applyMarginsToAll()">
-                                </div>
-                            </div>
-                            <button onclick="applyMarginsToAll()" style="width: 100%; margin-top: 8px; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                Применить ко всем страницам
-                            </button>
-                        </div>
-                        
-                        <!-- Сохранение/загрузка макета -->
-                        <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 8px;">
-                            <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Макет отступов:</label>
-                            <div style="display: flex; flex-direction: column; gap: 6px;">
-                                <button onclick="savePDFLayout()" style="width: 100%; padding: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                    💾 Сохранить макет
-                                </button>
-                                <button onclick="loadPDFLayout()" style="width: 100%; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                    📂 Загрузить макет
-                                </button>
-                            </div>
+            <div id="pdfExportSettingsGrid" style="display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 20px;">
+                <!-- Левая колонка: Настройки -->
+                <div style="min-width: 300px;">
+                    <p style="margin-bottom: 12px; font-size: 13px;">
+                        Будет сформирован PDF-файл с диаграммой Ганта в выбранном масштабе и детальной таблицей задач с комментариями.
+                    </p>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="pdfScaleMode" style="font-size: 13px;">Масштаб представления Ганта:</label>
+                        <select id="pdfScaleMode" onchange="updatePDFPreview()" style="width: 100%; padding: 6px; font-size: 13px;">
+                            <option value="day">Дни</option>
+                            <option value="week">Недели</option>
+                            <option value="month">Месяцы</option>
+                        </select>
+                    </div>
+                    <div class="form-group pdf-content-toggle" style="margin-bottom: 16px;">
+                        <label style="font-size: 13px;">Содержимое PDF:</label>
+                        <div class="pdf-toggle-options">
+                            <label class="pdf-toggle-option">
+                                <input type="radio" name="pdfContentMode" value="full" checked onchange="updatePDFPreview()">
+                                <span>С диаграммой</span>
+                            </label>
+                            <label class="pdf-toggle-option">
+                                <input type="radio" name="pdfContentMode" value="table" onchange="updatePDFPreview()">
+                                <span>Только таблица</span>
+                            </label>
                         </div>
                     </div>
                     
-                    <!-- Правая колонка: Предпросмотр -->
-                    <div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="font-weight: 600; font-size: 14px;">Предпросмотр всех страниц:</label>
-                            <span id="pdfPagesCount" style="color: #666; font-size: 12px;"></span>
-                        </div>
-                        <div id="pdfPreviewContainer" style="background: #f9f9f9; border: 2px solid #ddd; border-radius: 8px; padding: 16px; min-height: 600px; max-height: calc(95vh - 220px); overflow-y: auto; overflow-x: auto;">
-                            <div style="text-align: center; color: #999; padding: 40px;">
-                                Загрузка предпросмотра...
+                    <!-- Массовые настройки отступов -->
+                    <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                        <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Отступы для всех страниц (мм):</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div>
+                                <label for="pdfMarginTop" style="display: block; margin-bottom: 4px; font-size: 12px;">Верх:</label>
+                                <input type="number" id="pdfMarginTop" min="0" max="50" value="10" step="1" 
+                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                       oninput="applyMarginsToAll()">
                             </div>
+                            <div>
+                                <label for="pdfMarginBottom" style="display: block; margin-bottom: 4px; font-size: 12px;">Низ:</label>
+                                <input type="number" id="pdfMarginBottom" min="0" max="50" value="20" step="1" 
+                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                       oninput="applyMarginsToAll()">
+                            </div>
+                            <div>
+                                <label for="pdfMarginLeft" style="display: block; margin-bottom: 4px; font-size: 12px;">Слева:</label>
+                                <input type="number" id="pdfMarginLeft" min="0" max="50" value="5" step="1" 
+                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                       oninput="applyMarginsToAll()">
+                            </div>
+                            <div>
+                                <label for="pdfMarginRight" style="display: block; margin-bottom: 4px; font-size: 12px;">Справа:</label>
+                                <input type="number" id="pdfMarginRight" min="0" max="50" value="5" step="1" 
+                                       style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                                       oninput="applyMarginsToAll()">
+                            </div>
+                        </div>
+                        <button onclick="applyMarginsToAll()" style="width: 100%; margin-top: 8px; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            Применить ко всем страницам
+                        </button>
+                    </div>
+                    
+                    <!-- Сохранение/загрузка макета -->
+                    <div class="form-group" style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 8px;">
+                        <label style="font-weight: 600; margin-bottom: 8px; display: block; font-size: 13px;">Макет отступов:</label>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <button onclick="savePDFLayout()" style="width: 100%; padding: 6px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                💾 Сохранить макет
+                            </button>
+                            <button onclick="loadPDFLayout()" style="width: 100%; padding: 6px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                📂 Загрузить макет
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div id="excelExportSection" style="display: none; margin-bottom: 20px;">
-                <p style="margin-bottom: 12px; font-size: 13px;">
-                    Будет сформирован файл Excel с двумя листами: на первом — диаграмма Ганта в выбранном масштабе, на втором — таблица задач.
-                </p>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label for="exportExcelScale" style="display: block; margin-bottom: 4px; font-size: 13px;">Масштаб Ганта:</label>
-                    <select id="exportExcelScale" style="width: 100%; max-width: 240px; padding: 6px; font-size: 13px;">
-                        <option value="day">Дни</option>
-                        <option value="week">Недели</option>
-                        <option value="month">Месяцы</option>
-                        <option value="year">Годы</option>
-                    </select>
+                
+                <!-- Правая колонка: Предпросмотр -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-weight: 600; font-size: 14px;">Предпросмотр всех страниц:</label>
+                        <span id="pdfPagesCount" style="color: #666; font-size: 12px;"></span>
+                    </div>
+                    <div id="pdfPreviewContainer" style="background: #f9f9f9; border: 2px solid #ddd; border-radius: 8px; padding: 16px; min-height: 600px; max-height: 85vh; overflow-y: auto; overflow-x: auto;">
+                        <div style="text-align: center; color: #999; padding: 40px;">
+                            Загрузка предпросмотра...
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid #eee; padding-top: 16px;">
-                <button class="btn btn-primary" onclick="confirmExportByFormat()" style="flex: 1;">Экспорт</button>
+                <button class="btn btn-primary" onclick="confirmPDFExport()" style="flex: 1;">Выгрузить в PDF</button>
                 <button class="btn btn-secondary" onclick="closePDFExportModal()">Отмена</button>
             </div>
         </div>
@@ -6506,7 +6312,7 @@
     <div id="excelExportModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Экспорт в Excel</h2>
+                <h2>Выгрузка в Excel</h2>
                 <span class="close" onclick="closeExcelExportModal()">&times;</span>
             </div>
             <p style="margin-bottom: 12px;">
@@ -6523,7 +6329,7 @@
                 </select>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-primary" onclick="confirmExcelExport()">Экспорт</button>
+                <button class="btn btn-primary" onclick="confirmExcelExport()">Выгрузить</button>
                 <button class="btn btn-secondary" onclick="closeExcelExportModal()">Отмена</button>
             </div>
         </div>
@@ -7216,10 +7022,6 @@
             "2025-05-01", "2025-05-09", "2025-06-12", "2025-11-04"
         ];
 
-        // Пользовательский календарь: объект, где ключ - дата в формате "YYYY-MM-DD", значение - 'workday' или 'holiday'
-        // Например: { "2025-01-01": "workday", "2025-01-15": "holiday" }
-        let customCalendar = {};
-
         const INITIAL_START_DATE = new Date(2025, 0, 9); // 9 января 2025 (дефолт для сброса)
         let startDate = new Date(INITIAL_START_DATE); // текущее начало проекта
         let tasks = [];
@@ -7382,8 +7184,6 @@
             days: 90,
             responsible: 160
         };
-        // Набор закреплённых колонок (по умолчанию ничего не закреплено)
-        const stickyColumns = new Set();
 
         function formatDateForInput(date) {
             // Если date уже строка, возвращаем её как есть
@@ -7471,8 +7271,7 @@
                 const payload = {
                     name: companyName,
                     objectName: companyObjectName,
-                    logoData: companyLogoData,
-                    customCalendar: customCalendar
+                    logoData: companyLogoData
                 };
                 localStorage.setItem('iconaCompanyInfo', JSON.stringify(payload));
             } catch (e) {
@@ -7484,8 +7283,7 @@
             try {
                 const payload = {
                     name: companyName,
-                    logoData: companyLogoData,
-                    customCalendar: customCalendar
+                    logoData: companyLogoData
                 };
                 const companyParam = currentCompany ? `?company=${currentCompany}` : '';
                 await fetch(`/api/company-info${companyParam}`, {
@@ -7625,13 +7423,6 @@
                         companyLogoData = data.logoData || null;
                         companyChartType = data.chartType || 'icona';
                         
-                        // Загружаем пользовательский календарь
-                        if (data.customCalendar && typeof data.customCalendar === 'object') {
-                            customCalendar = data.customCalendar;
-                        } else {
-                            customCalendar = {};
-                        }
-                        
                         // Загружаем название контейнера и обновляем заголовок
                         await loadChartTypeContainerName(companyChartType);
                         updatePageTitle();
@@ -7655,13 +7446,6 @@
                     companyObjectName = stored.objectName ? String(stored.objectName) : '';
                     companyLogoData = stored.logoData || null;
                     companyChartType = stored.chartType || 'icona';
-                    
-                    // Загружаем пользовательский календарь
-                    if (stored.customCalendar && typeof stored.customCalendar === 'object') {
-                        customCalendar = stored.customCalendar;
-                    } else {
-                        customCalendar = {};
-                    }
                     
                     // Загружаем название контейнера и обновляем заголовок
                     await loadChartTypeContainerName(companyChartType);
@@ -7904,13 +7688,6 @@
         function isWorkday(date) {
             const dayOfWeek = date.getDay();
             const dateStr = formatDateKey(date);
-            
-            // Сначала проверяем пользовательский календарь
-            if (customCalendar[dateStr]) {
-                return customCalendar[dateStr] === 'workday';
-            }
-            
-            // Затем стандартная логика: не воскресенье (0), не суббота (6), не праздник
             return dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.includes(dateStr);
         }
 
@@ -10029,136 +9806,6 @@
             element.appendChild(resizer);
         }
 
-        // Управление закреплением колонок (задача + даты + дни + связь/ответственный)
-        function updateStickyColumns() {
-            const chart = document.getElementById('ganttChart');
-            if (!chart) return;
-
-            const allSelectors = [
-                '.gantt-header-label',
-                '.gantt-label',
-                '.start-col',
-                '.end-col',
-                '.days-col',
-                '.link-cell',
-                '.responsible-cell'
-            ];
-
-            // Сбрасываем прошлые стили закрепления
-            chart.querySelectorAll(allSelectors.join(',')).forEach((el) => {
-                el.style.position = '';
-                el.style.left = '';
-                el.style.zIndex = '';
-                el.style.clipPath = '';
-                el.style.background = '';
-            });
-
-            const getWidth = (selector, fallback) => {
-                const el = chart.querySelector(selector);
-                if (el) {
-                    const rect = el.getBoundingClientRect();
-                    if (rect.width) return rect.width;
-                }
-                return fallback || 0;
-            };
-
-            const labelWidth = ganttColumnWidths.label || getWidth('.gantt-header-label', 180);
-            const startWidth = ganttColumnWidths.start || getWidth('.gantt-details-cell.start-col', 120);
-            const endWidth = ganttColumnWidths.end || getWidth('.gantt-details-cell.end-col', 120);
-            const daysWidth = ganttColumnWidths.days || getWidth('.gantt-details-cell.days-col', 90);
-            const linkWidth = getWidth('.gantt-details-cell.link-cell', 70);
-            const respWidth = getWidth('.gantt-details-cell.responsible-cell', 200);
-
-            let left = 0;
-
-            const columns = [
-                { key: 'label', selector: '.gantt-header-label, .gantt-label', width: labelWidth, visible: stickyColumns.has('label') },
-                { key: 'start', selector: '.start-col', width: startWidth, visible: stickyColumns.has('start') },
-                { key: 'end', selector: '.end-col', width: endWidth, visible: stickyColumns.has('end') },
-                { key: 'days', selector: '.days-col', width: daysWidth, visible: stickyColumns.has('days') },
-                { key: 'link', selector: '.link-cell', width: linkWidth, visible: stickyColumns.has('link') && document.body.classList.contains('show-link') },
-                { key: 'responsible', selector: '.responsible-cell', width: respWidth, visible: stickyColumns.has('responsible') && document.body.classList.contains('show-responsible') },
-            ];
-
-            const applyLeft = (selector, z) => {
-                // Получаем computed background один раз
-                const rootStyle = getComputedStyle(document.documentElement);
-                let bgColor = rootStyle.getPropertyValue('--color-bg').trim();
-                if (!bgColor || bgColor === '') {
-                    // Fallback на вычисленный цвет из body
-                    bgColor = getComputedStyle(document.body).backgroundColor || '#f5f5f5';
-                }
-                
-                chart.querySelectorAll(selector).forEach((el) => {
-                    el.style.position = 'sticky';
-                    el.style.left = `${left}px`;
-                    el.style.zIndex = z;
-                    // Устанавливаем background явно для всех элементов, чтобы sticky работал правильно
-                    el.style.background = bgColor;
-                    el.style.backgroundColor = bgColor;
-                    // Убираем clipPath, чтобы не мешать отображению
-                    el.style.clipPath = '';
-                    // Убеждаемся, что элемент виден
-                    el.style.visibility = 'visible';
-                    el.style.opacity = '1';
-                });
-            };
-            const resetSticky = (selector) => {
-                chart.querySelectorAll(selector).forEach((el) => {
-                    el.style.position = '';
-                    el.style.left = '';
-                    el.style.zIndex = '';
-                    el.style.background = '';
-                    el.style.clipPath = '';
-                });
-            };
-
-            columns.forEach((col) => {
-                if (!col.visible) {
-                    resetSticky(col.selector);
-                    return;
-                }
-                applyLeft(col.selector, col.key === 'label' ? 11 : 7);
-                left += col.width;
-            });
-
-            chart.classList.toggle('has-sticky-columns', left > 0);
-            chart.style.setProperty('--sticky-left-width', `${left}px`);
-        }
-
-        // Обновляем визуальное состояние кнопок закрепления
-        function updateStickyButtons() {
-            const map = {
-                label: 'stickyLabelToggle',
-                start: 'stickyStartToggle',
-                end: 'stickyEndToggle',
-                days: 'stickyDaysToggle',
-                link: 'stickyLinkToggle',
-                responsible: 'stickyResponsibleToggle'
-            };
-            Object.entries(map).forEach(([key, id]) => {
-                const input = document.getElementById(id);
-                if (!input) return;
-                const isActive = stickyColumns.has(key);
-                input.checked = isActive;
-                const wrapper = input.closest('.header-sticky-toggle');
-                if (wrapper) {
-                    wrapper.classList.toggle('active', isActive);
-                }
-            });
-        }
-
-        // Переключение закрепления конкретной колонки
-        function toggleStickyColumn(columnKey) {
-            if (stickyColumns.has(columnKey)) {
-                stickyColumns.delete(columnKey);
-            } else {
-                stickyColumns.add(columnKey);
-            }
-            updateStickyButtons();
-            updateStickyColumns();
-        }
-
         // Вспомогательная функция для вычисления количества символов, которые помещаются в ширину
         // Используем кэшированный элемент для измерения, чтобы не создавать его каждый раз
         let measureElement = null;
@@ -10693,13 +10340,7 @@
 
             const headerLabel = document.createElement('div');
             headerLabel.className = 'gantt-header-label';
-            headerLabel.innerHTML = `
-                <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Задача'">
-                    <input type="checkbox" id="stickyLabelToggle" onchange="toggleStickyColumn('label')">
-                    <span class="header-sticky-switch"></span>
-                </label>
-                <span class="header-label-text">Задача</span>
-            `;
+            headerLabel.textContent = 'Задача';
             applyColumnWidth(headerLabel, 'label');
             addColumnResizer(headerLabel, 'label');
             headerFirstRow.appendChild(headerLabel);
@@ -10708,41 +10349,11 @@
             const detailsHeader = document.createElement('div');
             detailsHeader.className = 'gantt-details-header';
             detailsHeader.innerHTML = `
-                <div class="gantt-details-cell start-col">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Дата начала'">
-                        <input type="checkbox" id="stickyStartToggle" onchange="toggleStickyColumn('start')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Дата начала</span>
-                </div>
-                <div class="gantt-details-cell end-col">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Дата окончания'">
-                        <input type="checkbox" id="stickyEndToggle" onchange="toggleStickyColumn('end')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Дата окончания</span>
-                </div>
-                <div class="gantt-details-cell days-col">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Рабочих дней'">
-                        <input type="checkbox" id="stickyDaysToggle" onchange="toggleStickyColumn('days')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Рабочих дней</span>
-                </div>
-                <div class="gantt-details-cell link-cell">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Связь'">
-                        <input type="checkbox" id="stickyLinkToggle" onchange="toggleStickyColumn('link')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Связь</span>
-                </div>
-                <div class="gantt-details-cell responsible-cell">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Ответственный'">
-                        <input type="checkbox" id="stickyResponsibleToggle" onchange="toggleStickyColumn('responsible')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Ответственный</span>
-                </div>
+                <div class="gantt-details-cell">Дата начала</div>
+                <div class="gantt-details-cell">Дата окончания</div>
+                <div class="gantt-details-cell">Рабочих дней</div>
+                <div class="gantt-details-cell link-cell">Связь</div>
+                <div class="gantt-details-cell responsible-cell">Ответственный</div>
             `;
 
             const headerCells = detailsHeader.querySelectorAll('.gantt-details-cell');
@@ -10796,33 +10407,9 @@
                 if (scaleMode === 'day') {
                     // Подсветка выходных и праздников только в дневном режиме
                     cell.title = unit.start.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
-                    const key = formatDateKey(unit.start);
-                    
-                    // Проверяем пользовательский календарь
-                    if (customCalendar[key]) {
-                        if (customCalendar[key] === 'holiday') {
-                            cell.classList.add('gantt-holiday');
-                        } else {
-                            // Рабочий день - убираем классы выходных
-                            cell.classList.remove('gantt-holiday', 'gantt-weekend');
-                        }
-                    } else if (!isWorkday(unit.start)) {
-                        // Стандартная логика для выходных и праздников
+                    if (!isWorkday(unit.start)) {
+                        const key = formatDateKey(unit.start);
                         cell.classList.add(holidays.includes(key) ? 'gantt-holiday' : 'gantt-weekend');
-                    } else {
-                        // Рабочий день - убираем классы выходных
-                        cell.classList.remove('gantt-holiday', 'gantt-weekend');
-                    }
-                    
-                    // Добавляем обработчик клика для изменения статуса дня (только в режиме редактирования)
-                    if (canEdit()) {
-                        cell.style.cursor = 'pointer';
-                        cell.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const dateKey = formatDateKey(unit.start);
-                            const rect = cell.getBoundingClientRect();
-                            openDayStatusMenu(rect.left + rect.width / 2, rect.bottom + 5, dateKey, cell);
-                        });
                     }
                 } else if (scaleMode === 'week') {
                     const fromStr = unit.start.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -11029,7 +10616,7 @@
                 detailsRow.className = 'gantt-details-row';
 
                 const startCell = document.createElement('div');
-                startCell.className = 'gantt-details-cell start-col';
+                startCell.className = 'gantt-details-cell';
                 const startInput = document.createElement('input');
                 startInput.type = 'date';
                 startInput.className = 'gantt-details-input';
@@ -11046,7 +10633,7 @@
                 applyColumnWidth(startCell, 'start');
 
                 const endCell = document.createElement('div');
-                endCell.className = 'gantt-details-cell end-col';
+                endCell.className = 'gantt-details-cell';
                 const endInput = document.createElement('input');
                 endInput.type = 'date';
                 endInput.className = 'gantt-details-input';
@@ -11063,7 +10650,7 @@
                 applyColumnWidth(endCell, 'end');
 
                 const daysCell = document.createElement('div');
-                daysCell.className = 'gantt-details-cell days-col';
+                daysCell.className = 'gantt-details-cell';
                 const daysInput = document.createElement('input');
                 daysInput.type = 'number';
                 daysInput.min = '0';
@@ -12584,9 +12171,6 @@
                 });
             }
             
-            // Обновляем позиции фиксированных колонок после отрисовки строк
-            updateStickyColumns();
-
             // Создаем метки этапов с использованием requestAnimationFrame для гарантии готовности DOM
             requestAnimationFrame(() => {
                 setTimeout(() => {
@@ -15866,13 +15450,11 @@ async function showPDFPreview(scaleMode = 'day', includeDiagram = true) {
                             }
                             .pdf-page-logo {
                                 position: absolute !important;
-                                top: 12px !important;
-                                right: 12px !important;
-                                width: 80px !important;
-                                height: 80px !important;
+                                top: 0 !important;
+                                right: 0 !important;
+                                width: 100px !important;
+                                height: 100px !important;
                                 z-index: 1000 !important;
-                                pointer-events: none !important;
-                                opacity: 0.28 !important;
                             }
                         }
                     </style>
@@ -15899,9 +15481,94 @@ async function showPDFPreview(scaleMode = 'day', includeDiagram = true) {
                     right: parseFloat(rightMargin.input.value) || 5
                 };
                 
-                // Сразу экспортируем через html2pdf без системного окна печати
-                closeModal();
-                await exportPDFWithMargins(scaleMode, includeDiagram, margins, wrapper);
+                // Предлагаем выбор: экспорт через html2pdf или стандартная печать Windows
+                const useStandardPrint = confirm(
+                    'Выберите способ экспорта:\n\n' +
+                    'OK - Стандартное окно печати Windows (можно сохранить в PDF)\n' +
+                    'Отмена - Экспорт через html2pdf (автоматическое сохранение)'
+                );
+                
+                if (useStandardPrint) {
+                    // Используем стандартное окно печати Windows
+                    closeModal();
+                    
+                    // Создаем временное окно для печати
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) {
+                        alert('Пожалуйста, разрешите всплывающие окна для печати');
+                        return;
+                    }
+                    
+                    // Клонируем wrapper для печати
+                    const printContent = wrapper.cloneNode(true);
+                    
+                    // Применяем отступы к секциям
+                    const printSections = printContent.querySelectorAll('.pdf-page-section');
+                    printSections.forEach((section, index) => {
+                        if (index === 0) return; // Титульный лист не трогаем
+                        section.style.paddingTop = margins.top + 'mm';
+                        section.style.paddingBottom = margins.bottom + 'mm';
+                        section.style.paddingLeft = '0'; // Убираем padding слева - таблицы начинаются от края
+                        section.style.paddingRight = margins.right + 'mm';
+                    });
+                    
+                    // Применяем стили для печати
+                    const printStyles = `
+                        <style>
+                            @page {
+                                size: A3 landscape;
+                                margin: 0;
+                            }
+                            * {
+                                box-sizing: border-box;
+                            }
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                font-family: Arial, sans-serif;
+                            }
+                            .pdf-page-section {
+                                width: 100% !important;
+                                page-break-before: always;
+                                page-break-inside: avoid;
+                                break-before: page;
+                                break-inside: avoid;
+                                margin: 0 !important;
+                            }
+                            .pdf-page-section:first-child {
+                                page-break-before: auto;
+                                break-before: auto;
+                            }
+                            table {
+                                width: 100% !important;
+                                border-collapse: collapse;
+                            }
+                            @media print {
+                                .pdf-page-section {
+                                    page-break-before: always;
+                                    page-break-inside: avoid;
+                                }
+                                .pdf-page-section:first-child {
+                                    page-break-before: auto;
+                                }
+                            }
+                        </style>
+                    `;
+                    
+                    printWindow.document.write(printStyles);
+                    printWindow.document.body.appendChild(printContent);
+                    printWindow.document.close();
+                    
+                    // Ждем загрузки изображений и открываем окно печати
+                    setTimeout(() => {
+                        printWindow.print();
+                        // Окно можно закрыть вручную после печати
+                    }, 500);
+                } else {
+                    // Используем html2pdf
+                    closeModal();
+                    await exportPDFWithMargins(scaleMode, includeDiagram, margins, wrapper);
+                }
             };
         });
     }, 100);
@@ -17358,13 +17025,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             /* Логотип на каждой странице при печати */
             .pdf-page-logo {
                 position: absolute !important;
-                top: 12px !important;
-                right: 12px !important;
-                width: 80px !important;
-                height: 80px !important;
+                top: 0 !important;
+                right: 0 !important;
+                width: 100px !important;
+                height: 100px !important;
                 z-index: 1000 !important;
-                pointer-events: none !important;
-                opacity: 0.28 !important;
             }
             /* КРИТИЧЕСКИ ВАЖНО: Запрещаем разрыв таблиц диаграммы Ганта (они уже разбиты на chunks) */
             .pdf-page-section table.gantt-diagram-table {
@@ -17791,16 +17456,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             }
         }
 
-        function getExcelScaleModeValue() {
-            const selectEl = document.getElementById('exportExcelScale') || document.getElementById('excelScaleMode');
-            const rawMode = selectEl ? String(selectEl.value || '').toLowerCase() : 'day';
-            let scaleMode = 'day';
-            if (rawMode.startsWith('week') || rawMode.startsWith('нед')) scaleMode = 'week';
-            else if (rawMode.startsWith('month') || rawMode.startsWith('мес')) scaleMode = 'month';
-            else if (rawMode.startsWith('year') || rawMode.startsWith('год')) scaleMode = 'year';
-            return scaleMode;
-        }
-
         // Экспорт в Excel
         function exportExcel() {
             // Показываем индикатор загрузки
@@ -17839,7 +17494,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             // делаем простой экспорт в CSV, который Excel спокойно открывает.
             if (typeof XLSX === 'undefined') {
                 try {
-                    const scaleMode = getExcelScaleModeValue();
+                    const selectEl = document.getElementById('excelScaleMode');
+                    const rawMode = selectEl ? String(selectEl.value || '').toLowerCase() : 'day';
+                    let scaleMode = 'day';
+                    if (rawMode.startsWith('week') || rawMode.startsWith('нед')) scaleMode = 'week';
+                    else if (rawMode.startsWith('month') || rawMode.startsWith('мес')) scaleMode = 'month';
+                    else if (rawMode.startsWith('year') || rawMode.startsWith('год')) scaleMode = 'year';
 
                     const timelineUnits = buildExportTimeline(scaleMode);
 
@@ -18251,8 +17911,77 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
         }
 
         function openExcelExportModal() {
-            // Переиспользуем единое модальное окно с выбором формата
-            openPDFExportModal('excel');
+            const modal = document.getElementById('excelExportModal');
+            if (modal) {
+                modal.style.display = 'block';
+                
+                // На мобильных устройствах и планшетах позиционируем модальное окно рядом с кнопкой
+                const isMobile = window.innerWidth <= 1024;
+                if (isMobile) {
+                    // Используем requestAnimationFrame для применения стилей после рендера
+                    requestAnimationFrame(() => {
+                        // Находим кнопку "Выгрузить в Excel"
+                        const buttons = document.querySelectorAll('.btn');
+                        let excelButton = null;
+                        for (let btn of buttons) {
+                            if (btn.textContent && btn.textContent.includes('Выгрузить в Excel')) {
+                                excelButton = btn;
+                                break;
+                            }
+                        }
+                        
+                        if (excelButton) {
+                            const modalContent = modal.querySelector('.modal-content');
+                            if (modalContent) {
+                                const buttonRect = excelButton.getBoundingClientRect();
+                                
+                                // Позиционируем модальное окно так, чтобы оно было видно рядом с кнопкой
+                                // Вычисляем позицию: если кнопка в нижней половине экрана - показываем над ней, иначе - под ней
+                                const viewportHeight = window.innerHeight;
+                                const buttonBottom = buttonRect.bottom;
+                                const spaceBelow = viewportHeight - buttonBottom;
+                                const spaceAbove = buttonRect.top;
+                                
+                                // Вычисляем позицию относительно viewport (так как modal имеет position: fixed)
+                                let topPosition;
+                                if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+                                    // Показываем над кнопкой
+                                    topPosition = buttonRect.top - 350; // высота модального окна примерно 350px
+                                } else {
+                                    // Показываем под кнопкой
+                                    topPosition = buttonRect.bottom + 20; // небольшой отступ
+                                }
+                                
+                                // Убеждаемся, что окно не выходит за пределы экрана
+                                const minTop = 20;
+                                const maxTop = viewportHeight - 400;
+                                topPosition = Math.max(minTop, Math.min(topPosition, maxTop));
+                                
+                                // Применяем стили с !important через setProperty для переопределения CSS
+                                modalContent.style.setProperty('position', 'absolute', 'important');
+                                modalContent.style.setProperty('top', topPosition + 'px', 'important');
+                                modalContent.style.setProperty('left', '50%', 'important');
+                                modalContent.style.setProperty('transform', 'translateX(-50%)', 'important');
+                                modalContent.style.setProperty('margin', '0', 'important');
+                                modalContent.style.setProperty('width', 'calc(100% - 40px)', 'important');
+                                modalContent.style.setProperty('max-width', '500px', 'important');
+                            }
+                        }
+                    });
+                } else {
+                    // На десктопе сбрасываем стили (используется стандартное центрирование через CSS)
+                    const modalContent = modal.querySelector('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.position = '';
+                        modalContent.style.top = '';
+                        modalContent.style.left = '';
+                        modalContent.style.transform = '';
+                        modalContent.style.margin = '';
+                        modalContent.style.width = '';
+                        modalContent.style.maxWidth = '';
+                    }
+                }
+            }
         }
 
         function closeExcelExportModal() {
@@ -18276,35 +18005,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
         function confirmExcelExport() {
             closeExcelExportModal();
             exportExcel();
-        }
-
-        function confirmExportByFormat() {
-            const formatSelect = document.getElementById('exportFormatSelect');
-            const format = formatSelect ? String(formatSelect.value || 'pdf').toLowerCase() : 'pdf';
-            if (format === 'excel') {
-                closePDFExportModal();
-                exportExcel();
-            } else {
-                confirmPDFExport();
-            }
-        }
-
-        function handleExportFormatChange() {
-            const formatSelect = document.getElementById('exportFormatSelect');
-            const format = formatSelect ? String(formatSelect.value || 'pdf').toLowerCase() : 'pdf';
-            const pdfSection = document.getElementById('pdfExportSection');
-            const excelSection = document.getElementById('excelExportSection');
-            
-            if (pdfSection) {
-                pdfSection.style.display = format === 'pdf' ? 'block' : 'none';
-            }
-            if (excelSection) {
-                excelSection.style.display = format === 'excel' ? 'block' : 'none';
-            }
-            
-            if (format === 'pdf') {
-                updatePDFPreview();
-            }
         }
 
         // ========== ФУНКЦИИ ПОИСКА ==========
@@ -18759,35 +18459,33 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             modalContent.dataset.resizeInitialized = 'true';
         }
         
-        function openPDFExportModal(defaultFormat = 'pdf') {
+        function openPDFExportModal() {
             const modal = document.getElementById('pdfExportModal');
             if (modal) {
                 modal.style.display = 'block';
-                
-                // Устанавливаем выбранный формат и переключаем секции
-                const formatSelect = document.getElementById('exportFormatSelect');
-                if (formatSelect) {
-                    formatSelect.value = defaultFormat || 'pdf';
-                }
-                handleExportFormatChange();
                 
                 // Инициализируем ресайз для модального окна
                 initPDFModalResize();
                 
                 // Генерируем предпросмотр при открытии
-                if ((defaultFormat || 'pdf') === 'pdf') {
-                    setTimeout(() => {
-                        updatePDFPreview();
-                    }, 100);
-                }
+                setTimeout(() => {
+                    updatePDFPreview();
+                }, 100);
                 
                 // На мобильных устройствах и планшетах позиционируем модальное окно рядом с кнопкой
                 const isMobile = window.innerWidth <= 1024;
                 if (isMobile) {
                     // Используем requestAnimationFrame для применения стилей после рендера
                     requestAnimationFrame(() => {
-                        // Находим кнопку запуска модалки
-                        const pdfButton = document.getElementById('exportUnifiedButton');
+                        // Находим кнопку "Выгрузить в PDF"
+                        const buttons = document.querySelectorAll('.btn');
+                        let pdfButton = null;
+                        for (let btn of buttons) {
+                            if (btn.textContent && btn.textContent.includes('Выгрузить в PDF')) {
+                                pdfButton = btn;
+                                break;
+                            }
+                        }
                         
                         if (pdfButton) {
                             const modalContent = modal.querySelector('.modal-content');
@@ -19945,9 +19643,22 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             // Если есть индивидуальные отступы, используем их, иначе дефолтные
             const margins = Object.keys(currentPageMargins).length > 0 ? currentPageMargins : defaultMargins;
             
+            // Предлагаем выбор: экспорт через html2pdf или стандартная печать Windows
+            const useStandardPrint = confirm(
+                'Выберите способ экспорта:\n\n' +
+                'OK - Стандартное окно печати Windows (можно сохранить в PDF)\n' +
+                'Отмена - Экспорт через html2pdf (автоматическое сохранение)'
+            );
+            
             closePDFExportModal();
-            // Сразу экспортируем через html2pdf
-            exportPDF(scaleMode, includeDiagram, margins);
+            
+            if (useStandardPrint) {
+                // Используем стандартное окно печати Windows
+                printPDFWithStandardDialog(scaleMode, includeDiagram, margins);
+            } else {
+                // Используем html2pdf
+                exportPDF(scaleMode, includeDiagram, margins);
+            }
         }
         
         // Функция печати через стандартное окно Windows
@@ -20111,13 +19822,11 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                         }
                         .pdf-page-logo {
                             position: absolute !important;
-                            top: 12px !important;
-                            right: 12px !important;
-                            width: 80px !important;
-                            height: 80px !important;
+                            top: 0 !important;
+                            right: 0 !important;
+                            width: 100px !important;
+                            height: 100px !important;
                             z-index: 1000 !important;
-                            pointer-events: none !important;
-                            opacity: 0.28 !important;
                         }
                     }
                 </style>
@@ -22219,164 +21928,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             statusMenuOpenedFromSelect = false;
         }
 
-        // Текущая дата, для которой открыто меню статуса дня
-        let currentDayStatusTarget = null;
-
-        // Открытие меню выбора статуса дня
-        function openDayStatusMenu(x, y, dateKey, targetCell) {
-            currentDayStatusTarget = { dateKey, targetCell };
-            
-            const menu = document.getElementById('dayStatusMenu');
-            if (!menu) {
-                console.error('❌ Меню dayStatusMenu не найдено в DOM!');
-                return;
-            }
-            
-            // Перемещаем меню в body если нужно
-            if (menu.parentElement !== document.body) {
-                document.body.appendChild(menu);
-            }
-            
-            // Сбрасываем стили и позиционируем
-            menu.style.cssText = '';
-            menu.style.margin = '0';
-            menu.style.padding = '0';
-            menu.style.display = 'block';
-            menu.style.visibility = 'visible';
-            menu.style.opacity = '1';
-            menu.style.position = 'fixed';
-            menu.style.zIndex = '99999';
-            
-            // Позиционируем меню
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    const menuRect = menu.getBoundingClientRect();
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
-                    
-                    let left = x - menuRect.width / 2;
-                    let top = y;
-                    
-                    // Проверяем границы viewport
-                    if (left < 10) left = 10;
-                    if (left + menuRect.width > viewportWidth - 10) {
-                        left = viewportWidth - menuRect.width - 10;
-                    }
-                    if (top + menuRect.height > viewportHeight - 10) {
-                        top = y - menuRect.height - 5;
-                    }
-                    if (top < 10) top = 10;
-                    
-                    menu.style.left = left + 'px';
-                    menu.style.top = top + 'px';
-                });
-            });
-            
-            // Добавляем обработчики для элементов меню
-            const menuItems = menu.querySelectorAll('.status-menu-item');
-            menuItems.forEach(item => {
-                item.onclick = (e) => {
-                    e.stopPropagation();
-                    const status = item.getAttribute('data-day-status');
-                    applyDayStatus(dateKey, status);
-                    closeDayStatusMenu();
-                };
-            });
-            
-            // Закрытие при клике вне меню
-            const closeHandler = (e) => {
-                if (!menu.contains(e.target) && e.target !== targetCell) {
-                    closeDayStatusMenu();
-                    document.removeEventListener('click', closeHandler);
-                }
-            };
-            setTimeout(() => {
-                document.addEventListener('click', closeHandler);
-            }, 100);
-        }
-
-        // Закрытие меню статуса дня
-        function closeDayStatusMenu() {
-            const menu = document.getElementById('dayStatusMenu');
-            if (menu) {
-                menu.style.display = 'none';
-            }
-            currentDayStatusTarget = null;
-        }
-
-        // Применение статуса дня (рабочий/выходной)
-        function applyDayStatus(dateKey, status) {
-            if (!canEdit()) return;
-            
-            // Обновляем пользовательский календарь
-            if (status === 'workday') {
-                customCalendar[dateKey] = 'workday';
-            } else if (status === 'holiday') {
-                customCalendar[dateKey] = 'holiday';
-            } else if (status === 'reset') {
-                // Удаляем запись из customCalendar, возвращаем к стандартному статусу
-                delete customCalendar[dateKey];
-            }
-            
-            // Сохраняем изменения календаря
-            saveCompanyInfoLocally();
-            saveCompanyInfoToServer();
-            
-            // Пересчитываем все задачи с учетом нового календаря
-            recalculateTasksAfterCalendarChange();
-            
-            // Перерисовываем график
-            renderGantt();
-            renderTable();
-        }
-
-        // Пересчет задач после изменения календаря
-        function recalculateTasksAfterCalendarChange() {
-            // Пересчитываем все задачи последовательно, начиная с первой
-            let currentStartDate = new Date(startDate);
-            
-            // Находим первый рабочий день
-            while (!isWorkday(currentStartDate)) {
-                currentStartDate.setDate(currentStartDate.getDate() + 1);
-            }
-            
-            tasks.forEach((task, index) => {
-                if (!task.days || task.days <= 0) {
-                    // Если у задачи нет рабочих дней, пропускаем её
-                    return;
-                }
-                
-                // ВАЖНО: Сохраняем текущую дату начала задачи, если она установлена
-let taskStartDate = (task.startDate && task.startDate instanceof Date && !isNaN(task.startDate.getTime())) 
-    ? new Date(task.startDate) 
-    : currentStartDate;
-const newDates = getTaskDates(taskStartDate, task.days);
-                
-                if (newDates.length > 0) {
-                    // Обновляем дату начала (Date объект)
-                    task.startDate = new Date(newDates[0]);
-                    
-                    // Обновляем дату окончания (Date объект)
-                    task.endDate = new Date(newDates[newDates.length - 1]);
-                    
-                    // Обновляем массив дат задачи (Date объекты)
-                    task.dates = newDates.map(d => new Date(d));
-                    
-                    // Обновляем дату начала для следующей задачи
-                    currentStartDate = new Date(task.endDate);
-                    currentStartDate.setDate(currentStartDate.getDate() + 1);
-                    
-                    // Находим следующий рабочий день
-                    while (!isWorkday(currentStartDate)) {
-                        currentStartDate.setDate(currentStartDate.getDate() + 1);
-                    }
-                }
-            });
-            
-            // Сохраняем изменения
-            autoSaveGanttState();
-        }
-
         // Обновление визуального выделения ячеек
         function updateCellSelection() {
             // Убираем выделение со всех ячеек
@@ -22953,25 +22504,43 @@ const newDates = getTaskDates(taskStartDate, task.days);
             const targetDate = status === 'completed' ? targetDates[targetDates.length - 1] : targetDates[0];
 
             if (status === 'completed') {
-                // Не двигаем сроки и последовательность задач — только отмечаем выбранный диапазон как завершённый
+                // 1) Обрезаем задачу по выбранной дате (все позже — выкидываем)
                 const targetTime = targetDate.getTime();
-                task.status = 'completed';
-                task.dateStatuses = task.dateStatuses || {};
-
-                // Красим все даты задачи, которые попадают до выбранной даты (включительно)
-                (task.dates || []).forEach(d => {
+                const newDates = (task.dates || []).filter(d => {
                     const dateObj = d instanceof Date ? d : new Date(d);
-                    if (!isNaN(dateObj.getTime()) && dateObj.getTime() <= targetTime) {
-                        const ds = formatDateKey(dateObj);
-                        task.dateStatuses[ds] = 'completed';
-                    }
+                    return !isNaN(dateObj.getTime()) && dateObj.getTime() <= targetTime;
+                }).map(d => d instanceof Date ? d : new Date(d));
+                if (newDates.length > 0) {
+                    task.dates = newDates;
+                    task.startDate = newDates[0];
+                    task.endDate = newDates[newDates.length - 1];
+                    task.days = newDates.length;
+                } else {
+                    // На всякий случай: если по каким-то причинам ничего не попало —
+                    // ставим единственный день завершения
+                    task.dates = [targetDate];
+                    task.startDate = targetDate;
+                    task.endDate = targetDate;
+                    task.days = 1;
+                }
+
+                // 2) Отмечаем все оставшиеся дни задачи как завершённые
+                task.status = 'completed';
+                task.dateStatuses = {};
+                task.dates.forEach(d => {
+                    const ds = formatDateKey(d);
+                    task.dateStatuses[ds] = 'completed';
                 });
 
-                // Сохраняем комментарий только для выбранной даты завершения
+                // 3) Новый комментарий, если введён, привязываем только к целевой дате завершения,
+                // не затирая существующие комментарии по другим дням.
                 if (commentText && commentText.trim().length > 0) {
                     const completionKey = formatDateKey(targetDate);
                     task.dateComments[completionKey] = commentText.trim();
                 }
+
+                // 4) Жёсткая последовательность: подтягиваем все последующие задачи
+                recalculateFollowingTasks(taskIndex);
             } else if (status === 'in-progress') {
                 // ВАЖНО: Применяем статус только к выбранным датам (не ко всей задаче)
                 // Каждая ячейка (день) обрабатывается отдельно
@@ -24942,18 +24511,10 @@ const newDates = getTaskDates(taskStartDate, task.days);
             // Убеждаемся, что график отрисован
             console.log('📊 Финальное количество задач:', tasks.length);
             if (tasks.length > 0) {
-                // Пересчитываем задачи с учетом загруженного календаря (если есть пользовательские настройки)
-                if (Object.keys(customCalendar).length > 0) {
-                    console.log('📅 Пересчет задач с учетом пользовательского календаря...');
-                    recalculateTasksAfterCalendarChange();
-                }
-                
                 console.log('✅ Отрисовка графика и таблицы...');
                 renderGantt();
                 renderTable();
                 renderStageTabs();
-                updateStickyButtons();
-                updateStickyColumns();
                 
                 // Инициализируем lastSavedState после отрисовки (если еще не инициализирован)
                 if (!lastSavedState) {
