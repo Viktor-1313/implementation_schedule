@@ -361,13 +361,24 @@ function addLog(userName, action, details, companyId = null, detailedChanges = n
     // Более жесткая проверка: не логируем, если пользователь не определен
     const validUserName = userName && userName !== 'Неизвестный пользователь' && userName.trim() !== '';
     if (!validUserName) {
-      console.warn('⚠️ addLog: пропускаем логирование - пользователь не определен', { userName, action });
+      const logMsg = `⚠️ addLog: пропускаем логирование - пользователь не определен [${action}]`;
+      console.warn(logMsg, { userName, action });
+      // В продакшене также записываем в файл для отладки
+      if (process.env.NODE_ENV === 'production') {
+        appendToLogFile(logMsg);
+      }
       return; // Не логируем действие, если пользователь не определен
     }
     
-    console.log('📝 addLog вызвана:', { userName, action, details, companyId, detailedChanges: detailedChanges ? detailedChanges.length : 0 });
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (!isProduction) {
+      console.log('📝 addLog вызвана:', { userName, action, details, companyId, detailedChanges: detailedChanges ? detailedChanges.length : 0 });
+    }
+    
     const logs = readLogs();
-    console.log('   Текущее количество логов:', logs.length);
+    if (!isProduction) {
+      console.log('   Текущее количество логов:', logs.length);
+    }
     
     const logEntry = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -387,23 +398,55 @@ function addLog(userName, action, details, companyId = null, detailedChanges = n
       })
     };
     logs.push(logEntry);
-    console.log('   Новое количество логов:', logs.length);
+    
+    if (!isProduction) {
+      console.log('   Новое количество логов:', logs.length);
+    }
     
     writeLogs(logs);
+    
+    // В продакшене записываем важные логи в файл для отладки
+    if (isProduction) {
+      const logMsg = `[${logEntry.dateTime}] ${userName}: ${action} | ${details || ''} | Company: ${companyId || 'N/A'}`;
+      appendToLogFile(logMsg);
+    }
     
     // Проверяем, что файл создан/обновлен
     if (fs.existsSync(LOGS_FILE)) {
       const stats = fs.statSync(LOGS_FILE);
-      console.log('✅ Файл логов существует, размер:', stats.size, 'байт');
+      if (!isProduction) {
+        console.log('✅ Файл логов существует, размер:', stats.size, 'байт');
+      }
     } else {
-      console.error('❌ Файл логов не создан!');
+      const errorMsg = '❌ Файл логов не создан!';
+      console.error(errorMsg);
+      if (isProduction) {
+        appendToLogFile(errorMsg);
+      }
     }
     
     return logEntry;
   } catch (e) {
-    console.error('❌ Ошибка добавления лога:', e);
+    const errorMsg = `❌ Ошибка добавления лога: ${e.message}`;
+    console.error(errorMsg);
     console.error('   Стек ошибки:', e.stack);
+    if (process.env.NODE_ENV === 'production') {
+      appendToLogFile(`${errorMsg}\n   Стек: ${e.stack}`);
+    }
     return null;
+  }
+}
+
+// Дополнительное логирование в файл для продакшена
+const SERVER_LOG_FILE = path.join(__dirname, 'server.log');
+function appendToLogFile(message) {
+  try {
+    const timestamp = new Date().toISOString();
+    const logLine = `[${timestamp}] ${message}\n`;
+    fs.appendFileSync(SERVER_LOG_FILE, logLine, 'utf8');
+  } catch (e) {
+    // Если не удалось записать в файл, просто игнорируем (не критично)
+    console.error('Не удалось записать в server.log:', e.message);
   }
 }
 
@@ -2671,6 +2714,32 @@ app.delete('/api/activity-logs', requireAuth, requireAdmin, (req, res) => {
   }
 });
 
+// Получить логи сервера (требуется авторизация, только админы) - для отладки на продакшене
+app.get('/api/server-logs', requireAuth, requireAdmin, (req, res) => {
+  try {
+    const { lines = 100 } = req.query; // По умолчанию последние 100 строк
+    const maxLines = Math.min(parseInt(lines) || 100, 1000); // Максимум 1000 строк
+    
+    if (!fs.existsSync(SERVER_LOG_FILE)) {
+      return res.json({ ok: true, logs: [], message: 'Файл логов сервера не существует' });
+    }
+    
+    const logContent = fs.readFileSync(SERVER_LOG_FILE, 'utf8');
+    const logLines = logContent.split('\n').filter(line => line.trim());
+    const recentLogs = logLines.slice(-maxLines);
+    
+    res.json({ 
+      ok: true, 
+      logs: recentLogs,
+      total: logLines.length,
+      shown: recentLogs.length
+    });
+  } catch (e) {
+    console.error('Ошибка чтения логов сервера:', e);
+    res.status(500).json({ ok: false, error: 'read_failed', message: e.message });
+  }
+});
+
 // ========== API ДЛЯ БЭКАПА КОМПАНИЙ ==========
 
 // Экспорт данных компании (требуется авторизация и доступ к компании)
@@ -2957,8 +3026,44 @@ app.get('/', (req, res) => {
   res.redirect('/auth.html');
 });
 
+// Middleware для правильной отдачи JS файлов с корректным MIME типом
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  }
+  next();
+});
+
+// Явный маршрут для html2pdf.bundle.min.js для гарантированной отдачи файла
+app.get('/html2pdf.bundle.min.js', (req, res) => {
+  const filePath = path.join(__dirname, 'html2pdf.bundle.min.js');
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Кеширование на год
+    res.sendFile(filePath);
+  } else {
+    res.status(404).type('application/javascript').send('// File not found');
+  }
+});
+
 // отдаём статику из текущей директории (где находится server.js)
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
+  }
+}));
+
+// Обработчик 404 для JS файлов - отдаем правильный MIME тип даже для несуществующих файлов
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js') && req.method === 'GET') {
+    // Если это запрос JS файла и он не найден, отдаем 404 с правильным MIME типом
+    res.status(404).type('application/javascript').send('// File not found');
+    return;
+  }
+  next();
+});
 
 // Логирование для отладки (только в development)
 if (process.env.NODE_ENV !== 'production') {

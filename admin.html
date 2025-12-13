@@ -1907,6 +1907,7 @@
                     <button class="btn btn-primary" onclick="loadActivityLogs()" style="width: auto; padding: 14px 24px;">Обновить</button>
                     <button class="btn btn-secondary" onclick="exportActivityLogs('excel')" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">Экспорт в Excel</button>
                     <button class="btn btn-secondary" onclick="exportActivityLogs('txt')" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">Экспорт в TXT</button>
+                    <button class="btn btn-secondary" onclick="loadServerLogs()" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);">Логи сервера</button>
                     <button class="btn btn-secondary" onclick="clearActivityLogs()" style="width: auto; padding: 14px 24px; background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);">Очистить логи</button>
                 </div>
             </div>
@@ -3487,39 +3488,22 @@
                         <td style="padding: 10px;">
                             <input type="text" class="skeleton-input" data-index="${safeIndex}" data-field="${col.field}" 
                                    value="${value.replace(/"/g, '&quot;')}" 
-                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
-                                   onchange="updateSkeletonTask(${safeIndex}, '${col.field}', this.value)"
-                                   onfocus="selectSkeletonRowSilent(${safeIndex})"
-                                   oninput="updateSkeletonTask(${safeIndex}, '${col.field}', this.value)"
-                                   onclick="event.stopPropagation();"
-                                   onmousedown="event.stopPropagation();"
-                                   onmouseup="event.stopPropagation();"
-                                   onselectstart="event.stopPropagation();">
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
                         </td>
                     `;
                 }).join('');
 
                 return `
-                    <tr class="skeleton-row" data-index="${safeIndex}" style="${rowStyle} position: relative;" 
-                        onclick="if(event.target.tagName !== 'INPUT' && event.target.tagName !== 'BUTTON' && !event.target.closest('.skeleton-delete-btn')) selectSkeletonRow(${safeIndex})"
-                        onmouseover="if(${safeIndex} !== selectedSkeletonRowIndex) this.style.backgroundColor='#f5f5f5'"
-                        onmouseout="if(${safeIndex} !== selectedSkeletonRowIndex) this.style.backgroundColor=''">
+                    <tr class="skeleton-row" data-index="${safeIndex}" style="${rowStyle} position: relative;">
                         <td style="padding: 10px; text-align: center; width: 50px;">${index + 1}</td>
                         ${columnCells}
                         <td style="padding: 10px;">
                             <input type="number" class="skeleton-input" data-index="${safeIndex}" data-field="days" 
                                    value="${task.days || 1}" min="1" 
-                                   style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
-                                   onchange="updateSkeletonTask(${safeIndex}, 'days', parseInt(this.value) || 1)"
-                                   onfocus="selectSkeletonRowSilent(${safeIndex})"
-                                   oninput="updateSkeletonTask(${safeIndex}, 'days', parseInt(this.value) || 1)"
-                                   onclick="event.stopPropagation();"
-                                   onmousedown="event.stopPropagation();"
-                                   onmouseup="event.stopPropagation();"
-                                   onselectstart="event.stopPropagation();">
+                                   style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
                         </td>
                         <td style="padding: 0; width: 0; position: relative; overflow: visible;">
-                            <button class="skeleton-delete-btn" onclick="event.stopPropagation(); deleteSkeletonTask(${safeIndex});" title="Удалить задачу">
+                            <button class="skeleton-delete-btn" data-index="${safeIndex}" title="Удалить задачу">
                                 <span class="skeleton-delete-btn-icon">×</span>
                             </button>
                         </td>
@@ -3540,12 +3524,142 @@
                     }
                 }, 0);
             }
+            
+            // Настраиваем делегирование событий для лучшей производительности
+            setupSkeletonTableEventDelegation();
+        }
+        
+        // Настройка делегирования событий для таблицы скелета (вызывается после каждого рендера)
+        function setupSkeletonTableEventDelegation() {
+            const tbody = document.getElementById('skeletonTableBody');
+            if (!tbody) return;
+            
+            // Удаляем старые обработчики, если они есть
+            const newTbody = tbody.cloneNode(true);
+            tbody.parentNode.replaceChild(newTbody, tbody);
+            
+            // Делегирование событий для строк таблицы
+            newTbody.addEventListener('click', (e) => {
+                const row = e.target.closest('.skeleton-row');
+                if (!row) return;
+                
+                const index = parseInt(row.getAttribute('data-index'));
+                if (isNaN(index)) return;
+                
+                // Если клик по input или button, не выделяем строку
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.skeleton-delete-btn')) {
+                    return;
+                }
+                
+                selectSkeletonRow(index);
+            });
+            
+            // Делегирование для hover эффекта
+            newTbody.addEventListener('mouseover', (e) => {
+                const row = e.target.closest('.skeleton-row');
+                if (!row) return;
+                
+                const index = parseInt(row.getAttribute('data-index'));
+                if (isNaN(index) || index === selectedSkeletonRowIndex) return;
+                
+                row.style.backgroundColor = '#f5f5f5';
+            });
+            
+            newTbody.addEventListener('mouseout', (e) => {
+                const row = e.target.closest('.skeleton-row');
+                if (!row) return;
+                
+                const index = parseInt(row.getAttribute('data-index'));
+                if (isNaN(index) || index === selectedSkeletonRowIndex) return;
+                
+                row.style.backgroundColor = '';
+            });
+            
+            // Делегирование для input полей
+            newTbody.addEventListener('input', (e) => {
+                if (!e.target.classList.contains('skeleton-input')) return;
+                
+                const index = parseInt(e.target.getAttribute('data-index'));
+                const field = e.target.getAttribute('data-field');
+                if (isNaN(index) || !field) return;
+                
+                const value = e.target.tagName === 'INPUT' && e.target.type === 'number' 
+                    ? parseInt(e.target.value) || 1 
+                    : e.target.value;
+                
+                updateSkeletonTask(index, field, value);
+            });
+            
+            newTbody.addEventListener('change', (e) => {
+                if (!e.target.classList.contains('skeleton-input')) return;
+                
+                const index = parseInt(e.target.getAttribute('data-index'));
+                const field = e.target.getAttribute('data-field');
+                if (isNaN(index) || !field) return;
+                
+                const value = e.target.tagName === 'INPUT' && e.target.type === 'number' 
+                    ? parseInt(e.target.value) || 1 
+                    : e.target.value;
+                
+                updateSkeletonTask(index, field, value);
+            });
+            
+            newTbody.addEventListener('focus', (e) => {
+                if (!e.target.classList.contains('skeleton-input')) return;
+                
+                const index = parseInt(e.target.getAttribute('data-index'));
+                if (isNaN(index)) return;
+                
+                selectSkeletonRowSilent(index);
+            }, true);
+            
+            // Делегирование для кнопок удаления
+            newTbody.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.skeleton-delete-btn');
+                if (!deleteBtn) return;
+                
+                e.stopPropagation();
+                const index = parseInt(deleteBtn.getAttribute('data-index'));
+                if (isNaN(index)) return;
+                
+                deleteSkeletonTask(index);
+            });
+            
+            // Предотвращаем выделение текста при клике на input
+            newTbody.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('skeleton-input')) {
+                    e.stopPropagation();
+                }
+            });
+            
+            newTbody.addEventListener('selectstart', (e) => {
+                if (e.target.classList.contains('skeleton-input')) {
+                    e.stopPropagation();
+                }
+            });
         }
 
-        // Выделить строку скелета (с перерисовкой)
+        // Выделить строку скелета (без полной перерисовки для лучшей производительности)
         function selectSkeletonRow(index) {
+            if (selectedSkeletonRowIndex === index) {
+                return; // Уже выделена
+            }
+            const oldIndex = selectedSkeletonRowIndex;
             selectedSkeletonRowIndex = index;
-            renderSkeletonTable();
+            // Обновляем стили строк без полной перерисовки
+            const rows = document.querySelectorAll('.skeleton-row');
+            if (rows.length > 0) {
+                rows.forEach((row, i) => {
+                    if (i === index) {
+                        row.style.backgroundColor = '#e3f2fd';
+                    } else if (i === oldIndex) {
+                        row.style.backgroundColor = '';
+                    }
+                });
+            } else {
+                // Если строки еще не отрисованы, делаем полную перерисовку
+                renderSkeletonTable();
+            }
         }
 
         // Выделить строку скелета без перерисовки (только обновить стиль)
@@ -4364,6 +4478,78 @@
         // Очистить логи (старая функция, теперь открывает модальное окно)
         function clearActivityLogs() {
             openClearLogsModal();
+        }
+
+        // Загрузить логи сервера (для отладки на продакшене)
+        async function loadServerLogs() {
+            try {
+                const response = await fetch('/api/server-logs?lines=200', {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Ошибка загрузки логов сервера' }));
+                    showMessage(`Ошибка загрузки логов сервера: ${errorData.error || response.statusText}`, 'error');
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.ok && Array.isArray(result.logs)) {
+                    // Отображаем логи в модальном окне
+                    let modal = document.getElementById('serverLogsModal');
+                    if (!modal) {
+                        // Создаем модальное окно, если его нет
+                        const modalHtml = `
+                            <div id="serverLogsModal" class="modal" style="display: none;" onclick="if(event.target.id === 'serverLogsModal') closeServerLogsModal()">
+                                <div class="modal-content" style="max-width: 90%; max-height: 90vh; overflow: auto;" onclick="event.stopPropagation()">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                        <h2 style="margin: 0; color: #1565c0;">Логи сервера</h2>
+                                        <button onclick="closeServerLogsModal()" style="background: #ef5350; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Закрыть</button>
+                                    </div>
+                                    <div style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 70vh; overflow: auto;">
+                                        <pre id="serverLogsContent" style="margin: 0; white-space: pre-wrap; word-wrap: break-word;"></pre>
+                                    </div>
+                                    <div style="margin-top: 10px; color: #666; font-size: 0.9rem;">
+                                        Показано: ${result.shown} из ${result.total} строк
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        modal = document.getElementById('serverLogsModal');
+                    }
+                    
+                    const content = document.getElementById('serverLogsContent');
+                    if (content) {
+                        content.textContent = result.logs.join('\n');
+                    }
+                    
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        // Закрытие по Escape
+                        const escapeHandler = (e) => {
+                            if (e.key === 'Escape') {
+                                closeServerLogsModal();
+                                document.removeEventListener('keydown', escapeHandler);
+                            }
+                        };
+                        document.addEventListener('keydown', escapeHandler);
+                    }
+                } else {
+                    showMessage('Ошибка загрузки логов сервера: неверный формат данных', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки логов сервера:', error);
+                showMessage('Ошибка загрузки логов сервера', 'error');
+            }
+        }
+
+        // Закрыть модальное окно логов сервера
+        function closeServerLogsModal() {
+            const modal = document.getElementById('serverLogsModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         // Функция для экранирования HTML
