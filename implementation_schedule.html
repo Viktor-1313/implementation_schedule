@@ -21667,9 +21667,12 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             buildStageSettingsList();
         }
 
-        async function renameStage(oldShortName, newShortName) {
+                async function renameStage(oldShortName, newShortName) {
+            // 1. Обновляем список названий этапов (краткие названия в stageConfig)
             stageConfig = stageConfig.map(name => name === oldShortName ? newShortName : name);
 
+            // 2. Обновляем этапы в скелете (projectData),
+            //    чтобы новые компании и сброс плана уже использовали новое имя
             projectData.forEach(item => {
                 if (!item.stage) return;
                 if (item.stage.startsWith(oldShortName)) {
@@ -21677,16 +21680,33 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                 }
             });
 
+            // 3. ОБЯЗАТЕЛЬНО: обновляем этапы в ТЕКУЩИХ задачах,
+            //    чтобы не пересобирать график с нуля и не терять данные
+            if (Array.isArray(tasks)) {
+                tasks.forEach(task => {
+                    if (!task.stage) return;
+                    if (task.stage.startsWith(oldShortName)) {
+                        task.stage = newShortName + task.stage.slice(oldShortName.length);
+                    }
+                });
+            }
+
+            // 4. Обновляем фильтр этапов, если был выбран переименованный этап
             if (currentStageFilter === oldShortName) {
                 currentStageFilter = newShortName;
             }
 
-            await initializeTasks();
+            // 5. Перерисовываем интерфейс
             renderGantt();
             renderTable();
             renderStageTabs();
             buildStageSettingsList();
             applyStageSelection(); // Обновляем выделение этапа, если он был выделен
+
+            // 6. Сохраняем изменения на сервер (аналогично initializeTasks → autoSaveGanttState)
+            if (typeof autoSaveGanttState === 'function') {
+                autoSaveGanttState();
+            }
         }
 
         // Управление масштабом по горизонтали
