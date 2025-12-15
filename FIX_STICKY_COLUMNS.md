@@ -87,3 +87,6 @@ $content = $content -replace "selector: '.link-cell'","selector: '.gantt-details
 $content = $content -replace "selector: '.responsible-cell'","selector: '.gantt-details-cell.responsible-cell'"
 Set-Content implementation_schedule.html -Value $content -Encoding UTF8 -NoNewline
 ```
+
+
+

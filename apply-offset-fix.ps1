@@ -202,3 +202,6 @@ if ($content -match $oldUpdateStartDate) {
 # Сохраняем файл
 $content | Set-Content $filePath -Encoding UTF8 -NoNewline
 Write-Host "Изменения применены к файлу: $filePath"
+
+
+

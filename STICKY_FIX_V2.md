@@ -120,3 +120,6 @@ if (typeof updateStickyColumns === 'function') {
 ## Проверка в медиа-запросах
 
 Также проверьте медиа-запросы. Найдите все места, где определяется `.chart-container` в `@media` блоках и убедитесь, что там тоже `overflow-x: auto` или `overflow-x: scroll`, но НЕ `overflow: hidden` или `overflow: visible`.
+
+
+

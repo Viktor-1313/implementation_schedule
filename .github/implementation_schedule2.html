@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -2363,20 +2362,6 @@
             scrollbar-width: thin; /* Для Firefox */
             scrollbar-color: #90caf9 #e3f2fd; /* Для Firefox */
         }
-
-        /* Фоновая подложка для закреплённых колонок, чтобы тянуться по всей высоте */
-        .gantt-chart.has-sticky-columns::before {
-            content: '';
-            position: sticky;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: var(--sticky-left-width, 0px);
-            background: var(--color-bg);
-            border-right: 1px solid var(--color-border);
-            z-index: 6;
-            pointer-events: none;
-        }
         
         /* Стили скроллбара для десктопа */
         .gantt-chart::-webkit-scrollbar {
@@ -2420,18 +2405,18 @@
         .gantt-header-label {
             min-width: 180px;
             max-width: 180px;
-            padding: 10px 10px 26px 10px; /* Увеличен нижний padding для тогла */
+            padding: 10px 10px;
             border-right: 2px solid var(--color-border);
             background: var(--color-bg);
-            position: static;
-            left: auto;
-            z-index: auto;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            text-align: center;
             font-size: 16px;
             font-weight: 700;
             box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
+            /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
+            clip-path: inset(0);
         }
 
         .gantt-details-header {
@@ -2442,107 +2427,14 @@
             display: flex;
         }
 
-        /* --- Тогглы фиксации колонок внутри ячеек заголовков --- */
-        .header-sticky-toggle {
-            position: absolute;
-            bottom: 4px;
-            right: 4px;
-            display: inline-flex;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            z-index: 10;
-        }
-
-        .header-sticky-toggle input {
-            display: none;
-        }
-
-        .header-sticky-switch {
-            position: relative;
-            width: 28px;
-            height: 16px;
-            border-radius: 16px;
-            background: #d8d8d8;
-            border: 1px solid #c5c5c5;
-            transition: background 0.2s ease, border-color 0.2s ease;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
-        }
-
-        .header-sticky-switch::after {
-            content: '';
-            position: absolute;
-            top: 1px;
-            left: 1px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease;
-        }
-
-        .header-sticky-toggle input:checked + .header-sticky-switch {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-            border-color: var(--color-primary);
-        }
-
-        .header-sticky-toggle input:checked + .header-sticky-switch::after {
-            transform: translateX(12px);
-        }
-
-        .header-label-text {
-            flex: 1;
-            text-align: center;
-        }
-
-        [data-theme="dark"] .header-sticky-switch {
-            background: #2b2b2b;
-            border-color: #3a3a3a;
-        }
-
-        [data-theme="dark"] .header-sticky-toggle input:checked + .header-sticky-switch {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-            border-color: var(--color-primary);
-        }
-
-        /* Обновляем стили заголовков для поддержки тоглов */
-        .gantt-header-label {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding-left: 8px;
-            position: relative;
-        }
-
         .gantt-details-cell {
             padding: 8px 6px;
             border-right: 1px solid var(--color-border);
             background: var(--color-bg);
+            text-align: center;
             font-size: 11px;
             box-sizing: border-box;
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            position: relative;
-        }
-
-        .gantt-details-cell .header-label-text {
-            flex: 1;
-            text-align: center;
-            margin-left: 0; /* Тогл теперь абсолютно позиционирован, отступ не нужен */
-        }
-
-        .gantt-header-label .header-label-text {
-            flex: 1;
-            text-align: center;
-            margin-left: 0; /* Тогл теперь абсолютно позиционирован, отступ не нужен */
-        }
-
-        /* Скрытие только блока "Фиксация:" с чекбоксами над таблицей */
-        .sticky-controls {
-            display: none !important;
         }
 
         /* Анимация для колонки "Ответственный" в Ганте */
@@ -2811,17 +2703,6 @@
             border-right-color: rgba(30, 136, 229, 0.8);
         }
 
-	.gantt-stage-label.selected {
-            background: rgba(30, 136, 229, 0.3);
-            border-right: 3px solid var(--color-primary);
-            font-weight: 700;
-        }
-        
-        [data-theme="dark"] .gantt-stage-label.selected {
-            background: rgba(66, 165, 245, 0.3);
-            border-right: 3px solid var(--color-primary);
-        }
-
         /* Кастомная подсказка для меток этапов */
 
         /* Свернутое состояние метки этапа (горизонтальное) */
@@ -2987,10 +2868,12 @@
             background: var(--color-bg);
             font-weight: 500;
             font-size: 11px;
-            position: static;
-            left: auto;
-            z-index: auto;
+            position: sticky;
+            left: 0;
+            z-index: 5;
             box-sizing: border-box;
+            /* Ограничиваем область sticky, чтобы не выходила за пределы контейнера */
+            clip-path: inset(0);
             overflow: visible;
             white-space: nowrap;
             display: flex;
@@ -4327,7 +4210,7 @@
         }
 
         .stage-settings-btn {
-            display: none !important;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 36px;
@@ -6201,39 +6084,6 @@
                         <span class="stage-settings-knob stage-settings-knob-3"></span>
                     </span>
                 </button>
-                <div class="sticky-controls">
-                    <span class="zoom-label">Фиксация:</span>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Задача'">
-                        <input type="checkbox" id="stickyLabelToggle" onchange="toggleStickyColumn('label')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Задача</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Дата начала'">
-                        <input type="checkbox" id="stickyStartToggle" onchange="toggleStickyColumn('start')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Дата начала</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Дата окончания'">
-                        <input type="checkbox" id="stickyEndToggle" onchange="toggleStickyColumn('end')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Дата окончания</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Рабочих дней'">
-                        <input type="checkbox" id="stickyDaysToggle" onchange="toggleStickyColumn('days')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Рабочих дней</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Связь'">
-                        <input type="checkbox" id="stickyLinkToggle" onchange="toggleStickyColumn('link')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Связь</span>
-                    </label>
-                    <label class="sticky-toggle" data-tooltip="Закрепить столбец 'Ответственный'">
-                        <input type="checkbox" id="stickyResponsibleToggle" onchange="toggleStickyColumn('responsible')">
-                        <span class="sticky-switch"></span>
-                        <span class="sticky-toggle-text">Ответственный</span>
-                    </label>
-                </div>
                 </div>
             </div>
         </div>
@@ -6291,22 +6141,6 @@
         <div class="status-menu-item" data-status="completed">
             <div class="status-color-box" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);"></div>
             <span>Завершено (с начала по выбранную дату)</span>
-        </div>
-    </div>
-
-    <!-- Меню выбора статуса дня (рабочий/выходной) -->
-    <div id="dayStatusMenu" class="status-menu">
-        <div class="status-menu-item" data-day-status="workday">
-            <div class="status-color-box" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);"></div>
-            <span>Рабочий день</span>
-        </div>
-        <div class="status-menu-item" data-day-status="holiday">
-            <div class="status-color-box" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);"></div>
-            <span>Выходной день</span>
-        </div>
-        <div class="status-menu-item" data-day-status="reset" style="border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 5px;">
-            <div class="status-color-box" style="background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);"></div>
-            <span>Сбросить (стандартный)</span>
         </div>
     </div>
 
@@ -7228,10 +7062,6 @@
             "2025-05-01", "2025-05-09", "2025-06-12", "2025-11-04"
         ];
 
-        // Пользовательский календарь: объект, где ключ - дата в формате "YYYY-MM-DD", значение - 'workday' или 'holiday'
-        // Например: { "2025-01-01": "workday", "2025-01-15": "holiday" }
-        let customCalendar = {};
-
         const INITIAL_START_DATE = new Date(2025, 0, 9); // 9 января 2025 (дефолт для сброса)
         let startDate = new Date(INITIAL_START_DATE); // текущее начало проекта
         let tasks = [];
@@ -7285,12 +7115,8 @@
 
         // Выделение задач (можно выделять несколько строк)
         let selectedTaskIds = new Set(); // множество id выделенных задач
-	let copiedTask = null; // скопированная задача для вставки
-        // Выделение этапа
-        let selectedStage = null; // название выделенного этапа (например, "Этап 1. Формирование цифровой модели")
-        // Флаг и ссылка на модал удаления
         let lastSelectedTaskId = null;   // последняя "базовая" задача для Shift-выделения
-       
+        let copiedTask = null; // скопированная задача для вставки
         // Флаг и ссылка на модал удаления
         let isDeleteConfirmOpen = false;
         // Текущий фильтр по этапу: 'all' | 'Этап 1' | 'Этап 2' | ...
@@ -7398,8 +7224,6 @@
             days: 90,
             responsible: 160
         };
-        // Набор закреплённых колонок (по умолчанию ничего не закреплено)
-        const stickyColumns = new Set();
 
         function formatDateForInput(date) {
             // Если date уже строка, возвращаем её как есть
@@ -7487,8 +7311,7 @@
                 const payload = {
                     name: companyName,
                     objectName: companyObjectName,
-                    logoData: companyLogoData,
-                    customCalendar: customCalendar
+                    logoData: companyLogoData
                 };
                 localStorage.setItem('iconaCompanyInfo', JSON.stringify(payload));
             } catch (e) {
@@ -7500,8 +7323,7 @@
             try {
                 const payload = {
                     name: companyName,
-                    logoData: companyLogoData,
-                    customCalendar: customCalendar
+                    logoData: companyLogoData
                 };
                 const companyParam = currentCompany ? `?company=${currentCompany}` : '';
                 await fetch(`/api/company-info${companyParam}`, {
@@ -7641,13 +7463,6 @@
                         companyLogoData = data.logoData || null;
                         companyChartType = data.chartType || 'icona';
                         
-                        // Загружаем пользовательский календарь
-                        if (data.customCalendar && typeof data.customCalendar === 'object') {
-                            customCalendar = data.customCalendar;
-                        } else {
-                            customCalendar = {};
-                        }
-                        
                         // Загружаем название контейнера и обновляем заголовок
                         await loadChartTypeContainerName(companyChartType);
                         updatePageTitle();
@@ -7671,13 +7486,6 @@
                     companyObjectName = stored.objectName ? String(stored.objectName) : '';
                     companyLogoData = stored.logoData || null;
                     companyChartType = stored.chartType || 'icona';
-                    
-                    // Загружаем пользовательский календарь
-                    if (stored.customCalendar && typeof stored.customCalendar === 'object') {
-                        customCalendar = stored.customCalendar;
-                    } else {
-                        customCalendar = {};
-                    }
                     
                     // Загружаем название контейнера и обновляем заголовок
                     await loadChartTypeContainerName(companyChartType);
@@ -7844,20 +7652,6 @@
             }
         }
 
- function applyStageSelection() {
-            // Убираем выделение со всех меток этапов
-            document.querySelectorAll('.gantt-stage-label').forEach(label => {
-                label.classList.remove('selected');
-            });
-            
-            // Выделяем выбранный этап
-            if (selectedStage) {
-                const stageLabel = document.querySelector(`.gantt-stage-label[data-stage-name="${selectedStage}"]`);
-                if (stageLabel) {
-                    stageLabel.classList.add('selected');
-                }
-            }
-        }
         function clearSelection() {
             selectedTaskIds.clear();
             lastSelectedTaskId = null;
@@ -7875,11 +7669,6 @@
         // Выбор задач по клику (поддержка Shift для диапазона)
         function selectTask(taskId, options = {}) {
             const { range = false, preserveSelection = false } = options;
-
-	if (selectedStage) {
-                selectedStage = null;
-                applyStageSelection();
-            }
 
             if (range && lastSelectedTaskId !== null) {
                 // Диапазон между lastSelectedTaskId и текущей задачей
@@ -7939,13 +7728,6 @@
         function isWorkday(date) {
             const dayOfWeek = date.getDay();
             const dateStr = formatDateKey(date);
-            
-            // Сначала проверяем пользовательский календарь
-            if (customCalendar[dateStr]) {
-                return customCalendar[dateStr] === 'workday';
-            }
-            
-            // Затем стандартная логика: не воскресенье (0), не суббота (6), не праздник
             return dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.includes(dateStr);
         }
 
@@ -10064,155 +9846,6 @@
             element.appendChild(resizer);
         }
 
-        // Управление закреплением колонок (задача + даты + дни + связь/ответственный)
-        function updateStickyColumns() {
-            const chart = document.getElementById('ganttChart');
-            if (!chart) return;
-
-            const allSelectors = [
-                '.gantt-header-label',
-                '.gantt-label',
-                '.start-col',
-                '.end-col',
-                '.days-col',
-                '.link-cell',
-                '.responsible-cell'
-            ];
-
-            // Сбрасываем прошлые стили закрепления
-            chart.querySelectorAll(allSelectors.join(',')).forEach((el) => {
-                el.style.position = '';
-                el.style.left = '';
-                el.style.zIndex = '';
-                el.style.clipPath = '';
-                el.style.background = '';
-            });
-
-            const getWidth = (selector, fallback) => {
-                const el = chart.querySelector(selector);
-                if (el) {
-                    const rect = el.getBoundingClientRect();
-                    if (rect.width) return rect.width;
-                }
-                return fallback || 0;
-            };
-
-            const labelWidth = ganttColumnWidths.label || getWidth('.gantt-header-label', 180);
-            const startWidth = ganttColumnWidths.start || getWidth('.gantt-details-cell.start-col', 120);
-            const endWidth = ganttColumnWidths.end || getWidth('.gantt-details-cell.end-col', 120);
-            const daysWidth = ganttColumnWidths.days || getWidth('.gantt-details-cell.days-col', 90);
-            const linkWidth = getWidth('.gantt-details-cell.link-cell', 70);
-            const respWidth = getWidth('.gantt-details-cell.responsible-cell', 200);
-
-            let left = 0;
-
-            const columns = [
-                { key: 'label', selector: '.gantt-header-label, .gantt-label', width: labelWidth, visible: stickyColumns.has('label') },
-                { key: 'start', selector: '.start-col', width: startWidth, visible: stickyColumns.has('start') },
-                { key: 'end', selector: '.end-col', width: endWidth, visible: stickyColumns.has('end') },
-                { key: 'days', selector: '.days-col', width: daysWidth, visible: stickyColumns.has('days') },
-                { key: 'link', selector: '.link-cell', width: linkWidth, visible: stickyColumns.has('link') && document.body.classList.contains('show-link') },
-                { key: 'responsible', selector: '.responsible-cell', width: respWidth, visible: stickyColumns.has('responsible') && document.body.classList.contains('show-responsible') },
-            ];
-
-            const applyLeft = (selector, z) => {
-                // Получаем computed background один раз
-                const rootStyle = getComputedStyle(document.documentElement);
-                let bgColor = rootStyle.getPropertyValue('--color-bg').trim();
-                if (!bgColor || bgColor === '') {
-                    // Fallback на вычисленный цвет из body
-                    bgColor = getComputedStyle(document.body).backgroundColor || '#f5f5f5';
-                }
-                
-                chart.querySelectorAll(selector).forEach((el) => {
-                    el.style.position = 'sticky';
-                    el.style.left = `${left}px`;
-                    el.style.zIndex = z;
-                    // Устанавливаем background явно для всех элементов, чтобы sticky работал правильно
-                    el.style.background = bgColor;
-                    el.style.backgroundColor = bgColor;
-                    // Убираем clipPath, чтобы не мешать отображению
-                    el.style.clipPath = '';
-                    // Убеждаемся, что элемент виден
-                    el.style.visibility = 'visible';
-                    el.style.opacity = '1';
-                });
-            };
-            const resetSticky = (selector) => {
-                chart.querySelectorAll(selector).forEach((el) => {
-                    el.style.position = '';
-                    el.style.left = '';
-                    el.style.zIndex = '';
-                    el.style.background = '';
-                    el.style.clipPath = '';
-                });
-            };
-
-            columns.forEach((col) => {
-                if (!col.visible) {
-                    resetSticky(col.selector);
-                    return;
-                }
-                applyLeft(col.selector, col.key === 'label' ? 11 : 7);
-                left += col.width;
-            });
-
-            chart.classList.toggle('has-sticky-columns', left > 0);
-            chart.style.setProperty('--sticky-left-width', `${left}px`);
-        }
-
-// Обработчик скролла для обновления позиций sticky столбцов
-        const ganttChart = document.getElementById('ganttChart');
-        if (ganttChart) {
-            // Удаляем старый обработчик, если есть
-            ganttChart.removeEventListener('scroll', updateStickyColumnsOnScroll);
-            
-            // Добавляем новый обработчик с throttling для производительности
-            let scrollTimeout = null;
-            function updateStickyColumnsOnScroll() {
-                if (scrollTimeout) return;
-                scrollTimeout = requestAnimationFrame(() => {
-                    updateStickyColumns();
-                    scrollTimeout = null;
-                });
-            }
-            
-            ganttChart.addEventListener('scroll', updateStickyColumnsOnScroll, { passive: true });
-        }
-
-        // Обновляем визуальное состояние кнопок закрепления
-        function updateStickyButtons() {
-            const map = {
-                label: 'stickyLabelToggle',
-                start: 'stickyStartToggle',
-                end: 'stickyEndToggle',
-                days: 'stickyDaysToggle',
-                link: 'stickyLinkToggle',
-                responsible: 'stickyResponsibleToggle'
-            };
-            Object.entries(map).forEach(([key, id]) => {
-                const input = document.getElementById(id);
-                if (!input) return;
-                const isActive = stickyColumns.has(key);
-                input.checked = isActive;
-                const wrapper = input.closest('.header-sticky-toggle');
-                if (wrapper) {
-                    wrapper.classList.toggle('active', isActive);
-                }
-            });
-        }
-
-        // Переключение закрепления конкретной колонки
-        function toggleStickyColumn(columnKey) {
-            if (stickyColumns.has(columnKey)) {
-                stickyColumns.delete(columnKey);
-            } else {
-                stickyColumns.add(columnKey);
-            }
-            updateStickyButtons();
-            updateStickyColumns();
-        }
-
         // Вспомогательная функция для вычисления количества символов, которые помещаются в ширину
         // Используем кэшированный элемент для измерения, чтобы не создавать его каждый раз
         let measureElement = null;
@@ -10747,13 +10380,7 @@
 
             const headerLabel = document.createElement('div');
             headerLabel.className = 'gantt-header-label';
-            headerLabel.innerHTML = `
-                <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Задача'">
-                    <input type="checkbox" id="stickyLabelToggle" onchange="toggleStickyColumn('label')">
-                    <span class="header-sticky-switch"></span>
-                </label>
-                <span class="header-label-text">Задача</span>
-            `;
+            headerLabel.textContent = 'Задача';
             applyColumnWidth(headerLabel, 'label');
             addColumnResizer(headerLabel, 'label');
             headerFirstRow.appendChild(headerLabel);
@@ -10762,41 +10389,11 @@
             const detailsHeader = document.createElement('div');
             detailsHeader.className = 'gantt-details-header';
             detailsHeader.innerHTML = `
-                <div class="gantt-details-cell start-col">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Дата начала'">
-                        <input type="checkbox" id="stickyStartToggle" onchange="toggleStickyColumn('start')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Дата начала</span>
-                </div>
-                <div class="gantt-details-cell end-col">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Дата окончания'">
-                        <input type="checkbox" id="stickyEndToggle" onchange="toggleStickyColumn('end')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Дата окончания</span>
-                </div>
-                <div class="gantt-details-cell days-col">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Рабочих дней'">
-                        <input type="checkbox" id="stickyDaysToggle" onchange="toggleStickyColumn('days')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Рабочих дней</span>
-                </div>
-                <div class="gantt-details-cell link-cell">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Связь'">
-                        <input type="checkbox" id="stickyLinkToggle" onchange="toggleStickyColumn('link')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Связь</span>
-                </div>
-                <div class="gantt-details-cell responsible-cell">
-                    <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Ответственный'">
-                        <input type="checkbox" id="stickyResponsibleToggle" onchange="toggleStickyColumn('responsible')">
-                        <span class="header-sticky-switch"></span>
-                    </label>
-                    <span class="header-label-text">Ответственный</span>
-                </div>
+                <div class="gantt-details-cell">Дата начала</div>
+                <div class="gantt-details-cell">Дата окончания</div>
+                <div class="gantt-details-cell">Рабочих дней</div>
+                <div class="gantt-details-cell link-cell">Связь</div>
+                <div class="gantt-details-cell responsible-cell">Ответственный</div>
             `;
 
             const headerCells = detailsHeader.querySelectorAll('.gantt-details-cell');
@@ -10850,33 +10447,9 @@
                 if (scaleMode === 'day') {
                     // Подсветка выходных и праздников только в дневном режиме
                     cell.title = unit.start.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
-                    const key = formatDateKey(unit.start);
-                    
-                    // Проверяем пользовательский календарь
-                    if (customCalendar[key]) {
-                        if (customCalendar[key] === 'holiday') {
-                            cell.classList.add('gantt-holiday');
-                        } else {
-                            // Рабочий день - убираем классы выходных
-                            cell.classList.remove('gantt-holiday', 'gantt-weekend');
-                        }
-                    } else if (!isWorkday(unit.start)) {
-                        // Стандартная логика для выходных и праздников
+                    if (!isWorkday(unit.start)) {
+                        const key = formatDateKey(unit.start);
                         cell.classList.add(holidays.includes(key) ? 'gantt-holiday' : 'gantt-weekend');
-                    } else {
-                        // Рабочий день - убираем классы выходных
-                        cell.classList.remove('gantt-holiday', 'gantt-weekend');
-                    }
-                    
-                    // Добавляем обработчик клика для изменения статуса дня (только в режиме редактирования)
-                    if (canEdit()) {
-                        cell.style.cursor = 'pointer';
-                        cell.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const dateKey = formatDateKey(unit.start);
-                            const rect = cell.getBoundingClientRect();
-                            openDayStatusMenu(rect.left + rect.width / 2, rect.bottom + 5, dateKey, cell);
-                        });
                     }
                 } else if (scaleMode === 'week') {
                     const fromStr = unit.start.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -11083,7 +10656,7 @@
                 detailsRow.className = 'gantt-details-row';
 
                 const startCell = document.createElement('div');
-                startCell.className = 'gantt-details-cell start-col';
+                startCell.className = 'gantt-details-cell';
                 const startInput = document.createElement('input');
                 startInput.type = 'date';
                 startInput.className = 'gantt-details-input';
@@ -11100,7 +10673,7 @@
                 applyColumnWidth(startCell, 'start');
 
                 const endCell = document.createElement('div');
-                endCell.className = 'gantt-details-cell end-col';
+                endCell.className = 'gantt-details-cell';
                 const endInput = document.createElement('input');
                 endInput.type = 'date';
                 endInput.className = 'gantt-details-input';
@@ -11117,7 +10690,7 @@
                 applyColumnWidth(endCell, 'end');
 
                 const daysCell = document.createElement('div');
-                daysCell.className = 'gantt-details-cell days-col';
+                daysCell.className = 'gantt-details-cell';
                 const daysInput = document.createElement('input');
                 daysInput.type = 'number';
                 daysInput.min = '0';
@@ -12585,34 +12158,10 @@
                         stageHeight = 35;
                     }
                     
-                    // Обработчик двойного клика для переименования
-                    let clickTimer = null;
+                    // Добавляем обработчик клика для сворачивания/разворачивания
                     stageLabel.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        if (clickTimer === null) {
-                            clickTimer = setTimeout(() => {
-                                // Одиночный клик - выделение этапа
-                                selectedTaskIds.clear();
-                                selectedStage = stageName;
-                                applyStageSelection();
-                                clickTimer = null;
-                            }, 300);
-                        } else {
-                            // Двойной клик - переименование
-                            clearTimeout(clickTimer);
-                            clickTimer = null;
-                            openRenameStageModal(stageName);
-                        }
-                    });
-                    
-                    // Обработчик двойного клика
-                    stageLabel.addEventListener('dblclick', (e) => {
-                        e.stopPropagation();
-                        if (clickTimer) {
-                            clearTimeout(clickTimer);
-                            clickTimer = null;
-                        }
-                        openRenameStageModal(stageName);
+                        toggleStageCollapse(stageName);
                     });
                     
                     
@@ -12662,9 +12211,6 @@
                 });
             }
             
-            // Обновляем позиции фиксированных колонок после отрисовки строк
-            updateStickyColumns();
-
             // Создаем метки этапов с использованием requestAnimationFrame для гарантии готовности DOM
             requestAnimationFrame(() => {
                 setTimeout(() => {
@@ -12851,7 +12397,6 @@
                 }
                 renderGantt();
                 renderTable();
-		updateStickyColumns();
             });
             
             return row;
@@ -13549,7 +13094,6 @@
             if (searchResults.length > 0) {
                 highlightSearchResults();
             }
-		updateStickyColumns();
         }
 
         // Обработка изменения полей в детальной таблице
@@ -14727,11 +14271,6 @@
                 return; // Блокируем добавление задач в режиме просмотра
             }
             
-	    if (selectedStage) {
-                insertNewStage(selectedStage);
-                return;
-            }
-
             // Сохраняем состояние в историю перед добавлением задачи
             addToUndoHistory();
             
@@ -14834,82 +14373,6 @@
             selectTask(newTask.id);
 	    autoSaveGanttState();
             autoSaveGanttState(); // Автоматическое сохранение после добавления задачи
-        }
-
-function insertNewStage(afterStageName) {
-            addToUndoHistory();
-            
-            // Находим индекс последней задачи этапа
-            const stageTasks = tasks.filter(t => t.stage === afterStageName);
-            if (stageTasks.length === 0) return;
-            
-            const lastTask = stageTasks[stageTasks.length - 1];
-            const lastIndex = tasks.findIndex(t => t.id === lastTask.id);
-            if (lastIndex === -1) return;
-            
-            // Определяем номер нового этапа
-            const stageMatch = afterStageName.match(/^(Этап\s+)(\d+)/);
-            let newStageNumber = 1;
-            if (stageMatch) {
-                newStageNumber = parseInt(stageMatch[2]) + 1;
-            } else {
-                // Если формат не стандартный, ищем максимальный номер
-                const allStages = [...new Set(tasks.map(t => t.stage).filter(Boolean))];
-                const numbers = allStages.map(s => {
-                    const m = s.match(/^(Этап\s+)(\d+)/);
-                    return m ? parseInt(m[2]) : 0;
-                });
-                newStageNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
-            }
-            
-            const newStageName = `Этап ${newStageNumber}. Новый этап`;
-            
-            // Создаем новую задачу для нового этапа
-            let newStart = new Date(lastTask.endDate);
-            do {
-                newStart.setDate(newStart.getDate() + 1);
-            } while (!isWorkday(newStart));
-            
-            const newDates = getTaskDates(newStart, 1);
-            
-            const newTask = {
-                id: nextTaskId++,
-                stage: newStageName,
-                control: '',
-                task: 'Новая задача',
-                days: 1,
-                substage: '',
-                startDate: newDates[0],
-                endDate: newDates[newDates.length - 1],
-                dates: newDates,
-                status: 'pending',
-                dateStatuses: {},
-                link: 'О_Н',
-                responsible: '',
-                onTravel: false
-            };
-            
-            // Вставляем новую задачу после последней задачи этапа
-            tasks.splice(lastIndex + 1, 0, newTask);
-            
-            // Обновляем stageConfig
-            if (!stageConfig.includes(newStageName)) {
-                stageConfig.push(newStageName);
-                stageConfig.sort();
-            }
-            
-            // Пересчитываем связи
-            recalculateFollowingTasks(lastIndex + 1);
-            
-            // Выделяем новый этап
-            selectedStage = newStageName;
-            selectedTaskIds.clear();
-            
-            updateStatistics();
-            renderGantt();
-            renderTable();
-            renderStageTabs();
-            applyStageSelection();
         }
 
         // Удаление выбранных задач (Delete)
@@ -21621,17 +21084,9 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                 currentStageFilter = 'all';
             }
 
-            // Сбрасываем выделение этапа, если удаленный этап был выделен
-            if (selectedStage === shortName || selectedStage && selectedStage.startsWith(shortName)) {
-                selectedStage = null;
-            }
-
             await initializeTasks();
-            renderGantt();
-            renderTable();
             renderStageTabs();
             buildStageSettingsList();
-            applyStageSelection(); // Обновляем выделение этапов
         }
 
         async function addNewStage() {
@@ -21682,11 +21137,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             }
 
             await initializeTasks();
-            renderGantt();
-            renderTable();
             renderStageTabs();
             buildStageSettingsList();
-            applyStageSelection(); // Обновляем выделение этапа, если он был выделен
         }
 
         // Управление масштабом по горизонтали
@@ -22389,164 +21841,6 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             }
             currentStatusTarget = null;
             statusMenuOpenedFromSelect = false;
-        }
-
-        // Текущая дата, для которой открыто меню статуса дня
-        let currentDayStatusTarget = null;
-
-        // Открытие меню выбора статуса дня
-        function openDayStatusMenu(x, y, dateKey, targetCell) {
-            currentDayStatusTarget = { dateKey, targetCell };
-            
-            const menu = document.getElementById('dayStatusMenu');
-            if (!menu) {
-                console.error('❌ Меню dayStatusMenu не найдено в DOM!');
-                return;
-            }
-            
-            // Перемещаем меню в body если нужно
-            if (menu.parentElement !== document.body) {
-                document.body.appendChild(menu);
-            }
-            
-            // Сбрасываем стили и позиционируем
-            menu.style.cssText = '';
-            menu.style.margin = '0';
-            menu.style.padding = '0';
-            menu.style.display = 'block';
-            menu.style.visibility = 'visible';
-            menu.style.opacity = '1';
-            menu.style.position = 'fixed';
-            menu.style.zIndex = '99999';
-            
-            // Позиционируем меню
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    const menuRect = menu.getBoundingClientRect();
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
-                    
-                    let left = x - menuRect.width / 2;
-                    let top = y;
-                    
-                    // Проверяем границы viewport
-                    if (left < 10) left = 10;
-                    if (left + menuRect.width > viewportWidth - 10) {
-                        left = viewportWidth - menuRect.width - 10;
-                    }
-                    if (top + menuRect.height > viewportHeight - 10) {
-                        top = y - menuRect.height - 5;
-                    }
-                    if (top < 10) top = 10;
-                    
-                    menu.style.left = left + 'px';
-                    menu.style.top = top + 'px';
-                });
-            });
-            
-            // Добавляем обработчики для элементов меню
-            const menuItems = menu.querySelectorAll('.status-menu-item');
-            menuItems.forEach(item => {
-                item.onclick = (e) => {
-                    e.stopPropagation();
-                    const status = item.getAttribute('data-day-status');
-                    applyDayStatus(dateKey, status);
-                    closeDayStatusMenu();
-                };
-            });
-            
-            // Закрытие при клике вне меню
-            const closeHandler = (e) => {
-                if (!menu.contains(e.target) && e.target !== targetCell) {
-                    closeDayStatusMenu();
-                    document.removeEventListener('click', closeHandler);
-                }
-            };
-            setTimeout(() => {
-                document.addEventListener('click', closeHandler);
-            }, 100);
-        }
-
-        // Закрытие меню статуса дня
-        function closeDayStatusMenu() {
-            const menu = document.getElementById('dayStatusMenu');
-            if (menu) {
-                menu.style.display = 'none';
-            }
-            currentDayStatusTarget = null;
-        }
-
-        // Применение статуса дня (рабочий/выходной)
-        function applyDayStatus(dateKey, status) {
-            if (!canEdit()) return;
-            
-            // Обновляем пользовательский календарь
-            if (status === 'workday') {
-                customCalendar[dateKey] = 'workday';
-            } else if (status === 'holiday') {
-                customCalendar[dateKey] = 'holiday';
-            } else if (status === 'reset') {
-                // Удаляем запись из customCalendar, возвращаем к стандартному статусу
-                delete customCalendar[dateKey];
-            }
-            
-            // Сохраняем изменения календаря
-            saveCompanyInfoLocally();
-            saveCompanyInfoToServer();
-            
-            // Пересчитываем все задачи с учетом нового календаря
-            recalculateTasksAfterCalendarChange();
-            
-            // Перерисовываем график
-            renderGantt();
-            renderTable();
-        }
-
-        // Пересчет задач после изменения календаря
-        function recalculateTasksAfterCalendarChange() {
-            // Пересчитываем все задачи последовательно, начиная с первой
-            let currentStartDate = new Date(startDate);
-            
-            // Находим первый рабочий день
-            while (!isWorkday(currentStartDate)) {
-                currentStartDate.setDate(currentStartDate.getDate() + 1);
-            }
-            
-            tasks.forEach((task, index) => {
-                if (!task.days || task.days <= 0) {
-                    // Если у задачи нет рабочих дней, пропускаем её
-                    return;
-                }
-                
-                // ВАЖНО: Сохраняем текущую дату начала задачи, если она установлена
-let taskStartDate = (task.startDate && task.startDate instanceof Date && !isNaN(task.startDate.getTime())) 
-    ? new Date(task.startDate) 
-    : currentStartDate;
-const newDates = getTaskDates(taskStartDate, task.days);
-                
-                if (newDates.length > 0) {
-                    // Обновляем дату начала (Date объект)
-                    task.startDate = new Date(newDates[0]);
-                    
-                    // Обновляем дату окончания (Date объект)
-                    task.endDate = new Date(newDates[newDates.length - 1]);
-                    
-                    // Обновляем массив дат задачи (Date объекты)
-                    task.dates = newDates.map(d => new Date(d));
-                    
-                    // Обновляем дату начала для следующей задачи
-                    currentStartDate = new Date(task.endDate);
-                    currentStartDate.setDate(currentStartDate.getDate() + 1);
-                    
-                    // Находим следующий рабочий день
-                    while (!isWorkday(currentStartDate)) {
-                        currentStartDate.setDate(currentStartDate.getDate() + 1);
-                    }
-                }
-            });
-            
-            // Сохраняем изменения
-            autoSaveGanttState();
         }
 
         // Обновление визуального выделения ячеек
@@ -25114,18 +24408,10 @@ const newDates = getTaskDates(taskStartDate, task.days);
             // Убеждаемся, что график отрисован
             console.log('📊 Финальное количество задач:', tasks.length);
             if (tasks.length > 0) {
-                // Пересчитываем задачи с учетом загруженного календаря (если есть пользовательские настройки)
-                if (Object.keys(customCalendar).length > 0) {
-                    console.log('📅 Пересчет задач с учетом пользовательского календаря...');
-                    recalculateTasksAfterCalendarChange();
-                }
-                
                 console.log('✅ Отрисовка графика и таблицы...');
                 renderGantt();
                 renderTable();
                 renderStageTabs();
-                updateStickyButtons();
-                updateStickyColumns();
                 
                 // Инициализируем lastSavedState после отрисовки (если еще не инициализирован)
                 if (!lastSavedState) {
@@ -25372,14 +24658,6 @@ const newDates = getTaskDates(taskStartDate, task.days);
                         return;
                     }
                     event.preventDefault();
-                    
-                    // Если выделен этап, удаляем этап
-                    if (selectedStage) {
-                        openStageDeleteModal(selectedStage);
-                        return;
-                    }
-                    
-                    // Иначе удаляем выделенные задачи
                     openDeleteConfirm();
                     return;
                 }

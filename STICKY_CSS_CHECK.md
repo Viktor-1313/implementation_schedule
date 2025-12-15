@@ -34,3 +34,6 @@
 Убедитесь, что `.gantt-chart` НЕ имеет `overflow: hidden`, который может блокировать sticky.
 
 Если есть `overflow: hidden` на `.gantt-chart`, уберите его или замените на `overflow: visible`.
+
+
+

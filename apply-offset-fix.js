@@ -207,3 +207,6 @@ if (oldUpdateStartDateRegex.test(content)) {
 console.log('Сохранение файла...');
 fs.writeFileSync(filePath, content, 'utf8');
 console.log('✅ Изменения применены!');
+
+
+

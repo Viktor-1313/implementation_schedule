@@ -15,3 +15,6 @@ content = content.replace(
 
 fs.writeFileSync(filePath, content, 'utf8');
 console.log('✅ Исправлены вызовы openRenameStageModal');
+
+
+
