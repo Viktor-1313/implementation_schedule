@@ -12567,13 +12567,12 @@
                         currentChartContainerParent.appendChild(divider);
                     }
                     
-                    // Создаем метку этапа
-                    const stageLabel = document.createElement('div');
-                    stageLabel.className = 'gantt-stage-label';
-                    const stageMatch = stageName.match(/^(Этап\s+\d+)/);
-                    const stageNumber = stageMatch ? stageMatch[1] : stageName;
-                    stageLabel.textContent = stageNumber;
-                    stageLabel.setAttribute('data-stage-name', stageName);
+const stageLabel = document.createElement('div');
+stageLabel.className = 'gantt-stage-label';
+
+// Полное имя этапа (например, "Этап 2/1. Формирование цифровой модели")
+stageLabel.textContent = stageName;
+stageLabel.setAttribute('data-stage-name', stageName);
                     stageLabel.style.top = actualTopForLabel + 'px';
                     stageLabel.style.height = stageHeight + 'px';
                     
