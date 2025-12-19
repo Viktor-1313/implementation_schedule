@@ -512,3 +512,4 @@ DELETE /api/files/:fileId - удалить файл
 - [Gantt Chart Best Practices](https://www.projectmanager.com/blog/gantt-chart-best-practices)
 - [Project Management Feature Ideas](https://www.wrike.com/project-management-guide/)
 - [PWA Implementation Guide](https://web.dev/progressive-web-apps/)
+

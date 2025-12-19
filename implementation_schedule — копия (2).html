@@ -6931,6 +6931,29 @@ body.show-link .table-col-delay {
 
     <script>
         // Данные о задачах из Excel файла
+        // ========== ПРОВЕРКА АВТОРИЗАЦИИ ПЕРЕД ИНИЦИАЛИЗАЦИЕЙ ==========
+        (function checkAuthOnLoad() {
+            const userStr = localStorage.getItem('gantt-user');
+            const urlParams = new URLSearchParams(window.location.search);
+            const companyParam = urlParams.get('company');
+            
+            // Если нет пользователя в localStorage
+            if (!userStr) {
+                // Если есть параметр company в URL - это режим просмотра, можно остаться
+                if (companyParam) {
+                    console.log('✅ Режим просмотра: параметр company найден в URL');
+                    // Устанавливаем режим просмотра
+                    localStorage.setItem('gantt-mode', 'view');
+                    localStorage.setItem('gantt-company', companyParam);
+                } else {
+                    // Нет ни пользователя, ни параметра company - редирект на авторизацию
+                    console.warn('⚠️ Пользователь не авторизован и нет параметра company в URL. Редирект на страницу авторизации.');
+                    window.location.href = 'auth.html';
+                    return; // Прерываем выполнение скрипта
+                }
+            }
+        })();
+        
         // ========== ПОЛУЧЕНИЕ COMPANY ИЗ URL ==========
         function getCompanyFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -26920,7 +26943,12 @@ window.scrollTo(scrollX, scrollY);
                 text: 'Эта кнопка позволяет сбросить все даты, статусы и комментарии до значений по умолчанию. При нажатии появится окно подтверждения для предотвращения случайного сброса.',
                 position: 'bottom'
             },
-
+            {
+                element: '#helpBtn',
+                title: 'Справка',
+                text: 'Нажмите на эту кнопку, чтобы открыть справку по горячим клавишам и функциям системы.',
+                position: 'left'
+            },
             {
                 element: '#profileBtn',
                 title: 'Профиль',
@@ -26941,18 +26969,17 @@ window.scrollTo(scrollX, scrollY);
                 temporaryShow: true
             },
             {
-                element: '#helpBtn',
-                title: 'Справка',
-                text: 'Нажмите на эту кнопку, чтобы открыть справку по горячим клавишам и функциям системы.',
-                position: 'left'
-            },
-            {
                 element: '.gantt-chart',
                 title: 'Диаграмма Ганта',
                 text: 'Основная рабочая область. Здесь отображается график задач с возможностью редактирования дат, статусов и связей между задачами. Для приближения/отдаления используйте клавишу Z + колесо мыши над диаграммой.',
                 position: 'top'
             },
-
+            {
+                element: '.stage-settings-btn',
+                title: 'Редакция этапов',
+                text: 'Эта кнопка открывает окно редактирования этапов. Вы можете изменить названия этапов, добавить или удалить этапы, изменить их порядок.',
+                position: 'bottom'
+            },
             {
                 element: '.gantt-stage-label',
                 title: 'Сворачивание этапов',
@@ -27040,96 +27067,50 @@ window.scrollTo(scrollX, scrollY);
             }
             overlay.classList.add('active');
 
-            // Функция для подсветки элемента (вызывается после пересчета layout)
-            const highlightElement = () => {
-                // Проверяем, что элемент правильный
-                if (step.element === '#companiesBottomBtn' && element.id !== 'companiesBottomBtn') {
-                    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Найден неправильный элемент! Ожидался #companiesBottomBtn, найден:', element.id || element.className);
-                    setTimeout(() => showTourStep(stepIndex + 1), 500);
-                    return;
-                }
-                
-                // Подсвечиваем элемент
-                const rect = element.getBoundingClientRect();
-                console.log('📍 Координаты элемента:', {
-                    stepElement: step.element,
-                    elementId: element.id,
-                    elementClass: element.className,
-                    left: rect.left,
-                    top: rect.top,
-                    width: rect.width,
-                    height: rect.height
-                });
-                
-                if (rect.width === 0 || rect.height === 0) {
-                    console.warn('⚠️ Элемент имеет нулевой размер:', step.element, 'ID элемента:', element.id);
-                    // Если элемент все еще имеет нулевой размер, пропускаем шаг
-                    setTimeout(() => showTourStep(stepIndex + 1), 500);
-                    return;
-                }
-                
-                // Дополнительная проверка для companiesBottomBtn
-                if (step.element === '#companiesBottomBtn') {
-                    const computedStyle = window.getComputedStyle(element);
-                    if (computedStyle.display === 'none') {
-                        console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: #companiesBottomBtn все еще скрыт!');
-                        setTimeout(() => showTourStep(stepIndex + 1), 500);
-                        return;
-                    }
-                }
-                
-                const highlight = document.createElement('div');
-                highlight.className = 'tour-highlight';
-                highlight.style.position = 'fixed';
-                highlight.style.left = rect.left + 'px';
-                highlight.style.top = rect.top + 'px';
-                highlight.style.width = Math.max(rect.width, 40) + 'px';
-                highlight.style.height = Math.max(rect.height, 40) + 'px';
-                highlight.style.pointerEvents = 'none';
-                highlight.style.zIndex = '10001';
-                document.body.appendChild(highlight);
-
-                // Показываем подсказку
-                const tooltip = document.createElement('div');
-                tooltip.className = 'tour-tooltip';
-                tooltip.style.zIndex = '10002';
-                tooltip.innerHTML = `
-                    <h3>${step.title}</h3>
-                    <p>${step.text}</p>
-                    <div class="tour-progress">Шаг ${stepIndex + 1} из ${tourSteps.length}</div>
-                    <div class="tour-buttons">
-                        <button class="tour-btn-skip" onclick="endTour()">Пропустить</button>
-                        ${stepIndex < tourSteps.length - 1 
-                            ? `<button class="tour-btn-next" onclick="nextTourStep()">Далее</button>`
-                            : `<button class="tour-btn-finish" onclick="endTour()">Завершить</button>`
-                        }
-                    </div>
-                `;
-                document.body.appendChild(tooltip);
-
-                // Позиционируем подсказку
-                positionTooltip(tooltip, rect, step.position);
-
-                // Сохраняем ссылки для очистки
-                window.currentTourHighlight = highlight;
-                window.currentTourTooltip = tooltip;
-                window.currentTourElement = element;
-                window.currentTourOriginalDisplay = originalDisplay;
-                window.currentTourWasHidden = wasHidden;
-            };
-
-            // Если элемент был скрыт, ждем пересчета layout перед подсветкой
-            if (wasHidden) {
-                // Двойной requestAnimationFrame для гарантированного пересчета layout
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        highlightElement();
-                    });
-                });
-            } else {
-                // Если элемент уже видим, подсвечиваем сразу
-                highlightElement();
+            // Подсвечиваем элемент
+            const rect = element.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                console.warn('⚠️ Элемент имеет нулевой размер:', step.element);
             }
+            
+            const highlight = document.createElement('div');
+            highlight.className = 'tour-highlight';
+            highlight.style.position = 'fixed';
+            highlight.style.left = rect.left + 'px';
+            highlight.style.top = rect.top + 'px';
+            highlight.style.width = Math.max(rect.width, 40) + 'px';
+            highlight.style.height = Math.max(rect.height, 40) + 'px';
+            highlight.style.pointerEvents = 'none';
+            highlight.style.zIndex = '10001';
+            document.body.appendChild(highlight);
+
+            // Показываем подсказку
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tour-tooltip';
+            tooltip.style.zIndex = '10002';
+            tooltip.innerHTML = `
+                <h3>${step.title}</h3>
+                <p>${step.text}</p>
+                <div class="tour-progress">Шаг ${stepIndex + 1} из ${tourSteps.length}</div>
+                <div class="tour-buttons">
+                    <button class="tour-btn-skip" onclick="endTour()">Пропустить</button>
+                    ${stepIndex < tourSteps.length - 1 
+                        ? `<button class="tour-btn-next" onclick="nextTourStep()">Далее</button>`
+                        : `<button class="tour-btn-finish" onclick="endTour()">Завершить</button>`
+                    }
+                </div>
+            `;
+            document.body.appendChild(tooltip);
+
+            // Позиционируем подсказку
+            positionTooltip(tooltip, rect, step.position);
+
+            // Сохраняем ссылки для очистки
+            window.currentTourHighlight = highlight;
+            window.currentTourTooltip = tooltip;
+            window.currentTourElement = element;
+            window.currentTourOriginalDisplay = originalDisplay;
+            window.currentTourWasHidden = wasHidden;
         }
 
         // Позиционирование подсказки

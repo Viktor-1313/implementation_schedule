@@ -6696,14 +6696,21 @@
                     text: 'Для редактирования профиля нажмите сюда',
                     position: 'left'
                 },
+ 
                 {
                     element: '#logoutBtn',
-                    text: 'Для выхода из системы жмём сюда',
+                    text: 'Кнопка выхода из системы',
                     position: 'left'
                 },
                 {
                     element: '#archiveBtn',
                     text: 'Кнопка архива - здесь хранятся архивированные компании',
+                    position: 'left',
+                    adminOnly: true
+                },
+                {
+		    element: '#dashboardBtn',
+                    text: 'Дашборды компаний. Для внутреннего пользования',
                     position: 'left',
                     adminOnly: true
                 },
