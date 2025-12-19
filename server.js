@@ -2011,6 +2011,66 @@ app.post('/api/company-info', requireAuth, checkCompanyAccess, (req, res) => {
   }
 });
 
+// Функция для получения пути к файлу резюме компании
+function getCompanySummaryFile(companyId) {
+  // Заменяем недопустимые символы в имени файла на безопасные
+  const safeFileName = companyId.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_');
+  return path.join(__dirname, `company-summary-${safeFileName}.json`);
+}
+
+// Получить резюме компании
+app.get('/api/company-summary', optionalAuth, checkCompanyAccess, (req, res) => {
+  try {
+    const companyId = req.query.company;
+    if (!companyId) {
+      return res.status(400).json({ ok: false, error: 'Не указан ID компании' });
+    }
+    // Не используем isValidCompanyId, так как ID может содержать двоеточия и пробелы
+
+    const summaryFile = getCompanySummaryFile(companyId);
+    if (!fs.existsSync(summaryFile)) {
+      return res.json({ summary: '' });
+    }
+    const raw = fs.readFileSync(summaryFile, 'utf8');
+    const data = safeJsonParse(raw);
+    res.json({ summary: data.summary || '' });
+  } catch (e) {
+    console.error('Ошибка загрузки резюме:', e);
+    res.status(500).json({ ok: false, error: 'load_failed' });
+  }
+});
+
+// Сохранить резюме компании (требуется авторизация и доступ к компании)
+app.post('/api/company-summary', requireAuth, checkCompanyAccess, (req, res) => {
+  try {
+    const companyId = req.query.company || req.body.company;
+    if (!companyId) {
+      return res.status(400).json({ ok: false, error: 'Не указан ID компании' });
+    }
+    // Не используем isValidCompanyId, так как ID может содержать двоеточия и пробелы
+
+    const summaryFile = getCompanySummaryFile(companyId);
+    const summaryData = {
+      summary: req.body.summary || '',
+      updatedAt: new Date().toISOString(),
+      updatedBy: req.body.userName || req.headers['x-user-name'] || 'Unknown'
+    };
+    
+    fs.writeFileSync(summaryFile, JSON.stringify(summaryData, null, 2), 'utf8');
+    
+    // Логируем изменение резюме
+    const userName = req.body.userName || req.headers['x-user-name'] || null;
+    if (userName) {
+      addLog(userName, 'Обновил резюме компании', `Компания: ${companyId}`, companyId);
+    }
+    
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Ошибка сохранения резюме:', e);
+    res.status(500).json({ ok: false, error: 'save_failed' });
+  }
+});
+
 // ========== API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ==========
 
 // Получить список пользователей (требуется авторизация, только админы)

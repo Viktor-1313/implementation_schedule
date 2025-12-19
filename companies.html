@@ -264,7 +264,7 @@
             overflow: visible;
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 30px;
-            left: 80px;
+            left: 80px; /* Рядом с кнопкой темы (тема на left: 30px, админ-панель на left: 80px) */
             text-decoration: none;
             opacity: 0;
             transform: scale(0.8);
@@ -659,7 +659,7 @@
             border-radius: 50%;
             border: 2px solid #2c2c2c;
             cursor: pointer;
-            display: flex;
+            display: none; /* Скрыта по умолчанию, показывается только для админов */
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease !important;
@@ -668,9 +668,6 @@
             overflow: visible;
             pointer-events: auto !important;
             text-decoration: none;
-        }
-        
-        .dashboard-btn {
             background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
             top: 130px; /* 80px (archive) + 40px (высота) + 10px (отступ) = 130px */
             right: 30px;
@@ -2326,8 +2323,9 @@
             }
 
             .admin-btn {
-                top: 25px;
+                top: 25px !important;
                 left: 75px !important;
+                right: auto !important;
             }
 
             .profile-btn {
@@ -2477,8 +2475,9 @@
             }
 
             .admin-btn {
-                top: 15px;
+                top: 15px !important;
                 left: 65px !important;
+                right: auto !important;
             }
 
             .profile-btn {
@@ -2620,8 +2619,9 @@
             }
 
             .admin-btn {
-                top: 12px;
+                top: 12px !important;
                 left: 57px !important;
+                right: auto !important;
             }
 
             .profile-btn {
@@ -3288,7 +3288,7 @@
                 <span class="companies-bottom-tooltip">Компании</span>
             </button>
             
-            <button class="archive-btn" id="archiveBtn" data-tooltip="Архив" onclick="showArchive()" style="display: none;">
+            <button class="archive-btn" id="archiveBtn" data-tooltip="Архив" onclick="showArchive()">
                 <span class="archive-icon">📦</span>
                 <span class="archive-tooltip">Архив</span>
             </button>
@@ -3801,6 +3801,18 @@
                     currentUser = JSON.parse(userStr);
                     isAdmin = currentUser.role === 'admin';
                     
+                    // Показываем кнопки профиля и выхода всегда для авторизованных пользователей
+                    const profileBtn = document.getElementById('profileBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (profileBtn) {
+                        profileBtn.style.display = 'flex';
+                        profileBtn.style.visibility = 'visible';
+                    }
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'flex';
+                        logoutBtn.style.visibility = 'visible';
+                    }
+                    
                     // Показываем кнопку компаний всегда
                     const companiesBottomBtn = document.getElementById('companiesBottomBtn');
                     if (companiesBottomBtn) {
@@ -3824,21 +3836,33 @@
                     const archiveBtn = document.getElementById('archiveBtn');
                     if (archiveBtn) {
                         archiveBtn.style.display = isAdmin ? 'flex' : 'none';
+                        archiveBtn.style.visibility = isAdmin ? 'visible' : 'hidden';
                         if (isAdmin) {
+                            // Принудительно устанавливаем позицию
+                            archiveBtn.style.top = '80px';
+                            archiveBtn.style.right = '30px';
+                            archiveBtn.style.left = 'auto';
                             // Запускаем анимацию появления для кнопки архива
                             setTimeout(() => {
                                 archiveBtn.classList.add('show');
                             }, 350);
+                        } else {
+                            archiveBtn.classList.remove('show');
                         }
-                        
-                        // Кнопка дашборда всегда видна
-                        const dashboardBtn = document.getElementById('dashboardBtn');
-                        if (dashboardBtn) {
-                            dashboardBtn.style.display = 'flex';
+                    }
+                    
+                    // Кнопка дашборда видна только для администраторов
+                    const dashboardBtn = document.getElementById('dashboardBtn');
+                    if (dashboardBtn) {
+                        dashboardBtn.style.display = isAdmin ? 'flex' : 'none';
+                        if (isAdmin) {
                             dashboardBtn.style.visibility = 'visible';
                             setTimeout(() => {
                                 dashboardBtn.classList.add('show');
                             }, 400);
+                        } else {
+                            dashboardBtn.style.visibility = 'hidden';
+                            dashboardBtn.classList.remove('show');
                         }
                     }
                     
@@ -3847,10 +3871,18 @@
                     if (adminPanelLink) {
                         adminPanelLink.style.display = isAdmin ? 'flex' : 'none';
                         if (isAdmin) {
+                            adminPanelLink.style.visibility = 'visible';
+                            // Принудительно устанавливаем позицию рядом с кнопкой темы
+                            adminPanelLink.style.top = '30px';
+                            adminPanelLink.style.left = '80px';
+                            adminPanelLink.style.right = 'auto';
                             // Запускаем анимацию появления для кнопки админа
                             setTimeout(() => {
                                 adminPanelLink.classList.add('show');
                             }, 300);
+                        } else {
+                            adminPanelLink.style.visibility = 'hidden';
+                            adminPanelLink.classList.remove('show');
                         }
                     }
                     

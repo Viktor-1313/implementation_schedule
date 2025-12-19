@@ -325,14 +325,131 @@
         }
 
         .filter-select {
-            padding: 8px 12px;
+            padding: 10px 16px;
             border: 1px solid var(--color-border);
-            border-radius: 6px;
+            border-radius: 14px;
             background: var(--color-surface);
             color: var(--color-text);
             font-size: 14px;
             cursor: pointer;
             min-width: 150px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            padding-right: 36px;
+        }
+
+        .filter-select:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .filter-select:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15), 0 2px 8px rgba(33, 150, 243, 0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Кастомный выпадающий список */
+        .custom-select-wrapper {
+            position: relative;
+            min-width: 150px;
+        }
+
+        .custom-select {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .custom-select-trigger {
+            padding: 10px 16px;
+            padding-right: 36px;
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+        }
+
+        .custom-select-trigger:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .custom-select.open .custom-select-trigger {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15), 0 2px 8px rgba(33, 150, 243, 0.1);
+        }
+
+        .custom-select-options {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 0;
+        }
+
+        .custom-select.open .custom-select-options {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+            max-height: 300px;
+        }
+
+        .custom-select-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .custom-select-option:first-child {
+            border-top-left-radius: 14px;
+            border-top-right-radius: 14px;
+        }
+
+        .custom-select-option:last-child {
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+        }
+
+        .custom-select-option:hover {
+            background: rgba(33, 150, 243, 0.1);
+            color: var(--color-primary);
+        }
+
+        .custom-select-option.selected {
+            background: rgba(33, 150, 243, 0.15);
+            color: var(--color-primary);
+            font-weight: 500;
         }
 
         .stats-overview {
@@ -496,34 +613,62 @@
         }
 
         .company-summary {
-            margin-top: 12px;
+            margin-top: 16px;
+            padding: 14px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 10px;
+            border: 2px solid #e3f2fd;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .company-summary:hover {
+            border-color: #90caf9;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.12);
         }
 
         .company-summary-label {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin-bottom: 6px;
-            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .company-summary-label::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232196f3'%3E%3Cpath d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .company-summary-input {
             width: 100%;
-            min-height: 60px;
-            padding: 8px 12px;
+            min-height: 80px;
+            padding: 12px 14px;
             font-size: 13px;
             font-family: inherit;
+            line-height: 1.6;
             color: var(--color-text);
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: 6px;
-            resize: vertical;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: #ffffff;
+            border: 2px solid #e3f2fd;
+            border-radius: 8px;
+            resize: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .company-summary-input:focus {
             outline: none;
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
         }
 
         .company-summary-input:disabled {
@@ -534,7 +679,51 @@
 
         .company-summary-input::placeholder {
             color: var(--color-text-secondary);
-            opacity: 0.6;
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        .company-summary-save-btn {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+            align-self: flex-start;
+        }
+
+        .company-summary-save-btn:hover {
+            background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .company-summary-save-btn:active {
+            transform: translateY(0);
+        }
+
+        .company-summary-save-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .company-summary.has-focus .company-summary-save-btn {
+            display: block;
+        }
+
+        .company-summary-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
         }
 
         .company-actions {
@@ -686,6 +875,8 @@
     </style>
 </head>
 <body>
+    <!-- Надпись DeadLinePro в правом верхнем углу -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; font-size: 32px; font-weight: 600; color: rgba(33, 150, 243, 0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; user-select: none;">DeadLinePro</div>
     <!-- Светлячки -->
     <div class="firefly" id="dashboard-firefly-1"></div>
     <div class="firefly" id="dashboard-firefly-2"></div>
@@ -722,20 +913,41 @@
     <div class="filters">
         <div class="filter-group">
             <label class="filter-label">Статус:</label>
-            <select class="filter-select" id="statusFilter">
-                <option value="all">Все проекты</option>
-                <option value="active">Активные</option>
-                <option value="archived">Архивные</option>
-            </select>
+            <div class="custom-select-wrapper">
+                <div class="custom-select" id="statusFilterCustom">
+                    <div class="custom-select-trigger" id="statusFilterTrigger">Все проекты</div>
+                    <div class="custom-select-options">
+                        <div class="custom-select-option selected" data-value="all">Все проекты</div>
+                        <div class="custom-select-option" data-value="active">Активные</div>
+                        <div class="custom-select-option" data-value="archived">Архивные</div>
+                    </div>
+                </div>
+                <select class="filter-select" id="statusFilter" style="display: none;">
+                    <option value="all" selected>Все проекты</option>
+                    <option value="active">Активные</option>
+                    <option value="archived">Архивные</option>
+                </select>
+            </div>
         </div>
         <div class="filter-group">
             <label class="filter-label">Сортировка:</label>
-            <select class="filter-select" id="sortFilter">
-                <option value="name">По названию</option>
-                <option value="progress">По прогрессу</option>
-                <option value="deadline">По дедлайну</option>
-                <option value="overdue">Просроченные первыми</option>
-            </select>
+            <div class="custom-select-wrapper">
+                <div class="custom-select" id="sortFilterCustom">
+                    <div class="custom-select-trigger" id="sortFilterTrigger">По названию</div>
+                    <div class="custom-select-options">
+                        <div class="custom-select-option selected" data-value="name">По названию</div>
+                        <div class="custom-select-option" data-value="progress">По прогрессу</div>
+                        <div class="custom-select-option" data-value="deadline">По дедлайну</div>
+                        <div class="custom-select-option" data-value="overdue">Просроченные первыми</div>
+                    </div>
+                </div>
+                <select class="filter-select" id="sortFilter" style="display: none;">
+                    <option value="name" selected>По названию</option>
+                    <option value="progress">По прогрессу</option>
+                    <option value="deadline">По дедлайну</option>
+                    <option value="overdue">Просроченные первыми</option>
+                </select>
+            </div>
         </div>
         <div class="filter-group">
             <input type="text" class="filter-select" id="searchInput" placeholder="Поиск по названию...">
@@ -804,11 +1016,13 @@
                 initTheme();
                 checkAdminRole();
                 showButtons();
+                initCustomSelects();
             });
         } else {
             initTheme();
             checkAdminRole();
             showButtons();
+            initCustomSelects();
         }
 
         function showButtons() {
@@ -870,13 +1084,14 @@
             // Загружаем статистику и информацию о компаниях параллельно
             const promises = allCompanies.map(async (company) => {
                 try {
-                    // Загружаем данные графика и информацию о компании параллельно
-                    const [ganttResponse, infoResponse] = await Promise.all([
+                    // Загружаем данные графика, информацию о компании и резюме параллельно
+                    const [ganttResponse, infoResponse, summaryResponse] = await Promise.all([
                         fetch(`/api/gantt-state?company=${encodeURIComponent(company.id)}`),
-                        fetch(`/api/company-info?company=${encodeURIComponent(company.id)}`)
+                        fetch(`/api/company-info?company=${encodeURIComponent(company.id)}`),
+                        fetch(`/api/company-summary?company=${encodeURIComponent(company.id)}`)
                     ]);
 
-                    // Обновляем логотип компании и резюме, если есть
+                    // Обновляем логотип компании, если есть
                     if (infoResponse.ok) {
                         const companyInfo = await infoResponse.json();
                         if (companyInfo && companyInfo.logoData) {
@@ -885,8 +1100,19 @@
                         if (companyInfo && companyInfo.name) {
                             company.name = companyInfo.name;
                         }
-                        if (companyInfo && companyInfo.summary !== undefined) {
-                            company.summary = companyInfo.summary;
+                        // Сохраняем весь объект companyInfo для последующего использования
+                        if (companyInfo) {
+                            company.companyInfo = companyInfo;
+                        }
+                    }
+
+                    // Загружаем резюме из отдельного endpoint
+                    if (summaryResponse.ok) {
+                        const summaryData = await summaryResponse.json();
+                        if (summaryData && summaryData.summary !== undefined) {
+                            company.summary = summaryData.summary;
+                            // Сохраняем оригинальное значение для сравнения
+                            originalSummaryValues[company.id] = summaryData.summary;
                         }
                     }
 
@@ -1144,6 +1370,11 @@
                 const summaryValue = company.summary || '';
                 const summaryInputId = `summary-${company.id.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 
+                // Сохраняем оригинальное значение для сравнения
+                if (!originalSummaryValues[company.id]) {
+                    originalSummaryValues[company.id] = summaryValue;
+                }
+                
                 // Форматируем даты начала и окончания
                 const startDateStr = stats.projectStartDate 
                     ? new Date(stats.projectStartDate).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -1204,16 +1435,26 @@
                             </div>
                         </div>
                         ${isAdmin ? `
-                        <div class="company-summary">
-                            <div class="company-summary-label">Краткое резюме</div>
+                        <div class="company-summary" id="summary-container-${company.id.replace(/[^a-zA-Z0-9]/g, '-')}">
+                            <div class="company-summary-label">Краткое резюме проекта</div>
                             <textarea 
                                 id="${summaryInputId}" 
                                 class="company-summary-input" 
-                                placeholder="Что сделано, что в планах..."
-                                oninput="saveCompanySummary('${escapeHtml(company.id)}', this.value)"
+                                placeholder="Опишите текущий статус проекта, выполненные задачи и планы на ближайшее время..."
+                                oninput="autoResizeTextarea(this)"
                                 onclick="event.stopPropagation()"
-                                onfocus="event.stopPropagation()"
+                                onfocus="event.stopPropagation(); showSaveButton('${escapeHtml(company.id)}')"
+                                onblur="handleSummaryBlur('${escapeHtml(company.id)}')"
                             >${escapeHtml(summaryValue)}</textarea>
+                            <div class="company-summary-actions">
+                                <button 
+                                    class="company-summary-save-btn" 
+                                    id="save-btn-${company.id.replace(/[^a-zA-Z0-9]/g, '-')}"
+                                    onclick="event.stopPropagation(); saveCompanySummary('${escapeHtml(company.id)}')"
+                                >
+                                    Сохранить
+                                </button>
+                            </div>
                         </div>
                         ` : ''}
                         ${hasUpcoming && stats.upcomingDeadlinesList && stats.upcomingDeadlinesList.length > 0 ? `
@@ -1248,6 +1489,20 @@
                     </div>
                 `;
             }).join('');
+            
+            // Автоматически подстраиваем высоту всех textarea после рендеринга
+            // и сохраняем оригинальные значения резюме
+            setTimeout(() => {
+                document.querySelectorAll('.company-summary-input').forEach(textarea => {
+                    autoResizeTextarea(textarea);
+                    // Сохраняем оригинальное значение для сравнения
+                    const companyId = textarea.id.replace('summary-', '').replace(/-/g, '');
+                    const company = allCompanies.find(c => c.id === companyId || c.id.replace(/[^a-zA-Z0-9]/g, '-') === companyId);
+                    if (company) {
+                        originalSummaryValues[company.id] = textarea.value;
+                    }
+                });
+            }, 0);
         }
 
         function updateOverallStats() {
@@ -1747,63 +2002,240 @@
         }
 
         // ========== СОХРАНЕНИЕ РЕЗЮМЕ КОМПАНИИ ==========
-        let summarySaveTimeouts = {};
+        let originalSummaryValues = {}; // Храним оригинальные значения для сравнения
 
-        async function saveCompanySummary(companyId, summary) {
-            // Отменяем предыдущий таймер для этой компании
-            if (summarySaveTimeouts[companyId]) {
-                clearTimeout(summarySaveTimeouts[companyId]);
+        function autoResizeTextarea(textarea) {
+            // Сбрасываем высоту, чтобы получить правильный scrollHeight
+            textarea.style.height = 'auto';
+            // Устанавливаем новую высоту на основе содержимого
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        function showSaveButton(companyId) {
+            const containerId = `summary-container-${companyId.replace(/[^a-zA-Z0-9]/g, '-')}`;
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.classList.add('has-focus');
+            }
+        }
+
+        function handleSummaryBlur(companyId) {
+            // Не скрываем кнопку сразу, даем время на клик по кнопке
+            setTimeout(() => {
+                const containerId = `summary-container-${companyId.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                const container = document.getElementById(containerId);
+                const textarea = document.getElementById(`summary-${companyId.replace(/[^a-zA-Z0-9]/g, '-')}`);
+                const saveBtn = document.getElementById(`save-btn-${companyId.replace(/[^a-zA-Z0-9]/g, '-')}`);
+                
+                // Проверяем, не находится ли фокус на кнопке или textarea
+                if (container && document.activeElement !== textarea && document.activeElement !== saveBtn) {
+                    container.classList.remove('has-focus');
+                }
+            }, 200);
+        }
+
+        async function saveCompanySummary(companyId) {
+            const textareaId = `summary-${companyId.replace(/[^a-zA-Z0-9]/g, '-')}`;
+            const textarea = document.getElementById(textareaId);
+            const saveBtn = document.getElementById(`save-btn-${companyId.replace(/[^a-zA-Z0-9]/g, '-')}`);
+            
+            if (!textarea) {
+                console.error('Textarea не найдена');
+                return;
             }
 
-            // Устанавливаем новый таймер (debounce 1 секунда)
-            summarySaveTimeouts[companyId] = setTimeout(async () => {
-                try {
-                    // Загружаем текущую информацию о компании
-                    const infoResponse = await fetch(`/api/company-info?company=${encodeURIComponent(companyId)}`);
-                    let companyInfo = {};
-                    
-                    if (infoResponse.ok) {
-                        companyInfo = await infoResponse.json();
-                    }
+            const summary = textarea.value;
+            
+            // Блокируем кнопку во время сохранения
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Сохранение...';
+            }
 
-                    // Обновляем резюме
-                    companyInfo.summary = summary;
-
-                    // Сохраняем обновленную информацию
-                    const userStr = localStorage.getItem('gantt-user');
-                    const headers = {
-                        'Content-Type': 'application/json'
-                    };
-                    
-                    if (userStr) {
-                        try {
-                            const user = JSON.parse(userStr);
-                            headers['X-User-Name'] = user.name || user.login || 'Unknown';
-                        } catch (e) {
-                            console.warn('Не удалось получить имя пользователя:', e);
+            try {
+                // Получаем данные пользователя для авторизации
+                const userStr = localStorage.getItem('gantt-user');
+                let userName = 'Unknown';
+                let userLogin = null;
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (userStr) {
+                    try {
+                        const user = JSON.parse(userStr);
+                        userLogin = user.login || null;
+                        userName = user.name || user.login || 'Unknown';
+                        
+                        // Добавляем заголовки авторизации (как в других местах кода)
+                        if (userLogin) {
+                            headers['X-User-Login'] = userLogin;
                         }
-                    }
-
-                    const saveResponse = await fetch(`/api/company-info?company=${encodeURIComponent(companyId)}`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(companyInfo)
-                    });
-
-                    if (saveResponse.ok) {
-                        // Обновляем локальные данные
-                        const company = allCompanies.find(c => c.id === companyId);
-                        if (company) {
-                            company.summary = summary;
+                        if (user.name) {
+                            // Кодируем имя пользователя в base64 для передачи в заголовке
+                            try {
+                                const encodedName = btoa(encodeURIComponent(user.name));
+                                headers['X-User-Name'] = encodedName;
+                                headers['X-User-Name-Encoded'] = 'base64';
+                            } catch (e) {
+                                console.warn('⚠️ Ошибка кодирования имени пользователя:', e);
+                            }
                         }
-                        console.log(`Резюме компании ${companyId} сохранено`);
-                    } else {
-                        console.error('Ошибка сохранения резюме:', await saveResponse.text());
+                    } catch (e) {
+                        console.warn('Не удалось получить данные пользователя:', e);
                     }
-                } catch (error) {
-                    console.error('Ошибка сохранения резюме компании:', error);
                 }
-            }, 1000);
+
+                // Сохраняем резюме через новый endpoint
+                const saveResponse = await fetch(`/api/company-summary?company=${encodeURIComponent(companyId)}`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ 
+                        summary: summary,
+                        userName: userName,
+                        userLogin: userLogin // Добавляем логин в body для дополнительной идентификации
+                    })
+                });
+
+                if (saveResponse.ok) {
+                    // Обновляем локальные данные
+                    const company = allCompanies.find(c => c.id === companyId);
+                    if (company) {
+                        company.summary = summary;
+                    }
+                    
+                    // Сохраняем текущее значение как оригинальное
+                    originalSummaryValues[companyId] = summary;
+                    
+                    console.log(`Резюме компании ${companyId} сохранено`);
+                    
+                    // Показываем индикатор успешного сохранения
+                    const originalBorder = textarea.style.borderColor;
+                    textarea.style.borderColor = '#4caf50';
+                    setTimeout(() => {
+                        textarea.style.borderColor = originalBorder || '';
+                    }, 1000);
+                    
+                    // Обновляем текст кнопки
+                    if (saveBtn) {
+                        saveBtn.textContent = '✓ Сохранено';
+                        setTimeout(() => {
+                            saveBtn.textContent = 'Сохранить';
+                            saveBtn.disabled = false;
+                        }, 2000);
+                    }
+                } else {
+                    const errorText = await saveResponse.text();
+                    console.error('Ошибка сохранения резюме:', errorText);
+                    alert('Не удалось сохранить резюме. Попробуйте еще раз.');
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = 'Сохранить';
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения резюме:', error);
+                alert('Произошла ошибка при сохранении резюме.');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Сохранить';
+                }
+            }
+        }
+
+        // ========== КАСТОМНЫЕ ВЫПАДАЮЩИЕ СПИСКИ ==========
+        function initCustomSelects() {
+            // Инициализация кастомного селекта статуса
+            const statusSelect = document.getElementById('statusFilterCustom');
+            const statusTrigger = document.getElementById('statusFilterTrigger');
+            const statusOptions = statusSelect?.querySelectorAll('.custom-select-option');
+            const statusNativeSelect = document.getElementById('statusFilter');
+
+            if (statusSelect && statusTrigger && statusOptions && statusNativeSelect) {
+                statusTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeAllSelects();
+                    statusSelect.classList.toggle('open');
+                });
+
+                statusOptions.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const value = option.getAttribute('data-value');
+                        const text = option.textContent;
+                        
+                        // Обновляем триггер
+                        statusTrigger.textContent = text;
+                        
+                        // Обновляем нативный select
+                        statusNativeSelect.value = value;
+                        
+                        // Обновляем выбранный класс
+                        statusOptions.forEach(opt => opt.classList.remove('selected'));
+                        option.classList.add('selected');
+                        
+                        // Закрываем выпадающий список
+                        statusSelect.classList.remove('open');
+                        
+                        // Вызываем обработчик изменения
+                        applyFilters();
+                        renderDashboard();
+                    });
+                });
+            }
+
+            // Инициализация кастомного селекта сортировки
+            const sortSelect = document.getElementById('sortFilterCustom');
+            const sortTrigger = document.getElementById('sortFilterTrigger');
+            const sortOptions = sortSelect?.querySelectorAll('.custom-select-option');
+            const sortNativeSelect = document.getElementById('sortFilter');
+
+            if (sortSelect && sortTrigger && sortOptions && sortNativeSelect) {
+                sortTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeAllSelects();
+                    sortSelect.classList.toggle('open');
+                });
+
+                sortOptions.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const value = option.getAttribute('data-value');
+                        const text = option.textContent;
+                        
+                        // Обновляем триггер
+                        sortTrigger.textContent = text;
+                        
+                        // Обновляем нативный select
+                        sortNativeSelect.value = value;
+                        
+                        // Обновляем выбранный класс
+                        sortOptions.forEach(opt => opt.classList.remove('selected'));
+                        option.classList.add('selected');
+                        
+                        // Закрываем выпадающий список
+                        sortSelect.classList.remove('open');
+                        
+                        // Вызываем обработчик изменения
+                        applyFilters();
+                        renderDashboard();
+                    });
+                });
+            }
+
+            // Закрытие при клике вне выпадающего списка
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.custom-select')) {
+                    closeAllSelects();
+                }
+            });
+        }
+
+        function closeAllSelects() {
+            document.querySelectorAll('.custom-select').forEach(select => {
+                select.classList.remove('open');
+            });
         }
 
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
