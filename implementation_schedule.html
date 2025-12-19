@@ -1,15 +1,16 @@
 
 
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>График внедрения и обучения системы ICONA</title>
+    <title>График внедрения и обучения - DeadLinePro</title>
     <link rel="icon" type="image/png" href="favicon.png">
     
     <!-- Open Graph метатеги для превью ссылок -->
-    <meta property="og:title" content="График внедрения и обучения системы ICONA">
+    <meta property="og:title" content="График внедрения и обучения системы ICONA - DeadLinePro">
     <meta property="og:description" content="Интерактивная диаграмма Ганта для планирования внедрения и обучения системе ICONA">
     <meta property="og:image" content="logo.png">
     <meta property="og:type" content="website">
@@ -6483,7 +6484,7 @@ body.show-link .table-col-delay {
                         <th>Дата окончания</th>
                         <th>Рабочих дней</th>
                         <th class="table-col-responsible">Ответственный</th>
-                        <th>Статус</th>
+                        <!-- <th>Статус</th> -->
                     </tr>
                 </thead>
                 <tbody id="tasksTableBody"></tbody>
@@ -13201,7 +13202,7 @@ row.appendChild(delayCell);
                 '<th class="table-col-link">Связь</th>',
                 '<th class="table-col-delay">Задержка</th>',
                 '<th class="table-col-responsible">Ответственный</th>',
-                '<th>Статус</th>'
+                // '<th>Статус</th>'
             ];
 
             thead.innerHTML = headerCells.join('');
@@ -13433,13 +13434,13 @@ row.appendChild(delayCell);
                                data-index="${index}"
                                data-field="responsible">
                     </td>
-                    <td>
+                    <!-- <td>
                         <select class="tasks-table-input-select" data-index="${index}" data-field="status" ${disabledAttr}>
                             <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Запланирована</option>
                             <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>В работе</option>
                             <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Завершено</option>
                         </select>
-                    </td>
+                    </td> -->
                 `;
 
                 // Устанавливаем значения для всех настраиваемых столбцов
@@ -20582,7 +20583,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                 'Дата начала',
                 'Дата окончания',
                 'Рабочих дней',
-                'Статус',
+                // 'Статус',
                 'Комментарий'
             ];
             
@@ -20618,8 +20619,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                     task.startDate ? task.startDate.toLocaleDateString('ru-RU') : '',
                     task.endDate ? task.endDate.toLocaleDateString('ru-RU') : '',
                     task.days != null ? String(task.days) : '',
-                    task.status === 'completed' ? 'Завершено' : 
-                    task.status === 'in-progress' ? 'В работе' : 'Запланирована',
+                    // task.status === 'completed' ? 'Завершено' : 
+                    // task.status === 'in-progress' ? 'В работе' : 'Запланирована',
                     task.comment || ''
                 ];
                 
