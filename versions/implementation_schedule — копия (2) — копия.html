@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" href="favicon.png">
     
     <!-- Open Graph метатеги для превью ссылок -->
-    <meta property="og:title" content="Система планирования DeadlinePro">
+    <meta property="og:title" content="График внедрения и обучения системы ICONA">
     <meta property="og:description" content="Интерактивная диаграмма Ганта для планирования внедрения и обучения системе ICONA">
     <meta property="og:image" content="logo.png">
     <meta property="og:type" content="website">
@@ -2443,7 +2443,9 @@
             padding: 10px 10px 26px 10px; /* Увеличен нижний padding для тогла */
             border-right: 2px solid var(--color-border);
             background: var(--color-bg);
-            
+            position: static;
+            left: auto;
+            z-index: auto;
             font-size: 16px;
             font-weight: 700;
             box-sizing: border-box;
@@ -2591,18 +2593,15 @@
     width: 70px;
     min-width: 70px;
     max-width: 70px;
-    vertical-align: middle;
     text-align: center;
     padding: 4px;
     border-right: 1px solid #ddd;
-    background: var(--color-bg);
+    background: #f9f9f9;
     display: none; /* По умолчанию скрыт */
 }
 
 body.show-link .gantt-details-cell.delay-cell {
-    display: flex;
-align-items: center;
-justify-content: center;
+    display: table-cell; /* Показывается вместе со "Связью" */
 }
 
 .gantt-details-cell.delay-cell input {
@@ -2676,7 +2675,6 @@ justify-content: center;
             padding-right: 4px;
             margin-right: 0;
             border-right: 1px solid var(--color-border);
-	    
         }
 
         .gantt-details-cell.delay-cell input {
@@ -3112,7 +3110,9 @@ justify-content: center;
             background: var(--color-bg);
             font-weight: 500;
             font-size: 11px;
-            
+            position: static;
+            left: auto;
+            z-index: auto;
             box-sizing: border-box;
             overflow: visible;
             white-space: nowrap;
@@ -4955,12 +4955,11 @@ body.show-link .table-col-delay {
             /* График Ганта на мобильных */
             .chart-container {
                 isolation: isolate;
-                /* contain: layout style;  ❌ УБРАТЬ! */
+                contain: layout style;
                 position: relative;
                 z-index: 1;
                 max-width: 100%;
-                overflow-x: auto;   /* ✅ ИЗМЕНИТЬ на auto */
-                overflow-y: visible;   /* ✅ ДОБАВИТЬ */
+                overflow: hidden;
             }
 
             .gantt-chart {
@@ -10371,7 +10370,8 @@ body.show-link .table-col-delay {
                 { key: 'link', selector: '.link-cell', width: linkWidth, visible: stickyColumns.has('link') && document.body.classList.contains('show-link') },
                 { key: 'responsible', selector: '.responsible-cell', width: respWidth, visible: stickyColumns.has('responsible') && document.body.classList.contains('show-responsible') },
             ];
- const applyLeft = (selector, z) => {
+
+            const applyLeft = (selector, z) => {
                 // Получаем computed background один раз
                 const rootStyle = getComputedStyle(document.documentElement);
                 let bgColor = rootStyle.getPropertyValue('--color-bg').trim();
@@ -10381,18 +10381,17 @@ body.show-link .table-col-delay {
                 }
                 
                 chart.querySelectorAll(selector).forEach((el) => {
-                    el.style.position = 'sticky';   // ✅ ИСПОЛЬЗУЕМ sticky вместо fixed
-                    el.style.top = '0';   // ✅ Для sticky нужен top, но просто '0'
-                    el.style.left = `${left}px`;   // ✅ Используем left, НЕ baseLeft
-                    el.style.zIndex = z.toString();
-                    el.style.flexShrink = '0';
-                    el.style.backgroundColor = bgColor;
+                    el.style.position = 'sticky';
+                    el.style.left = `${left}px`;
+                    el.style.zIndex = z;
+                    // Устанавливаем background явно для всех элементов, чтобы sticky работал правильно
                     el.style.background = bgColor;
+                    el.style.backgroundColor = bgColor;
+                    // Убираем clipPath, чтобы не мешать отображению
                     el.style.clipPath = '';
+                    // Убеждаемся, что элемент виден
                     el.style.visibility = 'visible';
                     el.style.opacity = '1';
-                    el.style.boxSizing = 'border-box';
-                    // ✅ УБРАТЬ все расчеты rowRect.top и height - sticky делает это автоматически!
                 });
             };
             const resetSticky = (selector) => {
@@ -10419,30 +10418,23 @@ body.show-link .table-col-delay {
         }
 
 // Обработчик скролла для обновления позиций sticky столбцов
-const ganttChart = document.getElementById('ganttChart');
-if (ganttChart) {
-    let scrollTimeout = null;
-    let windowScrollTimeout = null;
-    
-    function updateFixedOnScroll() {
-        if (scrollTimeout) return;
-        scrollTimeout = requestAnimationFrame(() => {
-            updateStickyColumns(); // Пересчитывает все позиции
-            scrollTimeout = null;
-        });
-    }
-    
-    // Скролл контейнера графика
-    ganttChart.addEventListener('scroll', updateFixedOnScroll, { passive: true });
-    
-    // Скролл окна (если страница прокручивается)
-    window.addEventListener('scroll', updateFixedOnScroll, { passive: true });
-    
-    // Ресайз окна
-    window.addEventListener('resize', () => {
-        setTimeout(updateStickyColumns, 100);
-    }, { passive: true });
-}
+        const ganttChart = document.getElementById('ganttChart');
+        if (ganttChart) {
+            // Удаляем старый обработчик, если есть
+            ganttChart.removeEventListener('scroll', updateStickyColumnsOnScroll);
+            
+            // Добавляем новый обработчик с throttling для производительности
+            let scrollTimeout = null;
+            function updateStickyColumnsOnScroll() {
+                if (scrollTimeout) return;
+                scrollTimeout = requestAnimationFrame(() => {
+                    updateStickyColumns();
+                    scrollTimeout = null;
+                });
+            }
+            
+            ganttChart.addEventListener('scroll', updateStickyColumnsOnScroll, { passive: true });
+        }
 
         // Обновляем визуальное состояние кнопок закрепления
         function updateStickyButtons() {
@@ -14272,8 +14264,6 @@ row.appendChild(delayCell);
 
 
             } else if (field === 'endDate') {
-    // Сохраняем старое значение даты окончания ДО изменения
-    const oldEndDate = task.endDate ? new Date(task.endDate) : null;
                 if (task.startDate && task.endDate) {
                     // Фиксируем дату начала, двигаем только конец → считаем новые рабочие дни
                     const dates = getWorkdaysBetween(task.startDate, task.endDate);
@@ -14287,7 +14277,9 @@ row.appendChild(delayCell);
                     task.endDate = dates[dates.length - 1];
                 }
                 
-		 // Вычисляем новую дату окончания (уже обработана выше в коде)
+ // Вычисляем новую дату окончания из переменной newEnd (уже обработана выше в коде)
+                // newEnd создается на строке 12368: const newEnd = parseDateFromInput(input.value);
+                // и затем присваивается task.endDate на строке 12376
                 const newEndDate = task.endDate ? new Date(task.endDate) : null;
                 
                 if (oldEndDate && newEndDate) {
@@ -14390,14 +14382,6 @@ row.appendChild(delayCell);
 
             // Обработка изменения связи
             if (field === 'link') {
-
-// Сохраняем старое значение дат ДО изменения связи
-const oldStartDate = task.startDate ? new Date(task.startDate) : null;
-const oldEndDate = task.endDate ? new Date(task.endDate) : null;
-
-// Сохраняем состояние в историю отмены перед изменением
-addToUndoHistory();
-
                 const linkType = input.value || 'О_Н';
                 task.link = linkType;
                 
@@ -14462,11 +14446,11 @@ addToUndoHistory();
             // количество рабочих дней каждая задача сохраняет.
             // Теперь учитывается тип связи каждой задачи.
             // Вызываем recalculateFollowingTasks только если НЕ startDate и НЕ endDate
-// Вызываем recalculateFollowingTasks только если НЕ startDate, НЕ endDate и НЕ link
-// (для startDate, endDate и link последователи уже обработаны выше новым кодом)
-if (field !== 'startDate' && field !== 'endDate' && field !== 'link') {
-    recalculateFollowingTasks(index);
-}
+// Вызываем recalculateFollowingTasks только если НЕ startDate и НЕ endDate
+            // (для startDate и endDate последователи уже обработаны выше новым кодом)
+            if (field !== 'startDate' && field !== 'endDate') {
+                recalculateFollowingTasks(index);
+            }
 
             // Обновляем значения в input полях сразу после пересчета
             // (до полного рендера, чтобы пользователь видел изменения сразу)
@@ -14890,65 +14874,7 @@ if (field !== 'startDate' && field !== 'endDate' && field !== 'link') {
 
                 // Сбрасываем индивидуальные статусы дат для сдвинутых задач
                 task.dateStatuses = {};
-
-// Сохраняем смещения последователей (вместо recalculateFollowingTasks)
-// Вычисляем новое значение дат после изменения связи
-const newStartDate = task.startDate ? new Date(task.startDate) : null;
-const newEndDate = task.endDate ? new Date(task.endDate) : null;
-
-// Вычисляем разницу в датах (может измениться startDate или endDate в зависимости от типа связи)
-let diffDays = 0;
-
-if (oldStartDate && newStartDate && oldStartDate.getTime() !== newStartDate.getTime()) {
-    // Если изменилась дата начала, используем её для вычисления разницы
-    const diffTime = newStartDate.getTime() - oldStartDate.getTime();
-    diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-} else if (oldEndDate && newEndDate && oldEndDate.getTime() !== newEndDate.getTime()) {
-    // Если изменилась дата окончания, используем её для вычисления разницы
-    const diffTime = newEndDate.getTime() - oldEndDate.getTime();
-    diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-}
-
-// Если даты изменились, двигаем все последователи на ту же разницу
-if (diffDays !== 0 && index < tasks.length - 1) {
-    // Двигаем все последующие задачи на ту же разницу в днях
-    for (let i = index + 1; i < tasks.length; i++) {
-        const followingTask = tasks[i];
-        
-        // Сдвигаем дату начала
-        if (followingTask.startDate) {
-            const newStart = new Date(followingTask.startDate);
-            newStart.setDate(newStart.getDate() + diffDays);
-            followingTask.startDate = newStart;
-        }
-        
-        // Сдвигаем дату окончания
-        if (followingTask.endDate) {
-            const newEnd = new Date(followingTask.endDate);
-            newEnd.setDate(newEnd.getDate() + diffDays);
-            followingTask.endDate = newEnd;
-        }
-        
-        // Сдвигаем массив дат
-        if (followingTask.dates && Array.isArray(followingTask.dates)) {
-            followingTask.dates = followingTask.dates.map(d => {
-                const newDate = new Date(d);
-                newDate.setDate(newDate.getDate() + diffDays);
-                return newDate;
-            });
-        }
-        
-        // Пересчитываем даты с учетом выходных (если нужно)
-        if (followingTask.days > 0) {
-            recalculateTaskDatesWithWeekends(followingTask);
-        }
-    }
-    
-    // Обновляем задержки для всех задач
-    if (typeof updateDelays === 'function') {
-        updateDelays();
-    }
-}
+                
                 console.log('      - Статусы ПОСЛЕ сброса:', task.dateStatuses);
                 console.log('   ❌ ВСЕ СТАТУСЫ УДАЛЕНЫ!');
             }
@@ -25115,8 +25041,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                         resetBarResizeState();
                         return;
                     }
-                    // Сохраняем состояние в историю отмены перед изменением
-			addToUndoHistory();
+                    
                     console.log('📐 Завершение ресайза бара (справа):', {
                         taskId: resizingBarTaskId,
                         oldDays: resizeStartDays,
@@ -25147,57 +25072,8 @@ const newDates = getTaskDates(taskStartDate, task.days);
                         endDate: formatDateKey(task.endDate)
                     });
                     
-                    // Сохраняем смещения последователей (вместо recalculateFollowingTasks)
-// Старое значение endDate уже сохранено в resizeStartEndDate (из начала ресайза)
-const oldEndDate = resizeStartEndDate ? new Date(resizeStartEndDate) : null;
-
-
-if (oldEndDate && newEndDate) {
-    // Вычисляем разницу в календарных днях
-    const diffTime = newEndDate.getTime() - oldEndDate.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Если дата окончания изменилась, двигаем все последователи на ту же разницу
-    if (diffDays !== 0 && taskIndex < tasks.length - 1) {
-        // Двигаем все последующие задачи на ту же разницу в днях
-        for (let i = taskIndex + 1; i < tasks.length; i++) {
-            const followingTask = tasks[i];
-            
-            // Сдвигаем дату начала
-            if (followingTask.startDate) {
-                const newStart = new Date(followingTask.startDate);
-                newStart.setDate(newStart.getDate() + diffDays);
-                followingTask.startDate = newStart;
-            }
-            
-            // Сдвигаем дату окончания
-            if (followingTask.endDate) {
-                const newEnd = new Date(followingTask.endDate);
-                newEnd.setDate(newEnd.getDate() + diffDays);
-                followingTask.endDate = newEnd;
-            }
-            
-            // Сдвигаем массив дат
-            if (followingTask.dates && Array.isArray(followingTask.dates)) {
-                followingTask.dates = followingTask.dates.map(d => {
-                    const newDate = new Date(d);
-                    newDate.setDate(newDate.getDate() + diffDays);
-                    return newDate;
-                });
-            }
-            
-            // Пересчитываем даты с учетом выходных (если нужно)
-            if (followingTask.days > 0) {
-                recalculateTaskDatesWithWeekends(followingTask);
-            }
-        }
-        
-        // Обновляем задержки для всех задач
-        if (typeof updateDelays === 'function') {
-            updateDelays();
-        }
-    }
-}
+                    // Пересчитываем все последующие задачи
+                    recalculateFollowingTasks(taskIndex);
                     
                 } else if (direction === 'left') {
                     // ===== РЕСАЙЗ СЛЕВА (изменение даты начала) =====
@@ -25306,8 +25182,6 @@ if (oldEndDate && newEndDate) {
                         return;
                     }
                     
-			// Сохраняем состояние в историю отмены перед изменением
-			addToUndoHistory();
                     console.log('📐 Завершение ресайза бара (слева):', {
                         taskId: resizingBarTaskId,
                         oldStartDate: formatDateKey(resizeStartStartDate),
@@ -25340,72 +25214,21 @@ if (oldEndDate && newEndDate) {
                         endDate: formatDateKey(task.endDate)
                     });
                     
-// Сохраняем смещения последователей (вместо recalculateFollowingTasks)
-// Старое значение startDate уже сохранено в resizeStartStartDate (из начала ресайза)
-const oldStartDate = resizeStartStartDate ? new Date(resizeStartStartDate) : null;
-
-
-if (oldStartDate && newStartDate) {
-    // Вычисляем разницу в календарных днях
-    const diffTime = newStartDate.getTime() - oldStartDate.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Если дата начала изменилась, двигаем все последователи на ту же разницу
-    if (diffDays !== 0 && taskIndex < tasks.length - 1) {
-        // Двигаем все последующие задачи на ту же разницу в днях
-        for (let i = taskIndex + 1; i < tasks.length; i++) {
-            const followingTask = tasks[i];
-            
-            // Сдвигаем дату начала
-            if (followingTask.startDate) {
-                const newStart = new Date(followingTask.startDate);
-                newStart.setDate(newStart.getDate() + diffDays);
-                followingTask.startDate = newStart;
-            }
-            
-            // Сдвигаем дату окончания
-            if (followingTask.endDate) {
-                const newEnd = new Date(followingTask.endDate);
-                newEnd.setDate(newEnd.getDate() + diffDays);
-                followingTask.endDate = newEnd;
-            }
-            
-            // Сдвигаем массив дат
-            if (followingTask.dates && Array.isArray(followingTask.dates)) {
-                followingTask.dates = followingTask.dates.map(d => {
-                    const newDate = new Date(d);
-                    newDate.setDate(newDate.getDate() + diffDays);
-                    return newDate;
-                });
-            }
-            
-            // Пересчитываем даты с учетом выходных (если нужно)
-            if (followingTask.days > 0) {
-                recalculateTaskDatesWithWeekends(followingTask);
-            }
-        }
-        
-        // Обновляем задержки для всех задач
-        if (typeof updateDelays === 'function') {
-            updateDelays();
-        }
-    }
-}
+                    // При ресайзе слева для первой задачи (taskIndex === 0) пересчитываем последующие задачи,
+                    // так как изменение даты начала первой задачи влияет на все последующие
+                    // Для остальных задач при ресайзе слева не пересчитываем последующие задачи,
+                    // потому что endDate остался прежним
+                    if (taskIndex === 0) {
+                        recalculateFollowingTasks(taskIndex);
+                    }
                 } else {
                     console.error('❌ Неизвестное направление ресайза:', direction);
                     resetBarResizeState();
                     return;
                 }
                 
-// Сохраняем текущую позицию прокрутки перед перерисовкой
-const scrollY = window.scrollY || window.pageYOffset;
-const scrollX = window.scrollX || window.pageXOffset;
-
-// Перерисовываем график
-renderGantt();
-
-// Восстанавливаем позицию прокрутки после перерисовки
-window.scrollTo(scrollX, scrollY);
+                // Перерисовываем график
+                renderGantt();
                 
                 // Сохраняем изменения
                 autoSaveGanttState();
@@ -25497,13 +25320,7 @@ window.scrollTo(scrollX, scrollY);
                 oldDate: formatDateKey(dragStartDate),
                 newDate: formatDateKey(newStartDate)
             });
-            // Сохраняем состояние в историю отмены перед изменением
-		addToUndoHistory();
-
-		// Сохраняем старое значение даты начала ДО изменения
-		const oldStartDate = dragStartDate ? new Date(dragStartDate) : null;
-
-
+            
             // Сохраняем старые данные для отладки
             const oldDays = task.days;
             const oldDatesCount = task.dates ? task.dates.length : 0;
@@ -25544,67 +25361,15 @@ window.scrollTo(scrollX, scrollY);
                 endDate: formatDateKey(task.endDate)
             });
             
-// Сохраняем смещения последователей (вместо recalculateFollowingTasks)
-// newStartDate уже объявлена выше (строка 25304), используем task.startDate напрямую
-const finalStartDate = task.startDate ? new Date(task.startDate) : null;
-
-
-if (oldStartDate && newStartDate) {
-    // Вычисляем разницу в календарных днях
-    const diffTime = newStartDate.getTime() - oldStartDate.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Если дата начала изменилась, двигаем все последователи на ту же разницу
-    if (diffDays !== 0 && taskIndex < tasks.length - 1) {
-        // Двигаем все последующие задачи на ту же разницу в днях
-        for (let i = taskIndex + 1; i < tasks.length; i++) {
-            const followingTask = tasks[i];
+            // Сбрасываем индивидуальные статусы дат (так как даты изменились)
+            task.dateStatuses = {};
+            task.dateComments = {};
             
-            // Сдвигаем дату начала
-            if (followingTask.startDate) {
-                const newStart = new Date(followingTask.startDate);
-                newStart.setDate(newStart.getDate() + diffDays);
-                followingTask.startDate = newStart;
-            }
+            // Пересчитываем все последующие задачи
+            recalculateFollowingTasks(taskIndex);
             
-            // Сдвигаем дату окончания
-            if (followingTask.endDate) {
-                const newEnd = new Date(followingTask.endDate);
-                newEnd.setDate(newEnd.getDate() + diffDays);
-                followingTask.endDate = newEnd;
-            }
-            
-            // Сдвигаем массив дат
-            if (followingTask.dates && Array.isArray(followingTask.dates)) {
-                followingTask.dates = followingTask.dates.map(d => {
-                    const newDate = new Date(d);
-                    newDate.setDate(newDate.getDate() + diffDays);
-                    return newDate;
-                });
-            }
-            
-            // Пересчитываем даты с учетом выходных (если нужно)
-            if (followingTask.days > 0) {
-                recalculateTaskDatesWithWeekends(followingTask);
-            }
-        }
-        
-        // Обновляем задержки для всех задач
-        if (typeof updateDelays === 'function') {
-            updateDelays();
-        }
-    }
-}
-
-// Сохраняем текущую позицию прокрутки перед перерисовкой
-const scrollY = window.scrollY || window.pageYOffset;
-const scrollX = window.scrollX || window.pageXOffset;
-
-// Перерисовываем график
-renderGantt();
-
-// Восстанавливаем позицию прокрутки после перерисовки
-window.scrollTo(scrollX, scrollY);
+            // Перерисовываем график
+            renderGantt();
             
             // Сохраняем изменения
             autoSaveGanttState();
@@ -25702,13 +25467,6 @@ window.scrollTo(scrollX, scrollY);
                 newDate: formatDateKey(newStartDate)
             });
             
-
-// Сохраняем состояние в историю отмены перед изменением
-addToUndoHistory();
-
-// Сохраняем старое значение даты начала ДО изменения
-const oldStartDate = dragStartDate ? new Date(dragStartDate) : null;
-
             // Сохраняем старые данные для отладки
             const oldDays = task.days;
             const oldDatesCount = task.dates ? task.dates.length : 0;
@@ -25749,64 +25507,15 @@ const oldStartDate = dragStartDate ? new Date(dragStartDate) : null;
                 endDate: formatDateKey(task.endDate)
             });
             
-  // Сохраняем смещения последователей (вместо recalculateFollowingTasks)
-
-
-if (oldStartDate && task.startDate) {
-    const diffTime = task.startDate.getTime() - oldStartDate.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Если дата начала изменилась, двигаем все последователи на ту же разницу
-    if (diffDays !== 0 && taskIndex < tasks.length - 1) {
-        // Двигаем все последующие задачи на ту же разницу в днях
-        for (let i = taskIndex + 1; i < tasks.length; i++) {
-            const followingTask = tasks[i];
+            // Сбрасываем индивидуальные статусы дат (так как даты изменились)
+            task.dateStatuses = {};
+            task.dateComments = {};
             
-            // Сдвигаем дату начала
-            if (followingTask.startDate) {
-                const newStart = new Date(followingTask.startDate);
-                newStart.setDate(newStart.getDate() + diffDays);
-                followingTask.startDate = newStart;
-            }
+            // Пересчитываем все последующие задачи
+            recalculateFollowingTasks(taskIndex);
             
-            // Сдвигаем дату окончания
-            if (followingTask.endDate) {
-                const newEnd = new Date(followingTask.endDate);
-                newEnd.setDate(newEnd.getDate() + diffDays);
-                followingTask.endDate = newEnd;
-            }
-            
-            // Сдвигаем массив дат
-            if (followingTask.dates && Array.isArray(followingTask.dates)) {
-                followingTask.dates = followingTask.dates.map(d => {
-                    const newDate = new Date(d);
-                    newDate.setDate(newDate.getDate() + diffDays);
-                    return newDate;
-                });
-            }
-            
-            // Пересчитываем даты с учетом выходных (если нужно)
-            if (followingTask.days > 0) {
-                recalculateTaskDatesWithWeekends(followingTask);
-            }
-        }
-        
-        // Обновляем задержки для всех задач
-        if (typeof updateDelays === 'function') {
-            updateDelays();
-        }
-    }
-}
-
-// Сохраняем текущую позицию прокрутки перед перерисовкой
-const scrollY = window.scrollY || window.pageYOffset;
-const scrollX = window.scrollX || window.pageXOffset;
-
-// Перерисовываем график
-renderGantt();
-
-// Восстанавливаем позицию прокрутки после перерисовки
-window.scrollTo(scrollX, scrollY);
+            // Перерисовываем график
+            renderGantt();
             
             // Сохраняем изменения
             autoSaveGanttState();

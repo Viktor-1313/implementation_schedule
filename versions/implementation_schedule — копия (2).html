@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -933,6 +934,25 @@
             background-color: var(--color-bg);
             color: var(--color-text-secondary);
         }
+
+[data-theme="dark"] .gantt-details-cell.delay-cell {
+            background: #2a2a2a;
+            border-right-color: #444;
+        }
+
+        [data-theme="dark"] .gantt-details-cell.delay-cell input {
+            color: #e0e0e0;
+        }
+
+        [data-theme="dark"] .table-col-delay {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        [data-theme="dark"] .table-col-delay input {
+            color: #e0e0e0;
+        }
+
 
         [data-theme="dark"] .gantt-cell {
             background: var(--color-surface);
@@ -2569,7 +2589,46 @@
                         margin-right 0.7s cubic-bezier(0.4, 0, 0.2, 1),
                         border-right 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
+.gantt-details-cell.delay-cell {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    text-align: center;
+    padding: 4px;
+    border-right: 1px solid #ddd;
+    background: #f9f9f9;
+    display: none; /* По умолчанию скрыт */
+}
 
+body.show-link .gantt-details-cell.delay-cell {
+    display: table-cell; /* Показывается вместе со "Связью" */
+}
+
+.gantt-details-cell.delay-cell input {
+    width: 100%;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    padding: 2px;
+    cursor: default;
+}
+
+.gantt-details-cell.delay-cell input[readonly] {
+    color: #333;
+}
+
+.gantt-details-cell.delay-cell input.positive {
+    color: #f44336; /* Красный для положительной задержки */
+}
+
+.gantt-details-cell.delay-cell input.negative {
+    color: #4caf50; /* Зеленый для отрицательной задержки */
+}
+
+.gantt-details-cell.delay-cell input.zero {
+    color: #666; /* Серый для нулевой задержки */
+}
         body.show-link .gantt-details-cell.link-cell {
             flex-basis: 70px !important;
             width: 70px !important;
@@ -2580,6 +2639,70 @@
             padding-right: 4px;
             margin-right: 0;
             border-right: 1px solid var(--color-border);
+        }
+
+.gantt-details-cell.delay-cell {
+            flex-basis: 0 !important;
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            opacity: 0;
+            overflow: hidden;
+            padding-left: 0;
+            padding-right: 0;
+            margin-right: 0;
+            border-right: none;
+            flex-shrink: 0;
+            flex-grow: 0;
+            transition: flex-basis 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                        max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
+                        min-width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                        width 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
+                        opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                        padding-left 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
+                        padding-right 0.7s cubic-bezier(0.4, 0, 0.2, 1), 
+                        margin-right 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-right 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.show-link .gantt-details-cell.delay-cell {
+            flex-basis: 70px !important;
+            width: 70px !important;
+            min-width: 50px !important;
+            max-width: 70px !important;
+            opacity: 1;
+            padding-left: 4px;
+            padding-right: 4px;
+            margin-right: 0;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .gantt-details-cell.delay-cell input {
+            width: 100%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            padding: 2px;
+            cursor: default;
+        }
+
+        .gantt-details-cell.delay-cell input[readonly] {
+            color: #333;
+        }
+
+        .gantt-details-cell.delay-cell input.positive {
+            color: #f44336;
+            font-weight: 500;
+        }
+
+        .gantt-details-cell.delay-cell input.negative {
+            color: #4caf50;
+            font-weight: 500;
+        }
+
+        .gantt-details-cell.delay-cell input.zero {
+            color: #666;
         }
 
         .gantt-details-cell.responsible-cell {
@@ -3032,7 +3155,7 @@
             right: 3px;
             height: 4px;
             bottom: 2px;
-            background: #ffd54f;
+            background: #000000;
             border-radius: 2px;
             pointer-events: none; /* не мешает кликам по основному бару */
             opacity: 0.9;
@@ -3202,11 +3325,93 @@
             display: none;
         }
 
+.table-col-delay {
+    width: 70px;
+    min-width: 70px;
+    text-align: center;
+    padding: 4px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    display: none; /* По умолчанию скрыт */
+}
+
+body.show-link .table-col-delay {
+    display: table-cell; /* Показывается вместе со "Связью" */
+}
+
+.table-col-delay input {
+    width: 100%;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    padding: 2px;
+    cursor: default;
+}
+
+.table-col-delay input[readonly] {
+    color: #333;
+}
+
+.table-col-delay input.positive {
+    color: #f44336;
+}
+
+.table-col-delay input.negative {
+    color: #4caf50;
+}
+
+.table-col-delay input.zero {
+    color: #666;
+}
         body.show-link .table-col-link {
             display: table-cell;
             width: 70px !important;
             min-width: 50px !important;
             max-width: 70px !important;
+        }
+
+.table-col-delay {
+            display: none;
+        }
+
+        body.show-link .table-col-delay {
+            display: table-cell;
+            width: 70px !important;
+            min-width: 50px !important;
+            max-width: 70px !important;
+            text-align: center;
+            padding: 4px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+        }
+
+        .table-col-delay input {
+            width: 100%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            padding: 2px;
+            cursor: default;
+        }
+
+        .table-col-delay input[readonly] {
+            color: #333;
+        }
+
+        .table-col-delay input.positive {
+            color: #f44336;
+            font-weight: 500;
+        }
+
+        .table-col-delay input.negative {
+            color: #4caf50;
+            font-weight: 500;
+        }
+
+        .table-col-delay input.zero {
+            color: #666;
         }
 
         body.show-responsible .table-col-responsible {
@@ -3488,7 +3693,8 @@
         .travel-icon {
             display: inline-block;
             font-size: 14px;
-            color: #ffc107;
+            color: #00ff88;
+	   -webkit-text-stroke: 0.5px #000;
             font-weight: bold;
             vertical-align: middle;
             cursor: default;
@@ -3507,7 +3713,8 @@
         .travel-icon-row {
             display: inline-block;
             font-size: 18px;
-            color: #ffc107;
+            color: #00ff88;
+	   -webkit-text-stroke: 0.5px #000;
             font-weight: bold;
             cursor: default;
             line-height: 1;
@@ -3542,7 +3749,8 @@
             top: 2px;
             right: 4px;
             font-size: 18px;
-            color: #ffc107;
+            color: #00ff88;
+	   -webkit-text-stroke: 0.5px #000;
             font-weight: bold;
             z-index: 10;
             cursor: default;
@@ -3552,7 +3760,8 @@
 
         .gantt-travel-icon {
             font-size: 18px !important;
-            color: #ffc107 !important;
+            color: #00ff88 !important;
+	   -webkit-text-stroke: 0.5px #000 !important;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.5);
             font-weight: bold;
         }
@@ -7732,6 +7941,7 @@
                 renderStageTabs();
                 renderGantt();
                 renderTable();
+		updateDelays();
                 applySelectionHighlight();
             });
             container.appendChild(allBtn);
@@ -7754,7 +7964,7 @@
                     // Перерисовываем график и таблицу
                     renderGantt();
                     renderTable();
-                    
+                    updateDelays();
                     // Пересчитываем позиции меток этапов после разворачивания
                     setTimeout(() => {
                         recalculateStageLabelsPositions();
@@ -8254,6 +8464,7 @@
             }
             renderGantt();
             renderTable();
+	    updateDelays();
             applyCompanyInfoToUI();
             renderStageTabs();
         }
@@ -9144,6 +9355,7 @@
                 // Перерисовываем интерфейс
                 renderGantt();
                 renderTable();
+		updateDelays();
                 updateStatistics();
 
                 // Восстанавливаем подсветку поиска после перерисовки
@@ -9693,6 +9905,7 @@
             }
                     renderGantt();
                     renderTable();
+		    updateDelays();
                     renderStageTabs();
                     // Обновляем состояние кнопки директивного плана после восстановления baselineSnapshot
                     updateBaselineToggleButton();
@@ -10002,12 +10215,55 @@
             document.getElementById('totalDays').textContent = totalDays;
 
             if (tasks.length > 0) {
-                const lastTask = tasks[tasks.length - 1];
-                const completionDate = new Date(lastTask.endDate);
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                document.getElementById('completionDate').textContent = 
-                    completionDate.toLocaleDateString('ru-RU', options);
+    // Находим максимальную дату среди всех дат в графике
+    let maxDate = null;
+    
+    tasks.forEach(task => {
+        // Проверяем дату окончания задачи
+        if (task.endDate) {
+            const endDate = new Date(task.endDate);
+            if (!isNaN(endDate.getTime())) {
+                if (!maxDate || endDate > maxDate) {
+                    maxDate = endDate;
+                }
             }
+        }
+        
+        // Проверяем все даты из массива dates задачи
+        if (task.dates && Array.isArray(task.dates) && task.dates.length > 0) {
+            task.dates.forEach(date => {
+                const dateObj = date instanceof Date ? date : new Date(date);
+                if (!isNaN(dateObj.getTime())) {
+                    if (!maxDate || dateObj > maxDate) {
+                        maxDate = dateObj;
+                    }
+                }
+            });
+        }
+        
+        // Проверяем все даты из dateStatuses (ключи - это даты в формате YYYY-MM-DD)
+        if (task.dateStatuses && typeof task.dateStatuses === 'object') {
+            Object.keys(task.dateStatuses).forEach(dateKey => {
+                // Используем функцию parseDateKey для парсинга даты из формата YYYY-MM-DD
+                const dateObj = parseDateKey(dateKey);
+                if (dateObj && !isNaN(dateObj.getTime())) {
+                    if (!maxDate || dateObj > maxDate) {
+                        maxDate = dateObj;
+                    }
+                }
+            });
+        }
+    });
+    
+    // Отображаем максимальную дату или "-" если дат нет
+    if (maxDate) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('completionDate').textContent = 
+            maxDate.toLocaleDateString('ru-RU', options);
+    } else {
+        document.getElementById('completionDate').textContent = '-';
+    }
+}
 
         }
 
@@ -10790,6 +11046,12 @@
                     </label>
                     <span class="header-label-text">Связь</span>
                 </div>
+<div class="gantt-details-cell delay-cell">
+    <span class="header-label-text">Задержка</span>
+</div>
+
+
+
                 <div class="gantt-details-cell responsible-cell">
                     <label class="header-sticky-toggle" data-tooltip="Закрепить столбец 'Ответственный'">
                         <input type="checkbox" id="stickyResponsibleToggle" onchange="toggleStickyColumn('responsible')">
@@ -11206,7 +11468,33 @@
                 linkCell.appendChild(linkSelect);
                 applyColumnWidth(linkCell, 'link');
                 detailsRow.appendChild(linkCell);
-
+if (showLink) {
+    const delayCell = document.createElement('div');
+    delayCell.className = 'gantt-details-cell delay-cell';
+    
+    const delayInput = document.createElement('input');
+    delayInput.type = 'text';
+    delayInput.readOnly = true;
+    delayInput.className = 'gantt-details-input';
+    delayInput.setAttribute('data-index', index);
+    delayInput.setAttribute('data-field', 'delay');
+    
+    // Вычисляем задержку
+    const delay = calculateTaskDelay(task, index);
+    delayInput.value = delay.text;
+    
+    // Добавляем класс для стилизации (положительная/отрицательная/нулевая)
+    if (delay.days > 0) {
+        delayInput.classList.add('positive');
+    } else if (delay.days < 0) {
+        delayInput.classList.add('negative');
+    } else {
+        delayInput.classList.add('zero');
+    }
+    
+    delayCell.appendChild(delayInput);
+    detailsRow.appendChild(delayCell);
+}
                 // Ячейка "Ответственный" всегда создается для анимации
                 const respCell = document.createElement('div');
                 respCell.className = 'gantt-details-cell responsible-cell';
@@ -11864,6 +12152,7 @@
             }
                     renderGantt();
                     renderTable();
+		    updateDelays();
                 });
 
                 // Клик по строке Ганта — выбираем задачу (поддержка Shift)
@@ -11950,6 +12239,7 @@
                     // Полностью перерисовываем график и таблицу для корректного отображения всех задач
                     renderGantt();
                     renderTable();
+		    updateDelays();
                     
                     // Восстанавливаем позицию прокрутки сразу после перерисовки
                     requestAnimationFrame(() => {
@@ -12016,6 +12306,7 @@
                     // Полностью перерисовываем график для корректного отображения баров свернутых этапов
                     renderGantt();
                     renderTable();
+		    updateDelays();
                     
                     // Восстанавливаем позицию прокрутки сразу после перерисовки
                     requestAnimationFrame(() => {
@@ -12197,7 +12488,17 @@
                 linkSelect.disabled = true;
                 linkCell.appendChild(linkSelect);
                 detailsRow.appendChild(linkCell);
-                
+                if (showLink) {
+    const delayCell = document.createElement('div');
+    delayCell.className = 'gantt-details-cell delay-cell';
+    const delayInput = document.createElement('input');
+    delayInput.type = 'text';
+    delayInput.value = '-';
+    delayInput.disabled = true;
+    delayInput.readOnly = true;
+    delayCell.appendChild(delayInput);
+    detailsRow.appendChild(delayCell);
+}
                 // Ячейка "Ответственный" - пустая и заблокированная для строки этапа
                 const respCell = document.createElement('div');
                 respCell.className = 'gantt-details-cell responsible-cell';
@@ -12567,13 +12868,12 @@
                         currentChartContainerParent.appendChild(divider);
                     }
                     
-                    // Создаем метку этапа
-                    const stageLabel = document.createElement('div');
-                    stageLabel.className = 'gantt-stage-label';
-                    const stageMatch = stageName.match(/^(Этап\s+\d+)/);
-                    const stageNumber = stageMatch ? stageMatch[1] : stageName;
-                    stageLabel.textContent = stageNumber;
-                    stageLabel.setAttribute('data-stage-name', stageName);
+const stageLabel = document.createElement('div');
+stageLabel.className = 'gantt-stage-label';
+
+// Полное имя этапа (например, "Этап 2/1. Формирование цифровой модели")
+stageLabel.textContent = stageName;
+stageLabel.setAttribute('data-stage-name', stageName);
                     stageLabel.style.top = actualTopForLabel + 'px';
                     stageLabel.style.height = stageHeight + 'px';
                     
@@ -12828,6 +13128,16 @@
             linkCell.appendChild(linkSelect);
             row.appendChild(linkCell);
             
+const delayCell = document.createElement('td');
+delayCell.className = 'table-col-delay';
+const delayInput = document.createElement('input');
+delayInput.type = 'text';
+delayInput.value = '-';
+delayInput.disabled = true;
+delayInput.readOnly = true;
+delayCell.appendChild(delayInput);
+row.appendChild(delayCell);
+
             // Ячейка "Ответственный" (пустая и заблокированная для строки этапа)
             const respCell = document.createElement('td');
             respCell.className = 'table-col-responsible';
@@ -12851,6 +13161,7 @@
                 }
                 renderGantt();
                 renderTable();
+	        updateDelays();
 		updateStickyColumns();
             });
             
@@ -12884,6 +13195,7 @@
                 '<th>Дата окончания</th>',
                 '<th>Рабочих дней</th>',
                 '<th class="table-col-link">Связь</th>',
+                '<th class="table-col-delay">Задержка</th>',
                 '<th class="table-col-responsible">Ответственный</th>',
                 '<th>Статус</th>'
             ];
@@ -13103,6 +13415,13 @@
                             <option value="О_О" ${task.link === 'О_О' ? 'selected' : ''}>О_О</option>
                         </select>
                     </td>
+			<td class="table-col-delay">
+                        <input type="text"
+                               class="tasks-table-input"
+                               data-index="${index}"
+                               data-field="delay"
+                               readonly>
+                    </td>
                     <td class="table-col-responsible" ${task.responsible ? `data-tooltip="${task.responsible.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"` : ''}>
                         <input type="text"
                                class="tasks-table-input"
@@ -13148,6 +13467,25 @@
                         }
                     }
                 });
+
+
+// Обновляем значение задержки
+                const delayInput = row.querySelector('input[data-field="delay"]');
+                if (delayInput) {
+                    const delay = calculateTaskDelay(task, index);
+                    delayInput.value = delay.text;
+                    
+                    // Обновляем классы
+                    delayInput.classList.remove('positive', 'negative', 'zero');
+                    if (delay.days > 0) {
+                        delayInput.classList.add('positive');
+                    } else if (delay.days < 0) {
+                        delayInput.classList.add('negative');
+                    } else {
+                        delayInput.classList.add('zero');
+                    }
+                }
+
 
                 // Drag & drop для таблицы
                 row.draggable = canEdit(); // Блокируем drag&drop в режиме просмотра
@@ -13239,6 +13577,7 @@
             }
                     renderGantt();
                     renderTable();
+		    updateDelays();
                 });
 
                 // Обработчик mousedown для предотвращения срабатывания клика строки при выделении текста
@@ -13646,6 +13985,7 @@
                 // Обновляем отображение графика и таблицы
                 renderGantt();
                 renderTable();
+		updateDelays();
                 
                 // Сохраняем изменения
                 debouncedSave();
@@ -13699,6 +14039,8 @@
                     }
                 }
             } else if (field === 'startDate') {
+                // Сохраняем старое значение даты начала ДО изменения
+                const oldStartDate = task.startDate ? new Date(task.startDate) : null;
                 task.startDate = parseDateFromInput(input.value);
 
                 // Если уже есть дата окончания и она стала раньше даты начала — подтягиваем её вперёд
@@ -13711,7 +14053,59 @@
                             inp.value = formatDateForInput(task.endDate);
                         });
                 }
+                // Вычисляем новую дату начала (уже обработана выше в коде)
+                const newStartDate = task.startDate ? new Date(task.startDate) : null;
+                
+                if (oldStartDate && newStartDate) {
+                    // Вычисляем разницу в календарных днях
+                    const diffTime = newStartDate.getTime() - oldStartDate.getTime();
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // Если дата начала изменилась, двигаем все последователи на ту же разницу
+                    if (diffDays !== 0 && index < tasks.length - 1) {
+                        // Двигаем все последующие задачи на ту же разницу в днях
+                        for (let i = index + 1; i < tasks.length; i++) {
+                            const followingTask = tasks[i];
+                            
+                            // Сдвигаем дату начала
+                            if (followingTask.startDate) {
+                                const newStart = new Date(followingTask.startDate);
+                                newStart.setDate(newStart.getDate() + diffDays);
+                                followingTask.startDate = newStart;
+                            }
+                            
+                            // Сдвигаем дату окончания
+                            if (followingTask.endDate) {
+                                const newEnd = new Date(followingTask.endDate);
+                                newEnd.setDate(newEnd.getDate() + diffDays);
+                                followingTask.endDate = newEnd;
+                            }
+                            
+                            // Сдвигаем массив дат
+                            if (followingTask.dates && Array.isArray(followingTask.dates)) {
+                                followingTask.dates = followingTask.dates.map(d => {
+                                    const newDate = new Date(d);
+                                    newDate.setDate(newDate.getDate() + diffDays);
+                                    return newDate;
+                                });
+                            }
+                            
+                            // Пересчитываем даты с учетом выходных (если нужно)
+                            if (followingTask.days > 0) {
+                                recalculateTaskDatesWithWeekends(followingTask);
+                            }
+                        }
+                        
+                        // Обновляем задержки для всех задач
+                        if (typeof updateDelays === 'function') {
+                            updateDelays();
+                        }
+                    }
+                }
+
             } else if (field === 'endDate') {
+                // Сохраняем старое значение даты окончания ДО изменения
+                const oldEndDate = task.endDate ? new Date(task.endDate) : null;
                 const newEnd = parseDateFromInput(input.value);
 
                 // Правило: дата окончания не может быть раньше даты начала
@@ -13722,6 +14116,58 @@
                 } else {
                     task.endDate = newEnd;
                 }
+
+// Вычисляем новую дату окончания (уже обработана выше в коде)
+                const newEndDate = task.endDate ? new Date(task.endDate) : null;
+                
+                if (oldEndDate && newEndDate) {
+                    // Вычисляем разницу в календарных днях
+                    const diffTime = newEndDate.getTime() - oldEndDate.getTime();
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // Если дата окончания изменилась, сдвигаем все последователи на ту же разницу
+                    if (diffDays !== 0 && index < tasks.length - 1) {
+                        // Сдвигаем все последующие задачи на ту же разницу в днях
+                        for (let i = index + 1; i < tasks.length; i++) {
+                            const followingTask = tasks[i];
+                            
+                            // Сдвигаем дату начала
+                            if (followingTask.startDate) {
+                                const newStart = new Date(followingTask.startDate);
+                                newStart.setDate(newStart.getDate() + diffDays);
+                                followingTask.startDate = newStart;
+                            }
+                            
+                            // Сдвигаем дату окончания
+                            if (followingTask.endDate) {
+                                const newEnd = new Date(followingTask.endDate);
+                                newEnd.setDate(newEnd.getDate() + diffDays);
+                                followingTask.endDate = newEnd;
+                            }
+                            
+                            // Сдвигаем массив дат
+                            if (followingTask.dates && Array.isArray(followingTask.dates)) {
+                                followingTask.dates = followingTask.dates.map(d => {
+                                    const newDate = new Date(d);
+                                    newDate.setDate(newDate.getDate() + diffDays);
+                                    return newDate;
+                                });
+                            }
+                            
+                            // Пересчитываем даты с учетом выходных (если нужно)
+                            if (followingTask.days > 0) {
+                                recalculateTaskDatesWithWeekends(followingTask);
+                            }
+                        }
+                        
+                        // Обновляем задержки для всех задач
+                        if (typeof updateDelays === 'function') {
+                            updateDelays();
+                        }
+                    }
+                }
+
+
             } else if (field === 'days') {
                 const val = parseInt(input.value, 10);
                 task.days = isNaN(val) || val < 0 ? 0 : val;
@@ -13815,17 +14261,11 @@
                     }
                 }
                 
-                // Если у следующей задачи связь Н_Н, пересчитываем её дату начала
-                if (index < tasks.length - 1) {
-                    const nextTask = tasks[index + 1];
-                    if (nextTask.link === 'Н_Н' && task.startDate) {
-                        nextTask.startDate = new Date(task.startDate);
-                        recalculateTaskDatesWithWeekends(nextTask);
-                        // Пересчитываем все последующие задачи
-                        recalculateFollowingTasks(index + 1);
-                    }
-                }
+
+
             } else if (field === 'endDate') {
+    // Сохраняем старое значение даты окончания ДО изменения
+    const oldEndDate = task.endDate ? new Date(task.endDate) : null;
                 if (task.startDate && task.endDate) {
                     // Фиксируем дату начала, двигаем только конец → считаем новые рабочие дни
                     const dates = getWorkdaysBetween(task.startDate, task.endDate);
@@ -13839,21 +14279,56 @@
                     task.endDate = dates[dates.length - 1];
                 }
                 
-                // Если у следующей задачи связь О_О, пересчитываем её дату окончания
-                if (index < tasks.length - 1) {
-                    const nextTask = tasks[index + 1];
-                    if (nextTask.link === 'О_О' && task.endDate) {
-                        nextTask.endDate = new Date(task.endDate);
-                        if (nextTask.days > 0) {
-                            const dates = getWorkdaysBackward(nextTask.endDate, nextTask.days);
-                            nextTask.dates = dates;
-                            nextTask.startDate = dates[0];
-                            nextTask.endDate = dates[dates.length - 1];
+		 // Вычисляем новую дату окончания (уже обработана выше в коде)
+                const newEndDate = task.endDate ? new Date(task.endDate) : null;
+                
+                if (oldEndDate && newEndDate) {
+                    // Вычисляем разницу в календарных днях
+                    const diffTime = newEndDate.getTime() - oldEndDate.getTime();
+                    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // Если дата окончания изменилась, сдвигаем все последователи на ту же разницу
+                    if (diffDays !== 0 && index < tasks.length - 1) {
+                        // Сдвигаем все последующие задачи на ту же разницу в днях
+                        for (let i = index + 1; i < tasks.length; i++) {
+                            const followingTask = tasks[i];
+                            
+                            // Сдвигаем дату начала
+                            if (followingTask.startDate) {
+                                const newStart = new Date(followingTask.startDate);
+                                newStart.setDate(newStart.getDate() + diffDays);
+                                followingTask.startDate = newStart;
+                            }
+                            
+                            // Сдвигаем дату окончания
+                            if (followingTask.endDate) {
+                                const newEnd = new Date(followingTask.endDate);
+                                newEnd.setDate(newEnd.getDate() + diffDays);
+                                followingTask.endDate = newEnd;
+                            }
+                            
+                            // Сдвигаем массив дат
+                            if (followingTask.dates && Array.isArray(followingTask.dates)) {
+                                followingTask.dates = followingTask.dates.map(d => {
+                                    const newDate = new Date(d);
+                                    newDate.setDate(newDate.getDate() + diffDays);
+                                    return newDate;
+                                });
+                            }
+                            
+                            // Пересчитываем даты с учетом выходных (если нужно)
+                            if (followingTask.days > 0) {
+                                recalculateTaskDatesWithWeekends(followingTask);
+                            }
                         }
-                        // Пересчитываем все последующие задачи
-                        recalculateFollowingTasks(index + 1);
+                        
+                        // Обновляем задержки для всех задач
+                        if (typeof updateDelays === 'function') {
+                            updateDelays();
+                        }
                     }
                 }
+
             } else if (field === 'days') {
                 // Проверяем тип связи
                 const linkType = task.link || 'О_Н';
@@ -13970,7 +14445,12 @@
             // рабочий день после окончания предыдущей, при этом своё
             // количество рабочих дней каждая задача сохраняет.
             // Теперь учитывается тип связи каждой задачи.
-            recalculateFollowingTasks(index);
+            // Вызываем recalculateFollowingTasks только если НЕ startDate и НЕ endDate
+// Вызываем recalculateFollowingTasks только если НЕ startDate и НЕ endDate
+            // (для startDate и endDate последователи уже обработаны выше новым кодом)
+            if (field !== 'startDate' && field !== 'endDate') {
+                recalculateFollowingTasks(index);
+            }
 
             // Обновляем значения в input полях сразу после пересчета
             // (до полного рендера, чтобы пользователь видел изменения сразу)
@@ -14014,7 +14494,7 @@
             // Всегда обновляем диаграмму Ганта, чтобы обновить input поля в ней
             renderGantt();
             renderTable();
-            
+            updateDelays();
             // Восстанавливаем позицию прокрутки сразу, без задержки
             window.scrollTo(scrollX, scrollY);
             const newChartContainer = document.getElementById('ganttChart');
@@ -14643,7 +15123,7 @@
             }
             renderGantt();
             renderTable();
-
+	    updateDelays();
             window.scrollTo(scrollX, scrollY);
             const newChartContainer = document.getElementById('ganttChart');
             if (newChartContainer) {
@@ -14713,6 +15193,7 @@
                 renderGantt();
             }
             renderTable();
+	    updateDelays();
             
             // Сохраняем изменения
             console.log('💾 Изменение статуса "на выезде", сохраняем');
@@ -14802,7 +15283,7 @@
             }
             renderGantt();
             renderTable();
-
+	    updateDelays();
             // Восстанавливаем позицию прокрутки сразу, без задержки
             window.scrollTo(scrollX, scrollY);
             const newChartContainer = document.getElementById('ganttChart');
@@ -14908,6 +15389,7 @@ function insertNewStage(afterStageName) {
             updateStatistics();
             renderGantt();
             renderTable();
+	    updateDelays();
             renderStageTabs();
             applyStageSelection();
         }
@@ -14979,6 +15461,7 @@ function insertNewStage(afterStageName) {
             }
                 renderGantt();
                 renderTable();
+		updateDelays();
                 return;
             }
 
@@ -15007,7 +15490,7 @@ function insertNewStage(afterStageName) {
             }
             renderGantt();
             renderTable();
-
+		updateDelays();
             applySelectionHighlight();
             autoSaveGanttState(); // Автоматическое сохранение после удаления задачи
         }
@@ -18539,6 +19022,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             if (needsRerender) {
                 renderGantt();
                 renderTable();
+		updateDelays();
                 // После перерисовки снова подсвечиваем результаты
                 setTimeout(() => {
                     highlightSearchResults();
@@ -18632,6 +19116,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                 collapsedStages.delete(taskStage);
                 renderGantt();
                 renderTable();
+		updateDelays();
             }
             
             // Выделяем задачу
@@ -20618,6 +21103,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
                 renderGantt();
             }
             renderTable();
+	   updateDelays();
             
             // Немедленное сохранение для критических операций (статусы)
             console.log('💾 Критическое изменение: статус из таблицы, сохраняем немедленно');
@@ -20664,6 +21150,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             await initializeTasks();
             renderGantt();
             renderTable();
+		 updateDelays();
             updateStatistics();
             
             // Восстанавливаем подсветку поиска после перерисовки
@@ -20680,6 +21167,122 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             updateViewToggleUI();
             updateViewPanelsUI();
         }
+
+ // Функция расчета задержки для задачи
+        function calculateTaskDelay(task, taskIndex) {
+    // Первая задача не имеет предшественника, задержка = 0
+    if (taskIndex === 0) {
+        return { days: 0, text: '0' };
+    }
+    
+    const prevTask = tasks[taskIndex - 1];
+    if (!prevTask) {
+        return { days: 0, text: '0' };
+    }
+    
+    const linkType = task.link || 'О_Н';
+    let expectedDate = null;
+    let actualDate = null;
+    
+    if (linkType === 'О_Н') {
+        // Ожидаемая дата начала = дата окончания предшественника + 1 рабочий день
+        if (!prevTask.endDate) {
+            return { days: 0, text: '-' };
+        }
+        expectedDate = new Date(prevTask.endDate);
+        expectedDate.setDate(expectedDate.getDate() + 1);
+        // Ищем следующий рабочий день
+        while (!isWorkday(expectedDate)) {
+            expectedDate.setDate(expectedDate.getDate() + 1);
+        }
+        actualDate = task.startDate ? new Date(task.startDate) : null;
+    } else if (linkType === 'Н_Н') {
+        // Ожидаемая дата начала = дата начала предшественника
+        if (!prevTask.startDate) {
+            return { days: 0, text: '-' };
+        }
+        expectedDate = new Date(prevTask.startDate);
+        actualDate = task.startDate ? new Date(task.startDate) : null;
+    } else if (linkType === 'О_О') {
+        // Ожидаемая дата окончания = дата окончания предшественника
+        if (!prevTask.endDate) {
+            return { days: 0, text: '-' };
+        }
+        expectedDate = new Date(prevTask.endDate);
+        actualDate = task.endDate ? new Date(task.endDate) : null;
+    }
+    
+    if (!expectedDate || !actualDate || isNaN(expectedDate.getTime()) || isNaN(actualDate.getTime())) {
+        return { days: 0, text: '-' };
+    }
+    
+    // Сбрасываем время для корректного сравнения дат
+    expectedDate.setHours(0, 0, 0, 0);
+    actualDate.setHours(0, 0, 0, 0);
+    
+    // Вычисляем разницу в календарных днях
+    const diffTime = actualDate.getTime() - expectedDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Форматируем текст с учетом знака
+    let text = '';
+    if (diffDays > 0) {
+        text = `+${diffDays}`;
+    } else if (diffDays < 0) {
+        text = `${diffDays}`; // Отрицательное число уже содержит знак минус
+    } else {
+        text = '0';
+    }
+    
+            return { days: diffDays, text: text };
+        }
+
+ function updateDelays() {
+            if (!showLink) return;
+            
+            // Обновляем задержки в диаграмме Ганта
+            const delayInputsGantt = document.querySelectorAll('.gantt-details-input[data-field="delay"]');
+            delayInputsGantt.forEach(input => {
+                const index = parseInt(input.getAttribute('data-index'), 10);
+                if (index >= 0 && index < tasks.length) {
+                    const task = tasks[index];
+                    const delay = calculateTaskDelay(task, index);
+                    input.value = delay.text;
+                    
+                    // Обновляем классы
+                    input.classList.remove('positive', 'negative', 'zero');
+                    if (delay.days > 0) {
+                        input.classList.add('positive');
+                    } else if (delay.days < 0) {
+                        input.classList.add('negative');
+                    } else {
+                        input.classList.add('zero');
+                    }
+                }
+            });
+            
+            // Обновляем задержки в таблице
+            const delayInputsTable = document.querySelectorAll('.tasks-table-input[data-field="delay"]');
+            delayInputsTable.forEach(input => {
+                const index = parseInt(input.getAttribute('data-index'), 10);
+                if (index >= 0 && index < tasks.length) {
+                    const task = tasks[index];
+                    const delay = calculateTaskDelay(task, index);
+                    input.value = delay.text;
+                    
+                    // Обновляем классы
+                    input.classList.remove('positive', 'negative', 'zero');
+                    if (delay.days > 0) {
+                        input.classList.add('positive');
+                    } else if (delay.days < 0) {
+                        input.classList.add('negative');
+                    } else {
+                        input.classList.add('zero');
+                    }
+                }
+            });
+        }
+
 
         // Переключение режима отображения баров в Ганте: точки по дням / слитные полосы
         function toggleLinkColumn() {
@@ -20720,7 +21323,8 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
 
             renderGantt();
             renderTable();
-            
+            // Обновляем задержки после перерисовки
+            updateDelays();
             // Восстанавливаем позицию прокрутки сразу, без задержки
             window.scrollTo(scrollX, scrollY);
             const newChartContainer = document.getElementById('ganttChart');
@@ -20988,6 +21592,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             renderStageTabs();
             renderGantt();
             renderTable();
+		updateDelays();
             applySelectionHighlight();
         }
 
@@ -21629,6 +22234,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             await initializeTasks();
             renderGantt();
             renderTable();
+	    updateDelays();
             renderStageTabs();
             buildStageSettingsList();
             applyStageSelection(); // Обновляем выделение этапов
@@ -21699,6 +22305,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             // 5. Перерисовываем интерфейс
             renderGantt();
             renderTable();
+		updateDelays();
             renderStageTabs();
             buildStageSettingsList();
             applyStageSelection(); // Обновляем выделение этапа, если он был выделен
@@ -22520,6 +23127,7 @@ async function exportPDF(scaleMode = 'day', includeDiagram = true, margins = nul
             // Перерисовываем график
             renderGantt();
             renderTable();
+	    updateDelays();
         }
 
         // Пересчет задач после изменения календаря
@@ -23269,6 +23877,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                 renderGantt();
             }
             renderTable();
+	    updateDelays();
             
             // Восстанавливаем позицию прокрутки сразу, без задержки
             window.scrollTo(scrollX, scrollY);
@@ -23387,6 +23996,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                 renderGantt();
             }
             renderTable();
+	    updateDelays();
             
             // Восстанавливаем позицию прокрутки
             window.scrollTo(scrollX, scrollY);
@@ -23544,6 +24154,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                 renderGantt();
             }
             renderTable();
+	    updateDelays();
             
             // Восстанавливаем позицию прокрутки сразу, без задержки
             window.scrollTo(scrollX, scrollY);
@@ -25143,6 +25754,7 @@ const newDates = getTaskDates(taskStartDate, task.days);
                 console.log('✅ Отрисовка графика и таблицы...');
                 renderGantt();
                 renderTable();
+	        updateDelays();
                 renderStageTabs();
                 updateStickyButtons();
                 updateStickyColumns();
@@ -26642,4 +27254,3 @@ const newDates = getTaskDates(taskStartDate, task.days);
     </footer>
 </body>
 </html>
-
