@@ -866,7 +866,14 @@ app.get('/api/companies', optionalAuth, (req, res) => {
     }
     const raw = fs.readFileSync(COMPANIES_FILE, 'utf8');
       const companies = safeJsonParse(raw);
-    // Фильтруем архивированные компании - они не должны показываться в основном списке
+    
+    // Если запрашиваются архивные компании
+    if (req.query.archived === 'true') {
+      const archivedCompanies = companies.filter(c => c.archived === true);
+      return res.json(archivedCompanies);
+    }
+    
+    // По умолчанию возвращаем только активные компании
     const activeCompanies = companies.filter(c => !c.archived);
     res.json(activeCompanies);
   } catch (e) {

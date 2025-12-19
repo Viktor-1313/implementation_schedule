@@ -7,11 +7,15 @@
   {
     "id": "praktis_id",
     "name": "ООО \"Сетл Практис ИД\"",
-    "createdAt": "2025-12-02T13:13:43.346Z"
+    "createdAt": "2025-12-02T13:13:43.346Z",
+    "archived": true,
+    "archivedAt": "2025-12-19T10:44:08.526Z"
   },
   {
     "id": "Tst1",
     "name": "ООО \"Прeмьера\"",
-    "createdAt": "2025-12-03T09:55:28.899Z"
+    "createdAt": "2025-12-03T09:55:28.899Z",
+    "archived": true,
+    "archivedAt": "2025-12-19T10:31:15.073Z"
   }
 ]

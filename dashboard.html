@@ -526,6 +526,35 @@
             border-left: 4px solid var(--color-warning);
         }
 
+        .company-card.archived {
+            position: relative;
+        }
+
+        .archive-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.95) 0%, rgba(211, 47, 47, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(244, 67, 54, 0.8);
+            border-radius: 6px;
+            padding: 6px 12px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4), 
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                        0 1px 2px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transform: rotate(-2deg);
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
         .company-card-header {
             display: flex;
             align-items: flex-start;
@@ -901,7 +930,7 @@
                 <span class="companies-btn-icon"></span>
                 <span class="companies-tooltip">Управление компаниями</span>
             </a>
-            <button class="pdf-export-btn" id="pdfExportBtn" data-tooltip="Выгрузить дашборд в PDF" onclick="exportDashboardToPDF()">
+            <button class="pdf-export-btn" id="pdfExportBtn" data-tooltip="Выгрузить дашборд в PDF" onclick="showPDFExportModal()">
                 <span class="pdf-export-tooltip">Выгрузить дашборд в PDF</span>
             </button>
             <button class="theme-toggle-btn" id="themeToggleBtn" data-tooltip="Переключить тему" onclick="toggleTheme()">
@@ -1066,11 +1095,22 @@
         // ========== ЗАГРУЗКА ДАННЫХ ==========
         async function loadCompanies() {
             try {
-                const response = await fetch('/api/companies');
-                if (!response.ok) {
+                // Загружаем активные компании
+                const activeResponse = await fetch('/api/companies');
+                if (!activeResponse.ok) {
                     throw new Error('Ошибка загрузки компаний');
                 }
-                allCompanies = await response.json();
+                const activeCompanies = await activeResponse.json();
+                
+                // Загружаем архивные компании
+                const archivedResponse = await fetch('/api/companies?archived=true');
+                let archivedCompanies = [];
+                if (archivedResponse.ok) {
+                    archivedCompanies = await archivedResponse.json();
+                }
+                
+                // Объединяем все компании
+                allCompanies = [...activeCompanies, ...archivedCompanies];
                 await loadStats();
             } catch (error) {
                 console.error('Ошибка загрузки компаний:', error);
@@ -1292,11 +1332,15 @@
                 return { company, stats };
             });
 
-            // Фильтр по статусу (пока только активные, архив отдельно)
+            // Фильтр по статусу
             if (statusFilter === 'archived') {
-                // Для архива нужен отдельный endpoint
-                filteredCompanies = [];
+                // Показываем только архивные компании
+                filteredCompanies = filteredCompanies.filter(({ company }) => company.archived === true);
+            } else if (statusFilter === 'active') {
+                // Показываем только активные компании
+                filteredCompanies = filteredCompanies.filter(({ company }) => !company.archived);
             }
+            // Если statusFilter === 'all', показываем все компании (без фильтрации)
 
             // Фильтр по поиску
             if (searchInput) {
@@ -1306,8 +1350,17 @@
                 );
             }
 
-            // Сортировка
+            // Сортировка (архивные всегда в конце)
             filteredCompanies.sort((a, b) => {
+                // Сначала разделяем на архивные и неархивные
+                const aArchived = a.company.archived === true;
+                const bArchived = b.company.archived === true;
+                
+                // Если один архивный, а другой нет - архивный идет в конец
+                if (aArchived && !bArchived) return 1;
+                if (!aArchived && bArchived) return -1;
+                
+                // Если оба архивные или оба неархивные - применяем обычную сортировку
                 switch (sortFilter) {
                     case 'name':
                         return a.company.name.localeCompare(b.company.name);
@@ -1351,8 +1404,10 @@
                 const logoData = company.logoData || '';
                 const hasOverdue = stats.overdueTasks > 0;
                 const hasUpcoming = stats.upcomingDeadlines > 0;
+                const isArchived = company.archived === true;
                 
                 let cardClass = 'company-card';
+                if (isArchived) cardClass += ' archived';
                 if (hasOverdue) cardClass += ' has-overdue';
                 else if (hasUpcoming) cardClass += ' has-upcoming';
 
@@ -1385,6 +1440,7 @@
                 
                 return `
                     <div class="${cardClass}">
+                        ${isArchived ? '<div class="archive-badge">Архив</div>' : ''}
                         <div class="company-card-header">
                             ${logoHtml}
                             ${fallbackLogo}
@@ -1483,9 +1539,11 @@
                             ${stats.overdueTasksList.length > 3 ? `<div style="margin-top: 4px; font-size: 10px; color: #000000 !important; opacity: 0.8 !important;">...и еще ${stats.overdueTasksList.length - 3}</div>` : ''}
                         </div>
                         ` : ''}
+                        ${!isArchived ? `
                         <div class="company-actions" onclick="event.stopPropagation()">
                             <a href="implementation_schedule.html?company=${encodeURIComponent(company.id)}" class="btn-open-gantt">Открыть график</a>
                         </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -1586,41 +1644,122 @@
             });
         }
 
+        // ========== МОДАЛЬНОЕ ОКНО ВЫБОРА ЭКСПОРТА ==========
+        function showPDFExportModal() {
+            const modal = document.createElement('div');
+            modal.id = 'pdfExportModal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = 'background: white; border-radius: 16px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);';
+            
+            modalContent.innerHTML = `
+                <h2 style="margin: 0 0 20px 0; font-size: 24px; color: #212121; font-weight: 600; text-align: center;">Выберите компании для экспорта</h2>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="pdf-export-option" data-type="all" style="padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; font-weight: 500; color: #212121; transition: all 0.3s ease; text-align: left;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Все компании</div>
+                        <div style="font-size: 13px; color: #757575;">Экспортировать все проекты</div>
+                    </button>
+                    <button class="pdf-export-option" data-type="active" style="padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; font-weight: 500; color: #212121; transition: all 0.3s ease; text-align: left;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Активные</div>
+                        <div style="font-size: 13px; color: #757575;">Только активные проекты</div>
+                    </button>
+                    <button class="pdf-export-option" data-type="archived" style="padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; font-weight: 500; color: #212121; transition: all 0.3s ease; text-align: left;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Архивные</div>
+                        <div style="font-size: 13px; color: #757575;">Только архивные проекты</div>
+                    </button>
+                </div>
+                <button id="cancelPdfExport" style="margin-top: 20px; padding: 12px; width: 100%; border: 1px solid #e0e0e0; border-radius: 8px; background: #f5f5f5; cursor: pointer; font-size: 14px; color: #757575; transition: all 0.3s ease;">
+                    Отмена
+                </button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Стили для опций
+            const style = document.createElement('style');
+            style.textContent = `
+                .pdf-export-option:hover {
+                    border-color: #2196f3 !important;
+                    background: #e3f2fd !important;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+                }
+                .pdf-export-option:active {
+                    transform: translateY(0);
+                }
+                #cancelPdfExport:hover {
+                    background: #eeeeee !important;
+                    border-color: #bdbdbd !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Обработчики событий
+            modalContent.querySelectorAll('.pdf-export-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const exportType = btn.getAttribute('data-type');
+                    document.body.removeChild(modal);
+                    document.head.removeChild(style);
+                    exportDashboardToPDF(exportType);
+                });
+            });
+            
+            document.getElementById('cancelPdfExport').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                document.head.removeChild(style);
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    document.head.removeChild(style);
+                }
+            });
+        }
+
         // ========== ЭКСПОРТ ДАШБОРДА В PDF ==========
-        async function exportDashboardToPDF() {
+        async function exportDashboardToPDF(exportType = 'all') {
             try {
-                // Проверяем, что есть компании для экспорта
-                console.log('Начало экспорта PDF. filteredCompanies:', filteredCompanies);
-                if (!filteredCompanies || filteredCompanies.length === 0) {
-                    console.warn('Нет компаний для экспорта. Попытка использовать allCompanies...');
-                    // Если filteredCompanies пуст, используем все компании
-                    if (allCompanies && allCompanies.length > 0 && allStats && allStats.length > 0) {
-                        // Создаем filteredCompanies из всех компаний
-                        const companiesWithStats = allCompanies.map(company => {
-                            const stats = allStats.find(s => s.companyId === company.id);
-                            return { company, stats: stats || {
-                                totalTasks: 0,
-                                completedTasks: 0,
-                                inProgressTasks: 0,
-                                pendingTasks: 0,
-                                overdueTasks: 0,
-                                overdueTasksList: [],
-                                upcomingDeadlines: 0,
-                                upcomingDeadlinesList: [],
-                                progress: 0,
-                                lastTaskDate: null
-                            }};
-                        });
-                        filteredCompanies = companiesWithStats;
-                        console.log('Используем все компании:', filteredCompanies.length);
+                // Определяем какие компании экспортировать
+                let companiesToExport = [];
+                
+                if (allCompanies && allCompanies.length > 0 && allStats && allStats.length > 0) {
+                    // Создаем список всех компаний со статистикой
+                    const companiesWithStats = allCompanies.map(company => {
+                        const stats = allStats.find(s => s.companyId === company.id);
+                        return { company, stats: stats || {
+                            totalTasks: 0,
+                            completedTasks: 0,
+                            inProgressTasks: 0,
+                            pendingTasks: 0,
+                            overdueTasks: 0,
+                            overdueTasksList: [],
+                            upcomingDeadlines: 0,
+                            upcomingDeadlinesList: [],
+                            progress: 0,
+                            lastTaskDate: null,
+                            projectStartDate: null,
+                            projectEndDate: null
+                        }};
+                    });
+                    
+                    // Фильтруем по типу экспорта
+                    if (exportType === 'active') {
+                        companiesToExport = companiesWithStats.filter(({ company }) => !company.archived);
+                    } else if (exportType === 'archived') {
+                        companiesToExport = companiesWithStats.filter(({ company }) => company.archived === true);
                     } else {
-                        alert('Нет компаний для экспорта. Убедитесь, что данные загружены.');
-                        return;
+                        companiesToExport = companiesWithStats;
                     }
+                } else {
+                    alert('Нет компаний для экспорта. Убедитесь, что данные загружены.');
+                    return;
                 }
                 
-                if (filteredCompanies.length === 0) {
-                    alert('Нет компаний для экспорта.');
+                if (companiesToExport.length === 0) {
+                    alert(`Нет ${exportType === 'active' ? 'активных' : exportType === 'archived' ? 'архивных' : ''} компаний для экспорта.`);
                     return;
                 }
 
@@ -1651,6 +1790,7 @@
                 exportWrapper.appendChild(logoContainer);
                 
                 // Добавляем заголовок
+                const headerTitle = exportType === 'archived' ? 'Дашборд архивных проектов' : 'Дашборд проектов';
                 const header = document.createElement('div');
                 header.style.cssText = 'text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #2196f3; position: relative;';
                 header.innerHTML = `
@@ -1658,7 +1798,7 @@
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="#2196f3" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
                         </svg>
-                        <h1 style="font-size: 32px; margin: 0; color: #212121; font-weight: 700;">Дашборд проектов</h1>
+                        <h1 style="font-size: 32px; margin: 0; color: #212121; font-weight: 700;">${headerTitle}</h1>
                     </div>
                     <p style="font-size: 14px; color: #757575; margin: 0;">${new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                 `;
@@ -1667,10 +1807,10 @@
                 // Добавляем общую статистику
                 const statsSection = document.createElement('div');
                 statsSection.style.cssText = 'margin-bottom: 30px; padding: 25px; background: linear-gradient(135deg, #f5f5f5 0%, #e8f4f8 100%); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
-                const totalProjects = filteredCompanies.length;
-                const totalTasks = filteredCompanies.reduce((sum, {stats}) => sum + (stats.totalTasks || 0), 0);
-                const totalOverdue = filteredCompanies.reduce((sum, {stats}) => sum + (stats.overdueTasks || 0), 0);
-                const avgProgress = filteredCompanies.length > 0 ? Math.round(filteredCompanies.reduce((sum, {stats}) => sum + (stats.progress || 0), 0) / filteredCompanies.length) : 0;
+                const totalProjects = companiesToExport.length;
+                const totalTasks = companiesToExport.reduce((sum, {stats}) => sum + (stats.totalTasks || 0), 0);
+                const totalOverdue = companiesToExport.reduce((sum, {stats}) => sum + (stats.overdueTasks || 0), 0);
+                const avgProgress = companiesToExport.length > 0 ? Math.round(companiesToExport.reduce((sum, {stats}) => sum + (stats.progress || 0), 0) / companiesToExport.length) : 0;
                 
                 statsSection.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
@@ -1728,7 +1868,7 @@
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="#2196f3" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
                         </svg>
-                        <h2 style="font-size: 22px; margin: 0; color: #212121; font-weight: 600;">Компании (${filteredCompanies.length})</h2>
+                        <h2 style="font-size: 22px; margin: 0; color: #212121; font-weight: 600;">Компании (${companiesToExport.length})</h2>
                     </div>
                 `;
                 exportWrapper.appendChild(companiesHeader);
@@ -1765,7 +1905,7 @@
                 `;
                 companiesGrid.appendChild(backgroundIcons);
                 
-                filteredCompanies.forEach(({ company, stats }) => {
+                companiesToExport.forEach(({ company, stats }) => {
                     const card = document.createElement('div');
                     card.className = 'company-card';
                     card.style.cssText = 'border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; background: white; page-break-inside: avoid; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; width: 100%; box-sizing: border-box; break-inside: avoid; overflow: visible; position: relative; z-index: 1;';
@@ -1917,7 +2057,7 @@
                     console.error('Контейнер пустой!', {
                         children: exportWrapper.children.length,
                         height: exportWrapper.scrollHeight,
-                        companies: filteredCompanies.length
+                        companies: companiesToExport.length
                     });
                     alert('Ошибка: контент для экспорта пустой. Убедитесь, что есть компании в дашборде.');
                     document.body.removeChild(exportWrapper);
@@ -1926,7 +2066,7 @@
                 }
 
                 console.log('Контент готов для экспорта:', {
-                    companies: filteredCompanies.length,
+                    companies: companiesToExport.length,
                     height: exportWrapper.scrollHeight,
                     width: exportWrapper.scrollWidth
                 });
@@ -1955,7 +2095,7 @@
                     pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['.company-card'] }
                 };
 
-                console.log('Начинаем экспорт PDF, компаний:', filteredCompanies.length);
+                console.log('Начинаем экспорт PDF, компаний:', companiesToExport.length);
                 console.log('Размер контейнера:', exportWrapper.scrollWidth, 'x', exportWrapper.scrollHeight);
 
                 html2pdf()

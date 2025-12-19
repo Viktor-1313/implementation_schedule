@@ -1130,6 +1130,31 @@
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .archive-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.95) 0%, rgba(211, 47, 47, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(244, 67, 54, 0.8);
+            border-radius: 6px;
+            padding: 6px 12px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4), 
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                        0 1px 2px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transform: rotate(-2deg);
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
         .company-card::before,
         .company-card::after {
             content: '';
@@ -5739,7 +5764,8 @@
                 `;
 
                 return `
-                    <div class="company-card">
+                    <div class="company-card" style="position: relative;">
+                        <div class="archive-badge">Архив</div>
                         ${statisticsButtonHtml}
                         <div class="company-info">
                             ${company.logoData ? `<img src="${escapeHtml(company.logoData)}" alt="${safeCompanyName}" class="company-logo">` : ''}
