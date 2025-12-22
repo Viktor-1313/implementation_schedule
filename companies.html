@@ -161,6 +161,11 @@
             min-height: 200px;
         }
 
+        /* Контейнер для кнопок только на мобильных - скрыт на десктопе */
+        .control-buttons-container {
+            display: none;
+        }
+
         [data-theme="dark"] .header {
             background: var(--color-surface);
             border: 1px solid var(--color-border);
@@ -2332,65 +2337,51 @@
                 padding: 25px;
             }
 
-            /* Кнопки управления на планшетах */
+            /* Кнопки управления на планшетах - только для мобильных */
+            .control-buttons-container {
+                position: absolute;
+                top: 25px;
+                right: 25px;
+                z-index: 1000;
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            /* Скрываем абсолютное позиционирование кнопок на мобильных */
             .profile-btn,
             .logout-btn,
             .admin-btn,
             .companies-bottom-btn,
-            .archive-btn {
-                width: 40px;
-                height: 40px;
+            .archive-btn,
+            .dashboard-btn {
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                left: auto !important;
+            }
+
+            .profile-btn,
+            .logout-btn,
+            .admin-btn,
+            .companies-bottom-btn,
+            .archive-btn,
+            .dashboard-btn {
+                width: 40px !important;
+                height: 40px !important;
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                left: auto !important;
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
             }
 
             .theme-toggle-btn {
                 top: 25px !important;
                 left: 25px !important;
-            }
-
-            .admin-btn {
-                top: 25px !important;
-                left: 75px !important;
-                right: auto !important;
-            }
-
-            .profile-btn {
-                top: 25px;
-                right: 25px !important;
-            }
-
-            .archive-btn {
-                top: 77px; /* 25px (top первой) + 40px (высота первой) + 12px (отступ) = 77px */
-                right: 25px !important;
-            }
-            
-            .dashboard-btn {
-                top: 127px; /* 77px (archive) + 40px (высота) + 10px (отступ) = 127px */
-                right: 25px !important;
-            }
-
-            .logout-btn {
-                top: 25px; /* На том же уровне, что и кнопка профиля */
-                right: 65px !important; /* Справа от кнопки профиля (25px + 40px ширина) */
-            }
-
-            .companies-bottom-btn {
-                top: 77px; /* 25px (top выхода) + 40px (высота выхода) + 12px (отступ) = 77px */
-                right: 65px !important; /* Та же позиция по right, что и кнопка выхода */
-                opacity: 1 !important;
-                transform: scale(1) !important;
-                display: flex !important;
-                visibility: visible !important;
-                z-index: 1000 !important;
-            }
-            
-            .dashboard-btn {
-                top: 127px; /* 77px (companies-bottom) + 40px (высота) + 10px (отступ) = 127px */
-                right: 65px !important;
-                opacity: 1 !important;
-                transform: scale(1) !important;
-                display: flex !important;
-                visibility: visible !important;
-                z-index: 1000 !important;
             }
         }
 
@@ -2484,65 +2475,51 @@
                 font-size: 1.5rem;
             }
 
-            /* Кнопки управления на мобильных */
+            /* Кнопки управления на мобильных - только для мобильных */
+            .control-buttons-container {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                z-index: 1000;
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            /* Скрываем абсолютное позиционирование кнопок на мобильных */
             .profile-btn,
             .logout-btn,
             .admin-btn,
             .companies-bottom-btn,
-            .archive-btn {
-                width: 38px;
-                height: 38px;
+            .archive-btn,
+            .dashboard-btn {
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                left: auto !important;
+            }
+
+            .profile-btn,
+            .logout-btn,
+            .admin-btn,
+            .companies-bottom-btn,
+            .archive-btn,
+            .dashboard-btn {
+                width: 40px !important;
+                height: 40px !important;
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                left: auto !important;
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
             }
 
             .theme-toggle-btn {
                 top: 15px !important;
                 left: 15px !important;
-            }
-
-            .admin-btn {
-                top: 15px !important;
-                left: 65px !important;
-                right: auto !important;
-            }
-
-            .profile-btn {
-                top: 15px;
-                right: 15px !important;
-            }
-
-            .archive-btn {
-                top: 65px; /* 15px (top первой) + 38px (высота первой) + 12px (отступ) = 65px */
-                right: 15px !important;
-            }
-            
-            .dashboard-btn {
-                top: 115px; /* 65px (archive) + 38px (высота) + 12px (отступ) = 115px */
-                right: 15px !important;
-            }
-
-            .logout-btn {
-                top: 15px; /* На том же уровне, что и кнопка профиля */
-                right: 53px !important; /* Справа от кнопки профиля (15px + 38px ширина) */
-            }
-
-            .companies-bottom-btn {
-                top: 65px; /* 15px (top выхода) + 38px (высота выхода) + 12px (отступ) = 65px */
-                right: 53px !important; /* Та же позиция по right, что и кнопка выхода */
-                opacity: 1 !important;
-                transform: scale(1) !important;
-                display: flex !important;
-                visibility: visible !important;
-                z-index: 1000 !important;
-            }
-            
-            .dashboard-btn {
-                top: 115px; /* 65px (companies-bottom) + 38px (высота) + 12px (отступ) = 115px */
-                right: 53px !important;
-                opacity: 1 !important;
-                transform: scale(1) !important;
-                display: flex !important;
-                visibility: visible !important;
-                z-index: 1000 !important;
             }
         }
 
@@ -2628,65 +2605,51 @@
                 font-size: 1rem;
             }
 
-            /* Кнопки управления на маленьких экранах */
+            /* Кнопки управления на маленьких экранах - только для мобильных */
+            .control-buttons-container {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 1000;
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            /* Скрываем абсолютное позиционирование кнопок на мобильных */
             .profile-btn,
             .logout-btn,
             .admin-btn,
             .companies-bottom-btn,
-            .archive-btn {
-                width: 35px;
-                height: 35px;
+            .archive-btn,
+            .dashboard-btn {
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                left: auto !important;
+            }
+
+            .profile-btn,
+            .logout-btn,
+            .admin-btn,
+            .companies-bottom-btn,
+            .archive-btn,
+            .dashboard-btn {
+                width: 40px !important;
+                height: 40px !important;
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                left: auto !important;
+                opacity: 1 !important;
+                transform: scale(1) !important;
+                display: flex !important;
+                visibility: visible !important;
             }
 
             .theme-toggle-btn {
                 top: 12px !important;
                 left: 12px !important;
-            }
-
-            .admin-btn {
-                top: 12px !important;
-                left: 57px !important;
-                right: auto !important;
-            }
-
-            .profile-btn {
-                top: 12px;
-                right: 12px !important;
-            }
-
-            .archive-btn {
-                top: 59px; /* 12px (top первой) + 35px (высота первой) + 12px (отступ) = 59px */
-                right: 12px !important;
-            }
-            
-            .dashboard-btn {
-                top: 106px; /* 59px (archive) + 35px (высота) + 12px (отступ) = 106px */
-                right: 12px !important;
-            }
-
-            .logout-btn {
-                top: 12px; /* На том же уровне, что и кнопка профиля */
-                right: 47px !important; /* Справа от кнопки профиля (12px + 35px ширина) */
-            }
-
-            .companies-bottom-btn {
-                top: 59px; /* 12px (top выхода) + 35px (высота выхода) + 12px (отступ) = 59px */
-                right: 47px !important; /* Та же позиция по right, что и кнопка выхода */
-                opacity: 1 !important;
-                transform: scale(1) !important;
-                display: flex !important;
-                visibility: visible !important;
-                z-index: 1000 !important;
-            }
-            
-            .dashboard-btn {
-                top: 106px; /* 59px (companies-bottom) + 35px (высота) + 12px (отступ) = 106px */
-                right: 47px !important;
-                opacity: 1 !important;
-                transform: scale(1) !important;
-                display: flex !important;
-                visibility: visible !important;
-                z-index: 1000 !important;
             }
 
             .modal-content {
@@ -3665,6 +3628,58 @@
 
         // Инициализируем тему сразу
         initTheme();
+
+        // Обертываем кнопки в контейнер только на мобильных устройствах
+        function wrapButtonsInContainer() {
+            if (window.innerWidth <= 1024) {
+                // Только на мобильных - создаем контейнер
+                const header = document.querySelector('.header');
+                if (header && !header.querySelector('.control-buttons-container')) {
+                    const buttons = [
+                        document.getElementById('profileBtn'),
+                        document.getElementById('logoutBtn'),
+                        document.getElementById('companiesBottomBtn'),
+                        document.getElementById('archiveBtn'),
+                        document.getElementById('dashboardBtn'),
+                        document.getElementById('adminPanelLink')
+                    ].filter(btn => btn !== null);
+
+                    if (buttons.length > 0) {
+                        const container = document.createElement('div');
+                        container.className = 'control-buttons-container';
+                        buttons.forEach(btn => {
+                            if (btn.parentNode) {
+                                btn.parentNode.insertBefore(container, btn);
+                                container.appendChild(btn);
+                            }
+                        });
+                    }
+                }
+            } else {
+                // На десктопе - убираем контейнер, возвращаем кнопки на место
+                const container = document.querySelector('.control-buttons-container');
+                if (container) {
+                    const header = document.querySelector('.header');
+                    if (header) {
+                        while (container.firstChild) {
+                            header.appendChild(container.firstChild);
+                        }
+                        container.remove();
+                    }
+                }
+            }
+        }
+
+        // Вызываем при загрузке и при изменении размера окна
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                wrapButtonsInContainer();
+                window.addEventListener('resize', wrapButtonsInContainer);
+            });
+        } else {
+            wrapButtonsInContainer();
+            window.addEventListener('resize', wrapButtonsInContainer);
+        }
 
         // Слушаем изменения системной темы
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
